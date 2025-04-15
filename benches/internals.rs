@@ -395,7 +395,7 @@ fn bench_transform_pipeline(c: &mut Criterion) {
     let mut color256_input = Vec::new();
     for i in 0..100u8 {
         color256_input.extend_from_slice(
-            format!("\x1b[38;5;{}m   Compiling\x1b[0m crate v0.{}.0\n", i, i).as_bytes(),
+            format!("\x1b[38;5;{i}m   Compiling\x1b[0m crate v0.{i}.0\n").as_bytes(),
         );
     }
     let basic_input = real_world_cargo();
@@ -523,7 +523,7 @@ fn unicode_math_bold_mixed(size: usize) -> Vec<u8> {
     let mut i = 0u32;
     while v.len() < size {
         if i % 5 == 0 {
-            let cp = 0x1D400 + (i % 26);
+            let cp = 0x0001_D400 + (i % 26);
             let c = char::from_u32(cp).unwrap_or('\u{1D400}');
             let mut buf = [0u8; 4];
             let s = c.encode_utf8(&mut buf);

@@ -9,12 +9,16 @@
 
 mod cache;
 mod config;
+mod iai_inputs;
 mod inputs;
 mod resources;
 mod runner;
 
 pub use cache::CacheInfo;
 pub use config::BenchConfig;
+pub use iai_inputs::{
+    IAI_SIZES, LARGE, MEDIUM, SMALL, TINY, XLARGE, iai_cargo, iai_input, iai_osc8,
+};
 pub use inputs::{
     InputMeta, InputSource, clean_input, dirty_input, fmt_bytes, load_fixture, select_input,
 };

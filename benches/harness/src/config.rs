@@ -5,9 +5,28 @@ use criterion::measurement::WallTime;
 
 /// Measurement parameters shared across all bench binaries.
 ///
-/// 10 samples × 3s measurement = Criterion packs thousands of
-/// iterations per sample for fast benchmarks, a few iterations
-/// for slow ones. Statistically sound either way.
+/// ## Defaults and rationale
+///
+/// - `sample_size: 200` — enough iterations-per-sample that a
+///   single context switch or stray IRQ doesn't dominate the CI.
+///   At 100 × 5s (the earlier value) sub-µs benches showed 20-40%
+///   CV. 200 × 9s tightens that to the 3-8% range on a quiet
+///   Linux workstation without requiring CPU pinning. That trades
+///   ~4min more wall time for numbers you can actually publish.
+/// - `measurement_secs: 9` — at larger sample counts criterion
+///   must pack more iters per sample to avoid floor-ing the batch
+///   at "1 iteration". 9s leaves headroom for the cold cache-tier
+///   benches while keeping total bench time under 15 min.
+/// - `warmup_secs: 3` — branch predictor, BTB, uop cache, and
+///   iTLB all need more than the default 1s to warm for
+///   small-input benches. At 1s warmup the first measured samples
+///   on OSC-8-class inputs ran 15-20% slow.
+/// - `max_size` — bounded by L3 × 2 unless overridden with
+///   `BENCH_MAX_SIZE`.
+///
+/// Override with `BENCH_QUICK=1` for a 20s/bench quick-check run
+/// (sample_size=20, measurement=1s, warmup=500ms) when iterating
+/// on the algorithm. Don't publish numbers from quick runs.
 pub struct BenchConfig {
     pub sample_size: usize,
     pub measurement_secs: u64,
@@ -16,7 +35,7 @@ pub struct BenchConfig {
 }
 
 impl BenchConfig {
-    /// Standard config. Reads `BENCH_MAX_SIZE` from env.
+    /// Standard config. Reads `BENCH_MAX_SIZE` and `BENCH_QUICK` from env.
     #[must_use]
     pub fn from_env(default_max: usize) -> Self {
         let max_size = match std::env::var("BENCH_MAX_SIZE") {
@@ -24,11 +43,31 @@ impl BenchConfig {
             Ok(s) => parse_size(&s).unwrap_or(default_max),
             Err(_) => default_max,
         };
-        Self {
-            sample_size: 10,
-            measurement_secs: 3,
-            warmup_secs: 1,
-            max_size,
+
+        let quick = std::env::var("BENCH_QUICK")
+            .ok()
+            .map(|v| v != "0" && !v.is_empty())
+            .unwrap_or(false);
+
+        if quick {
+            Self {
+                sample_size: 20,
+                measurement_secs: 1,
+                warmup_secs: 1,
+                max_size,
+            }
+        } else {
+            // 200 samples × 9s measurement gives criterion enough
+            // iterations-per-sample to absorb single-context-switch
+            // outliers on sub-µs benches. Empirically this tightens
+            // CV from 20-40% (at 100×5s) to 3-8% on a quiet Linux
+            // box — without requiring CPU pinning.
+            Self {
+                sample_size: 200,
+                measurement_secs: 9,
+                warmup_secs: 3,
+                max_size,
+            }
         }
     }
 

@@ -71,19 +71,21 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
         // Deduplicate: if the same fixture was already benched at
         // another target size, fall back to generated input.
         let id_key = (label.clone(), actual_size);
-        let (input, meta, label) = if !seen_ids.insert(id_key) {
+        let (input, meta, label) = if seen_ids.insert(id_key) {
+            (input, meta, label)
+        } else {
             let fallback = crate::dirty_input(target_size);
             let fb_meta = crate::inputs::analyze_pub(&fallback);
             let fb_label = format!("{}_dirty", bench.bench_id);
             // Also deduplicate the generated fallback.
             let fb_key = (fb_label.clone(), fallback.len());
-            if !seen_ids.insert(fb_key) {
+            if seen_ids.insert(fb_key) {
+                // New element inserted, proceed with fallback
+            } else {
                 eprintln!("  {}: skipped (duplicate)", fmt_bytes(target_size as u64),);
                 continue;
             }
             (fallback, fb_meta, fb_label)
-        } else {
-            (input, meta, label)
         };
         let actual_size = input.len();
 

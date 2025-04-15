@@ -7,12 +7,23 @@
 # Run all:   cargo bench -p ecosystem-bench
 # Run one:   cargo bench -p ecosystem-bench --bench distill
 # Run two:   cargo bench -p ecosystem-bench --bench distill --bench fast_strip
+#
+# Instruction-count variants (valgrind required):
+#   cargo bench -p ecosystem-bench --features iai-callgrind
 [package]
 name = "ecosystem-bench"
 version = "0.0.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 publish = false
+
+[features]
+# Empty switch feature — gates the `*_iai` bench targets via
+# `required-features`. iai-callgrind itself is always in [dependencies]
+# to keep the feature wiring consistent with the root crate (where
+# Cargo forbids optional dev-deps). Compile cost is a proc-macro +
+# small runner crate; no valgrind linkage at build time.
+iai-callgrind = []
 
 [[bench]]
 name = "distill"
@@ -30,6 +41,28 @@ harness = false
 name = "strip_escapes"
 harness = false
 
+# ── iai-callgrind variants (instruction counts, host-independent) ──
+
+[[bench]]
+name = "distill_iai"
+harness = false
+required-features = ["iai-callgrind"]
+
+[[bench]]
+name = "fast_strip_iai"
+harness = false
+required-features = ["iai-callgrind"]
+
+[[bench]]
+name = "console_iai"
+harness = false
+required-features = ["iai-callgrind"]
+
+[[bench]]
+name = "strip_escapes_iai"
+harness = false
+required-features = ["iai-callgrind"]
+
 [dependencies]
 distill-bench-harness = { path = "../harness" }
 strip-ansi = { package = "distill-strip-ansi", path = "../..", features = ["filter"] }
@@ -37,3 +70,4 @@ fast-strip-ansi = "0.13"
 strip-ansi-escapes = "0.2"
 console = "0.16"
 criterion = { version = "0.7", features = ["html_reports"] }
+iai-callgrind = "0.16.1"

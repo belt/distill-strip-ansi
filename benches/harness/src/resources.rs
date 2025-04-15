@@ -161,6 +161,21 @@ pub fn flush_resources(params: FlushParams<'_>) {
 /// resident usage, not allocator page cache from prior benchmarks.
 /// Without this, sequential benchmarks in the same process show
 /// `rss_delta = 0` because the heap never shrinks between groups.
+///
+/// # Cache-pollution note
+///
+/// The `malloc_trim(0)` syscall is ~20-50µs and evicts hot code
+/// from L1i. For sub-microsecond benches (OSC 8, cargo output at
+/// ~250ns), that's 100× the measurement. We mitigate this by
+/// placing `before()` immediately before `group.bench_with_input()`,
+/// which runs criterion's warmup window (3s, see `config.rs`)
+/// before the timed loop. Warmup repopulates L1i/L2, branch
+/// predictor, BTB, and iTLB — so by the time measurement starts
+/// the trim syscall's effects are fully cleared.
+///
+/// If warmup ever drops below ~1s for a hot-path bench, re-audit
+/// this. Short warmup + `trim_allocator` in `before()` produces
+/// 15-20% noise at the small-input tier.
 #[allow(unsafe_code)]
 fn trim_allocator() {
     #[cfg(target_os = "linux")]

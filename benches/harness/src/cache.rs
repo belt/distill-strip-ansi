@@ -28,18 +28,19 @@ impl CacheInfo {
     ///
     /// Returns sizes spanning L1 → L2 → L3 → DRAM, with
     /// power-of-two steps between boundaries.
+    ///
+    /// The floor is 1 KiB. Sub-KiB benches are dominated by
+    /// criterion harness overhead (setup, iter loop, per-batch
+    /// allocator calls) and produce CV >10% even on a pinned,
+    /// isolated core. Those samples muddy the reported picture
+    /// more than they inform it — a caller who needs per-byte
+    /// signal is better served by iai-callgrind, where one
+    /// iteration is as deterministic as a million.
     #[must_use]
     pub fn build_sizes(&self, max_size: usize) -> Vec<usize> {
         let mut sizes = Vec::with_capacity(20);
 
-        // Sub-L1: 256, 512
-        for &s in &[256, 512] {
-            if s <= max_size {
-                sizes.push(s);
-            }
-        }
-
-        // L1 range: 1K up to L1d
+        // L1 range: 1 KiB floor, power-of-two up to L1d.
         let mut s = 1024;
         while s <= self.l1d as usize && s <= max_size {
             sizes.push(s);
