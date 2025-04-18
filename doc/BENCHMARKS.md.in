@@ -4,24 +4,41 @@ Criterion.rs statistical benchmarks across the Rust ANSI
 stripping ecosystem: `distill-strip-ansi`, `fast-strip-ansi`,
 `strip-ansi-escapes`, and `console`.
 
-## Symbolic Notation
+For reproduction instructions, CPU pinning, PGO, and the mise
+task wiring, see `doc/BENCHMARKS-REPRODUCE.md`.
 
-| Symbol | Meaning                         |
-| ------ | ------------------------------- |
-| ns     | nanoseconds (10⁻⁹ s)            |
-| µs     | microseconds (10⁻⁶ s)           |
-| ms     | milliseconds (10⁻³ s)           |
-| MiB/s  | mebibytes/sec (2²⁰ B/s)         |
-| GiB/s  | gibibytes/sec (2³⁰ B/s)         |
-| ×      | multiplier (baseline = distill) |
-| RSS Δ  | memory retained after bench     |
-| CPU    | user+sys CPU time (bench)       |
+## Reading the Numbers
+
+| Symbol   | Meaning                                              |
+| -------- | ---------------------------------------------------- |
+| ns       | nanoseconds (10⁻⁹ s)                                 |
+| µs       | microseconds (10⁻⁶ s)                                |
+| ms       | milliseconds (10⁻³ s)                                |
+| MiB/s    | mebibytes/sec (2²⁰ B/s)                              |
+| GiB/s    | gibibytes/sec (2³⁰ B/s)                              |
+| ×        | multiplier (`base` = distill)                        |
+| Ir/MiB   | retired instructions per MiB (callgrind)             |
+| ⚠        | high-variance cell (CV ≥ 3%) — re-run via callgrind  |
+
+- Wall-clock runs hide the `CV` column to keep tables narrow.
+  A `⚠` next to a value means the coefficient of variation
+  was ≥ 3% — interpret that cell loosely and cross-check with
+  `mise x bench:callgrind` for a deterministic `Ir/MiB` value.
+- `Ir/MiB` is host-independent: retired instructions per MiB
+  of input. Not directly comparable to wall-clock throughput
+  (IPC varies by workload), but excellent for capacity
+  planning context — CPU, RAM, and cache costs.
+  Only present when the report was generated from an
+  iai-callgrind run.
 
 ## Highlights for Humans
 
 {{HIGHLIGHTS}}
+- Zero allocation on clean input (`Cow::Borrowed`)
+- No temp files, no disk I/O — pure in-memory
+- O(n) linear scaling — constant-ish throughput up to 1 GiB+
 
-## Environmental Concerns
+## Environment
 
 {{ENV}}
 
@@ -41,64 +58,24 @@ for the benchmark (not wall clock). Resource snapshots
 captured via `task_info` (macOS) / `getrusage` (POSIX)
 outside the timed loop — no measurement overhead.
 
-## Build Configuration (v0.6.0+)
-
-Release builds use LTO and target-cpu tuning for maximum throughput.
-Both development systems share the x86-64-v3 ISA level (Haswell+).
-
-| Setting         | Value        | Effect                        |
-| --------------- | ------------ | ----------------------------- |
-| `lto`           | `"thin"`     | Cross-module inlining         |
-| `codegen-units` | `1`          | Full optimizer visibility     |
-| `target-cpu`    | `x86-64-v3`  | AVX2/FMA auto-vectorization   |
-| `panic`         | `"abort"`    | No unwind tables              |
-| `strip`         | `"symbols"`  | Reduced binary size           |
-
-The `[profile.bench]` mirrors `lto` and `codegen-units` so
-criterion numbers reflect release performance.
-
-### Target CPU: x86-64-v3
-
-Author systems (Intel i7-4790K Haswell, Intel i7-9750H Coffee Lake)
-support the x86-64-v3 microarchitecture level:
-
-- SSE4.2, AVX, AVX2, FMA, BMI1, BMI2, POPCNT, MOVBE, F16C, LZCNT
-
-This enables FMA instructions for `palette.rs` matrix multiply
-and AVX2 for auto-vectorizable loops. The `memchr` crate uses
-runtime SIMD detection independently of this flag.
-
-### Profile-Guided Optimization (PGO)
-
-For maximum throughput (CI release builds):
-
-```bash
-# 1. Instrument
-RUSTFLAGS="-Cprofile-generate=/tmp/pgo-data" cargo build --release
-
-# 2. Collect profiles
-./target/release/strip-ansi < tests/fixtures/ansi-heavy.txt > /dev/null
-cargo bench --bench internals -- --profile-time 5
-
-# 3. Merge and rebuild
-llvm-profdata merge -o /tmp/pgo-data/merged.profdata /tmp/pgo-data
-RUSTFLAGS="-Cprofile-use=/tmp/pgo-data/merged.profdata" cargo build --release
-```
-
-Expected gain: 10-20% on hot paths. The 15×256 state table
-benefits most from trained branch prediction.
-
-## HOWTO: Reproduce
-
-{{HOWTO}}
-
 ## Details That Matter
 
 All crates: `&[u8]` input. `console`: `&str`
 (conversion outside timed loop). `distill-strip-ansi`
 used as baseline (Relative = time / baseline time).
 
+The `Ir/MiB` column, when present, reports deterministic
+instruction counts measured under Callgrind — independent
+of CPU frequency, thermal state, or scheduler noise. See
+the reproduction doc for how to generate it.
+
 {{DETAILS}}
+
+### Extended Capabilities
+
+Additional features available in `distill-strip-ansi`.
+
+{{EXTENDED_CAPS}}
 
 ## Scaling
 
@@ -109,3 +86,10 @@ RSS Δ and CPU shown at largest size only — small-size
 values are dominated by benchmark harness overhead.
 
 {{SCALING}}
+
+### Complexity Summary
+
+{{COMPLEXITY_SUMMARY}}
+
+Complexity estimated per memory tier (L1/L2/L3/DRAM) —
+throughput steps between tiers are hardware, not algorithmic.

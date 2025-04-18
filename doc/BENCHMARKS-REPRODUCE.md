@@ -1,0 +1,172 @@
+# Benchmarks — Reproduction & Setup
+
+Everything maintainers need to regenerate `doc/BENCHMARKS.md`:
+environment pinning, build profile rationale, mise tasks,
+direct invocations, iai-callgrind setup, and the test-data
+strategy. Results themselves live in `doc/BENCHMARKS.md`.
+
+## iai-callgrind Status
+
+Instruction-count data is present in `target/iai/` — `doc/BENCHMARKS.md`
+includes `Ir/MiB` columns where applicable.
+
+## Test Data Strategy
+
+| Tier            | Source               | Why            |
+| --------------- | -------------------- | -------------- |
+| ≤32.0K          | fixture or generated | L1 cache       |
+| 32.0K–256.0K    | generated in RAM     | L2 cache       |
+| 256.0K–12.0 MiB | generated in RAM     | L3 boundary    |
+| >12.0 MiB       | generated in RAM     | DRAM bandwidth |
+
+Each criterion size selects the closest
+`tests/fixtures/*.raw.txt` file that contains ANSI
+sequences (0.25×–4× tolerance). When no fixture fits,
+synthetic ~20% ANSI data is generated. Fixtures above
+~1 KiB with ANSI are rare, so most tiers use generated
+data.
+
+iai benches skip fixture selection — each tier uses
+generated input at the exact `IAI_SIZES` byte count
+plus the two fixture lines (cargo, osc8) for real-world
+representation.
+
+## Build Configuration
+
+Release builds use LTO and target-cpu tuning for maximum
+throughput.
+
+| Setting         | Value               | Effect                       |
+| --------------- | ------------------- | ---------------------------- |
+| `codegen-units` | `1`                 | Full optimizer visibility    |
+| `lto`           | `"thin"`            | Cross-module inlining        |
+| `panic`         | `"abort"`           | No unwind tables             |
+| `strip`         | release `"symbols"` | Smaller ship binaries        |
+| `strip`         | bench `false`       | Keeps iai wrapper symbols    |
+| `debug`         | bench `line-tables` | callgrind line attribution   |
+| `target-cpu`    | `x86-64-v3`         | ISA-level tuning (see below) |
+
+The `[profile.bench]` mirrors `lto` + `codegen-units` from
+release so criterion numbers reflect ship performance.
+**Unlike release, bench keeps symbols** — iai-callgrind's
+`--toggle-collect=*::__iai_callgrind_wrapper_mod::*` needs
+them to scope instrumentation; stripped symbols produce an
+all-zero callgrind run.
+
+### Target CPU: `x86-64-v3`
+
+Author systems support the `x86-64-v3` microarchitecture (2013+,
+Haswell): SSE4.2, AVX, AVX2, FMA, BMI1, BMI2, POPCNT, MOVBE, F16C,
+LZCNT. This enables FMA instructions for `palette.rs` matrix
+multiply and AVX2 for auto-vectorizable loops. The `memchr`
+crate uses runtime SIMD detection independent of this flag.
+
+### Profile-Guided Optimization (PGO)
+
+For maximum throughput on CI release builds:
+
+```bash
+# 1. Instrument
+RUSTFLAGS="-Cprofile-generate=/tmp/pgo-data" cargo build --release
+
+# 2. Collect profiles
+./target/release/strip-ansi < tests/fixtures/ansi-heavy.txt > /dev/null
+cargo bench --bench internals -- --profile-time 5
+
+# 3. Merge and rebuild
+llvm-profdata merge -o /tmp/pgo-data/merged.profdata /tmp/pgo-data
+RUSTFLAGS="-Cprofile-use=/tmp/pgo-data/merged.profdata" cargo build --release
+```
+
+Expected gain: 10-20% on hot paths. The 15×256 state table
+benefits most from trained branch prediction.
+
+## Pinning for Reproducible Numbers
+
+Criterion alone doesn't pin CPU frequency, affinity, or SMT
+siblings — noise from those can swing sub-microsecond benches
+10-20% run-to-run. For published comparisons:
+
+```bash
+# Linux: pin to one core, disable turbo, nice down.
+echo 1 | sudo tee /sys/devices/system/cpu/intel_pstate/no_turbo
+taskset -c 2 nice -n -10 ./bin/generate-benchmarks-md.py
+
+# macOS: no taskset equivalent. Close other apps, unplug
+# external displays (GPU context switches), disable App Nap.
+./bin/generate-benchmarks-md.py
+```
+
+Without pinning, runs on the same hardware can differ by
+5-15% at the sub-microsecond tier. The harness uses
+`sample_size=200`, 3s warmup, 9s measurement — that's
+enough iterations-per-sample to absorb single context
+switches and keep CV in the 3–8% band on a quiet box
+without CPU pinning. Pinning gets you from "publishable
+if you trust context" to "publishable anywhere".
+
+iai-callgrind is immune to this entirely — valgrind
+instrumentation is deterministic per ISA. A `⚠` next to
+a cell in `doc/BENCHMARKS.md` means its CV was ≥ 3%;
+re-run `mise x bench:callgrind` to get a deterministic
+`Ir/MiB` check for that workload.
+
+## Mise Tasks
+
+Pre-wired via `.mise.toml` — `mise install` once, then:
+
+| Task                     | What it does                               |
+| ------------------------ | ------------------------------------------ |
+| `mise x bench`           | Full criterion run; regenerates BENCHMARKS |
+| `mise x bench:quick`     | Fast pass (lower stats; don't publish)     |
+| `mise x bench:callgrind` | Deterministic Ir counts via iai-callgrind  |
+
+`bench:callgrind` requires `valgrind` on PATH (apt/brew/
+pacman) and drives the generator with
+`--features iai-callgrind` so every bench produces JSON
+summaries alongside the criterion output.
+
+## Direct Invocations
+
+```bash
+# Default run: up to 2×L3 cache (~10m51s)
+./bin/generate-benchmarks-md.py
+
+# Faster iteration (less statistical power — do NOT publish):
+BENCH_QUICK=1 ./bin/generate-benchmarks-md.py
+
+# Full run: all sizes including GiB-scale (~30 min)
+./bin/generate-benchmarks-md.py --max-size 0
+
+# Custom cap
+./bin/generate-benchmarks-md.py --max-size 64M
+
+# Re-render from existing data (~1 sec). Picks up iai
+# summaries automatically if target/iai/ exists.
+./bin/generate-benchmarks-md.py --no-run
+
+# Forward features to every bench. When iai-callgrind is
+# among them, the generator switches to the iai run set
+# and adds --save-summary=json per invocation.
+./bin/generate-benchmarks-md.py --features iai-callgrind
+```
+
+The generator drives five criterion suites by default:
+
+- `cargo bench --bench internals` — library internals:
+  strip, stream, classifier, filter, threats, transforms,
+  augments, unicode normalize
+- `cargo bench -p ecosystem-bench --bench {distill,fast_strip,console_bench,strip_escapes}`
+
+With `--features iai-callgrind`, the run set swaps to the
+`*_iai` parallel targets under Valgrind/Callgrind — same
+workloads, deterministic instruction counts.
+
+Each ecosystem bench uses the same harness
+(`distill-bench-harness`): identical sizes, config
+(200 samples, 9s measurement, 3s warmup), and RSS/CPU
+capture. Criterion sizes are hardware-adaptive — the
+harness detects L1/L2/L3 cache sizes and RAM, then picks
+boundary points. iai sizes are a fixed ladder (256 B,
+4 KiB, 64 KiB, 1 MiB, 16 MiB) so instruction counts stay
+comparable across hosts.
