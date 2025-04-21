@@ -17,7 +17,12 @@
 use strip_ansi::downgrade::{
     cube_to_rgb, grey_index_to_value, nearest_16, nearest_256, nearest_axis, nearest_greyscale,
 };
+use strip_ansi::palette::PaletteTransform;
 use strip_ansi::sgr_rewrite::rewrite_sgr_params;
+
+/// Shared identity palette for tests that only exercise depth reduction.
+/// Keeps every call site one line (vs. constructing per-call).
+const IDENTITY: PaletteTransform = PaletteTransform::const_identity();
 
 // ── 6x6x6 Cube Axis Quantization ───────────────────────────────────
 
@@ -324,7 +329,7 @@ fn sgr(params: &[u8]) -> Vec<u8> {
 fn rewrite_truecolor_fg_to_256() {
     // ESC[38;2;255;0;0m → ESC[38;5;Nm
     let input = sgr(b"38;2;255;0;0");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color256);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color256, &IDENTITY);
     // Should contain 38;5; prefix
     let s = String::from_utf8_lossy(&result);
     assert!(s.contains("38;5;"), "expected 38;5;N, got {s}");
@@ -335,7 +340,7 @@ fn rewrite_truecolor_fg_to_256() {
 fn rewrite_truecolor_bg_to_256() {
     // ESC[48;2;0;128;255m → ESC[48;5;Nm
     let input = sgr(b"48;2;0;128;255");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color256);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color256, &IDENTITY);
     let s = String::from_utf8_lossy(&result);
     assert!(s.contains("48;5;"), "expected 48;5;N, got {s}");
     assert!(!s.contains("48;2;"), "truecolor should be gone");
@@ -345,7 +350,7 @@ fn rewrite_truecolor_bg_to_256() {
 fn rewrite_256_fg_to_16() {
     // ESC[38;5;196m → ESC[91m (bright red) or ESC[31m (red)
     let input = sgr(b"38;5;196");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color16);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color16, &IDENTITY);
     let s = String::from_utf8_lossy(&result);
     assert!(!s.contains("38;5;"), "256-color should be gone");
     // Should be a basic fg color code (30-37 or 90-97)
@@ -356,7 +361,7 @@ fn rewrite_256_fg_to_16() {
 fn rewrite_preserves_style_params() {
     // ESC[1;38;2;255;0;0;4m → ESC[1;38;5;N;4m (bold + color + underline)
     let input = sgr(b"1;38;2;255;0;0;4");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color256);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color256, &IDENTITY);
     let s = String::from_utf8_lossy(&result);
     // Bold (1) and underline (4) must survive
     assert!(s.starts_with("\x1b["), "should start with CSI");
@@ -371,7 +376,7 @@ fn rewrite_preserves_style_params() {
 fn rewrite_basic_colors_unchanged_at_256() {
     // ESC[31m (basic red) should pass through when target is 256.
     let input = sgr(b"31");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color256);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color256, &IDENTITY);
     assert_eq!(
         result, input,
         "basic color should be unchanged at 256 depth"
@@ -382,7 +387,7 @@ fn rewrite_basic_colors_unchanged_at_256() {
 fn rewrite_basic_colors_unchanged_at_16() {
     // ESC[31m (basic red) should pass through when target is 16.
     let input = sgr(b"31");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color16);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color16, &IDENTITY);
     assert_eq!(result, input, "basic color should be unchanged at 16 depth");
 }
 
@@ -390,7 +395,7 @@ fn rewrite_basic_colors_unchanged_at_16() {
 fn rewrite_reset_preserved() {
     // ESC[0m should always pass through.
     let input = sgr(b"0");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color16);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color16, &IDENTITY);
     assert_eq!(result, input, "reset should be unchanged");
 }
 
@@ -398,7 +403,7 @@ fn rewrite_reset_preserved() {
 fn rewrite_empty_sgr_preserved() {
     // ESC[m (implicit reset) should pass through.
     let input = sgr(b"");
-    let result = rewrite_sgr_params(&input, ColorDepth::Color16);
+    let result = rewrite_sgr_params(&input, ColorDepth::Color16, &IDENTITY);
     assert_eq!(result, input, "implicit reset should be unchanged");
 }
 
@@ -406,7 +411,7 @@ fn rewrite_empty_sgr_preserved() {
 fn rewrite_to_mono_strips_all_color() {
     // ESC[1;38;2;255;0;0;4m → ESC[1;4m (bold + underline, no color)
     let input = sgr(b"1;38;2;255;0;0;4");
-    let result = rewrite_sgr_params(&input, ColorDepth::Mono);
+    let result = rewrite_sgr_params(&input, ColorDepth::Mono, &IDENTITY);
     let s = String::from_utf8_lossy(&result);
     assert!(!s.contains("38"), "fg color should be stripped in mono");
     assert!(!s.contains("31"), "basic fg should be stripped in mono");
@@ -420,7 +425,7 @@ fn rewrite_to_mono_strips_all_color() {
 fn rewrite_to_mono_strips_basic_fg_bg() {
     // ESC[31;42m → ESC[m (both colors stripped, only reset remains)
     let input = sgr(b"31;42");
-    let result = rewrite_sgr_params(&input, ColorDepth::Mono);
+    let result = rewrite_sgr_params(&input, ColorDepth::Mono, &IDENTITY);
     let s = String::from_utf8_lossy(&result);
     // Should not contain any color codes
     for code in 30..=37 {
@@ -441,7 +446,7 @@ fn rewrite_to_mono_strips_basic_fg_bg() {
 fn rewrite_to_greyscale_converts_color() {
     // ESC[38;2;255;0;0m → ESC[38;5;Nm where N is in greyscale ramp
     let input = sgr(b"38;2;255;0;0");
-    let result = rewrite_sgr_params(&input, ColorDepth::Greyscale);
+    let result = rewrite_sgr_params(&input, ColorDepth::Greyscale, &IDENTITY);
     let s = String::from_utf8_lossy(&result);
     assert!(s.contains("38;5;"), "should use 256-color greyscale index");
     // Extract the index

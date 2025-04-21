@@ -1,4 +1,4 @@
-//! Unit and property tests for TransformStream (streaming color transforms).
+//! Unit and property tests for `TransformStream` (streaming color transforms).
 
 #![cfg(feature = "transform")]
 
@@ -217,7 +217,7 @@ fn push_write_eq_push() {
 
 // ── Stateless equivalence ───────────────────────────────────────────
 
-/// Compare streaming transform against the buffered distill_main transform.
+/// Compare streaming transform against the buffered `distill_main` transform.
 #[test]
 fn streaming_eq_buffered_single_chunk() {
     let config = TransformConfig::new(ColorDepth::Color256);

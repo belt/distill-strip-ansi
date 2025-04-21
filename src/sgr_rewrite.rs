@@ -13,16 +13,27 @@ use alloc::vec::Vec;
 use smallvec::SmallVec;
 
 use crate::downgrade::ColorDepth;
+use crate::palette::PaletteTransform;
 
 // ── Public API ──────────────────────────────────────────────────────
 
-/// Rewrite SGR parameters in a complete CSI SGR sequence to the
-/// target color depth.
+/// Rewrite SGR parameters in a complete CSI SGR sequence, applying
+/// the given palette transform and reducing to the target color
+/// depth.
+///
+/// Pipeline for color params:
+/// 1. Extract RGB (directly from truecolor, or via `idx_to_rgb` for
+///    256/basic).
+/// 2. Apply `palette.transform(r, g, b)` in linear sRGB space.
+/// 3. Downgrade the transformed triplet to `target` depth.
 ///
 /// `seq` must be a complete SGR sequence: `ESC [ <params> m`.
-/// Returns a new sequence with color params rewritten.
-pub fn rewrite_sgr_params(seq: &[u8], target: ColorDepth) -> Vec<u8> {
-    if target == ColorDepth::Truecolor {
+/// When `palette.is_identity()` AND `target == Truecolor`, the input
+/// passes through unchanged. Use [`PaletteTransform::const_identity`]
+/// for the common "no remapping" case.
+#[must_use]
+pub fn rewrite_sgr_params(seq: &[u8], target: ColorDepth, palette: &PaletteTransform) -> Vec<u8> {
+    if target == ColorDepth::Truecolor && palette.is_identity() {
         return seq.to_vec();
     }
     debug_assert!(seq.len() >= 3 && seq[0] == 0x1B && seq[1] == b'[');
@@ -30,19 +41,20 @@ pub fn rewrite_sgr_params(seq: &[u8], target: ColorDepth) -> Vec<u8> {
     let param_bytes = &seq[2..params_end];
 
     let mut out = SmallVec::<[u8; 32]>::new();
-    rewrite_sgr_direct(param_bytes, target, &mut out);
+    rewrite_sgr_direct(param_bytes, target, palette, &mut out);
     out.to_vec()
 }
 
 /// Single-pass SGR rewriter that writes directly into a caller-provided
 /// `SmallVec`. Used by [`TransformStream`](crate::TransformStream) to
-/// avoid the `Vec` round-trip.
+/// avoid the `Vec` round-trip through [`rewrite_sgr_params`].
 ///
 /// `param_bytes` is the content between `ESC[` and `m` (exclusive).
 /// Writes a complete `ESC[…m` sequence into `out`.
 pub(crate) fn rewrite_sgr_direct(
     param_bytes: &[u8],
     target: ColorDepth,
+    palette: &PaletteTransform,
     out: &mut SmallVec<[u8; 32]>,
 ) {
     out.push(0x1B);
@@ -54,14 +66,14 @@ pub(crate) fn rewrite_sgr_direct(
         return;
     }
 
-    let mut emitter = SgrEmitter::new(target, out);
+    let mut emitter = SgrEmitter::new(target, palette, out);
     let mut acc: u16 = 0;
     let mut has_digit = false;
 
     for &b in param_bytes {
         let dv = DIGIT_VAL[b as usize];
         if dv != 0xFF {
-            acc = acc.saturating_mul(10).saturating_add(dv as u16);
+            acc = acc.saturating_mul(10).saturating_add(u16::from(dv));
             has_digit = true;
         } else if b == b';' {
             let val = if has_digit { acc } else { 0 };
@@ -105,18 +117,38 @@ enum ExtState {
 struct SgrEmitter<'a> {
     state: ExtState,
     target: ColorDepth,
+    palette: &'a PaletteTransform,
+    /// Fast flag — skip `palette.transform()` calls when identity.
+    palette_is_identity: bool,
     out: &'a mut SmallVec<[u8; 32]>,
     /// Whether we've emitted at least one param (for semicolon insertion).
     need_sep: bool,
 }
 
 impl<'a> SgrEmitter<'a> {
-    fn new(target: ColorDepth, out: &'a mut SmallVec<[u8; 32]>) -> Self {
+    fn new(
+        target: ColorDepth,
+        palette: &'a PaletteTransform,
+        out: &'a mut SmallVec<[u8; 32]>,
+    ) -> Self {
         Self {
             state: ExtState::Normal,
             target,
+            palette,
+            palette_is_identity: palette.is_identity(),
             out,
             need_sep: false,
+        }
+    }
+
+    /// Apply palette transform to an RGB triplet, or return unchanged
+    /// when the palette is identity (skips the lookup-table round trip).
+    #[inline]
+    fn apply_palette(&self, r: u8, g: u8, b: u8) -> (u8, u8, u8) {
+        if self.palette_is_identity {
+            (r, g, b)
+        } else {
+            self.palette.transform(r, g, b)
         }
     }
 
@@ -281,6 +313,24 @@ impl<'a> SgrEmitter<'a> {
     fn emit_simple(&mut self, code: u16) {
         use crate::downgrade::nearest_greyscale;
 
+        // Basic fg/bg colors route through the palette when non-identity,
+        // since a palette rotation on `red` ought to actually shift the
+        // color. When palette is identity, basic colors pass through
+        // unchanged (matches prior behavior).
+        if !self.palette_is_identity && is_fg_basic(code) {
+            let (r, g, b) = basic_to_rgb(code);
+            let (r, g, b) = self.apply_palette(r, g, b);
+            // Route via emit_fg_rgb so depth reduction picks the right path.
+            self.emit_fg_rgb_transformed(r, g, b);
+            return;
+        }
+        if !self.palette_is_identity && is_bg_basic(code) {
+            let (r, g, b) = basic_to_rgb(code);
+            let (r, g, b) = self.apply_palette(r, g, b);
+            self.emit_bg_rgb_transformed(r, g, b);
+            return;
+        }
+
         match self.target {
             ColorDepth::Mono if is_color_param(code) => {
                 // Strip color params in mono mode.
@@ -309,6 +359,18 @@ impl<'a> SgrEmitter<'a> {
 
     /// Emit a foreground RGB color, rewritten to target depth.
     fn emit_fg_rgb(&mut self, r: u8, g: u8, b: u8) {
+        let (r, g, b) = self.apply_palette(r, g, b);
+        self.emit_fg_rgb_transformed(r, g, b);
+    }
+
+    /// Emit a background RGB color, rewritten to target depth.
+    fn emit_bg_rgb(&mut self, r: u8, g: u8, b: u8) {
+        let (r, g, b) = self.apply_palette(r, g, b);
+        self.emit_bg_rgb_transformed(r, g, b);
+    }
+
+    /// Inner foreground RGB emitter — assumes palette already applied.
+    fn emit_fg_rgb_transformed(&mut self, r: u8, g: u8, b: u8) {
         use crate::downgrade::{nearest_16, nearest_256, nearest_greyscale};
 
         match self.target {
@@ -323,14 +385,13 @@ impl<'a> SgrEmitter<'a> {
                 self.write_fg_256(nearest_256(r, g, b));
             }
             ColorDepth::Truecolor => {
-                // Shouldn't reach here (early return), but be safe.
                 self.write_fg_rgb(r, g, b);
             }
         }
     }
 
-    /// Emit a background RGB color, rewritten to target depth.
-    fn emit_bg_rgb(&mut self, r: u8, g: u8, b: u8) {
+    /// Inner background RGB emitter — assumes palette already applied.
+    fn emit_bg_rgb_transformed(&mut self, r: u8, g: u8, b: u8) {
         use crate::downgrade::{nearest_16, nearest_256, nearest_greyscale};
 
         match self.target {
@@ -354,6 +415,15 @@ impl<'a> SgrEmitter<'a> {
     fn emit_fg_256(&mut self, idx: u8) {
         use crate::downgrade::{nearest_16, nearest_greyscale};
 
+        // When palette is non-identity, route 256-color indices through
+        // the RGB path so the palette can actually shift the color.
+        if !self.palette_is_identity {
+            let (r, g, b) = idx_to_rgb(idx);
+            let (r, g, b) = self.apply_palette(r, g, b);
+            self.emit_fg_rgb_transformed(r, g, b);
+            return;
+        }
+
         match self.target {
             ColorDepth::Mono => {}
             ColorDepth::Greyscale => {
@@ -372,6 +442,13 @@ impl<'a> SgrEmitter<'a> {
     /// Emit a background 256-color index, rewritten to target depth.
     fn emit_bg_256(&mut self, idx: u8) {
         use crate::downgrade::{nearest_16, nearest_greyscale};
+
+        if !self.palette_is_identity {
+            let (r, g, b) = idx_to_rgb(idx);
+            let (r, g, b) = self.apply_palette(r, g, b);
+            self.emit_bg_rgb_transformed(r, g, b);
+            return;
+        }
 
         match self.target {
             ColorDepth::Mono => {}
@@ -405,33 +482,33 @@ impl<'a> SgrEmitter<'a> {
     fn write_fg_256(&mut self, idx: u8) {
         self.sep();
         self.out.extend_from_slice(b"38;5;");
-        write_num(self.out, idx as u16);
+        write_num(self.out, u16::from(idx));
     }
 
     fn write_bg_256(&mut self, idx: u8) {
         self.sep();
         self.out.extend_from_slice(b"48;5;");
-        write_num(self.out, idx as u16);
+        write_num(self.out, u16::from(idx));
     }
 
     fn write_fg_rgb(&mut self, r: u8, g: u8, b: u8) {
         self.sep();
         self.out.extend_from_slice(b"38;2;");
-        write_num(self.out, r as u16);
+        write_num(self.out, u16::from(r));
         self.out.push(b';');
-        write_num(self.out, g as u16);
+        write_num(self.out, u16::from(g));
         self.out.push(b';');
-        write_num(self.out, b as u16);
+        write_num(self.out, u16::from(b));
     }
 
     fn write_bg_rgb(&mut self, r: u8, g: u8, b: u8) {
         self.sep();
         self.out.extend_from_slice(b"48;2;");
-        write_num(self.out, r as u16);
+        write_num(self.out, u16::from(r));
         self.out.push(b';');
-        write_num(self.out, g as u16);
+        write_num(self.out, u16::from(g));
         self.out.push(b';');
-        write_num(self.out, b as u16);
+        write_num(self.out, u16::from(b));
     }
 }
 

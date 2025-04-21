@@ -16,7 +16,12 @@ use smallvec::SmallVec;
 
 use crate::classifier::{ClassifyingParser, SeqAction, SeqKind, SgrContent};
 use crate::downgrade::ColorDepth;
+use crate::palette::PaletteTransform;
 use crate::sgr_rewrite::rewrite_sgr_direct;
+
+/// Identity palette shared across `TransformSlices` when the caller
+/// hasn't configured one. Resolved once at module load.
+static IDENTITY_PALETTE: PaletteTransform = PaletteTransform::const_identity();
 
 /// A slice yielded by [`TransformStream`]: either borrowed from the
 /// input or owned (rewritten SGR sequence).
@@ -28,7 +33,7 @@ pub enum TransformSlice<'a> {
     Owned(SmallVec<[u8; 32]>),
 }
 
-impl<'a> TransformSlice<'a> {
+impl TransformSlice<'_> {
     /// View the slice contents as a byte slice.
     #[inline]
     #[must_use]
@@ -45,20 +50,43 @@ impl<'a> TransformSlice<'a> {
 pub struct TransformConfig {
     /// Target color depth for SGR rewriting.
     pub depth: ColorDepth,
+    /// Optional color palette transform applied before depth reduction.
+    /// `None` means identity (no remapping).
+    pub palette: Option<PaletteTransform>,
 }
 
 impl TransformConfig {
-    /// Create a new transform config.
+    /// Create a new transform config with no palette remapping.
     #[must_use]
     pub fn new(depth: ColorDepth) -> Self {
-        Self { depth }
+        Self {
+            depth,
+            palette: None,
+        }
+    }
+
+    /// Attach a palette to this config (chainable).
+    #[must_use]
+    pub fn with_palette(mut self, palette: PaletteTransform) -> Self {
+        self.palette = Some(palette);
+        self
     }
 
     /// Returns `true` if no transform is needed (pass-through).
+    ///
+    /// Passthrough requires both truecolor depth AND no palette
+    /// remapping. A non-identity palette still rewrites even at
+    /// truecolor depth.
     #[inline]
     #[must_use]
     pub fn is_passthrough(&self) -> bool {
-        self.depth == ColorDepth::Truecolor
+        if self.depth != ColorDepth::Truecolor {
+            return false;
+        }
+        match &self.palette {
+            None => true,
+            Some(p) => p.is_identity(),
+        }
     }
 }
 
@@ -252,9 +280,13 @@ impl<'a> TransformSlices<'a, '_> {
                                     let param_bytes =
                                         &self.stream.seq_buf[2..self.stream.seq_buf.len() - 1];
                                     let mut rewritten = SmallVec::<[u8; 32]>::new();
+                                    // Resolve palette: None → shared module-level identity.
+                                    let palette =
+                                        self.config.palette.as_ref().unwrap_or(&IDENTITY_PALETTE);
                                     rewrite_sgr_direct(
                                         param_bytes,
                                         self.config.depth,
+                                        palette,
                                         &mut rewritten,
                                     );
                                     self.stream.seq_buf.clear();

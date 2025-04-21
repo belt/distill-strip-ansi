@@ -94,7 +94,13 @@ pub fn cube_to_rgb(idx: u8) -> (u8, u8, u8) {
 #[inline]
 #[must_use]
 pub fn grey_index_to_value(idx: u8) -> u8 {
-    (8 + 10 * (idx as u16 - 232)) as u8
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "idx in 232..=255 → value in 8..=238, fits u8"
+    )]
+    {
+        (8 + 10 * (u16::from(idx) - 232)) as u8
+    }
 }
 
 /// Map an RGB truecolor value to the nearest 256-color index (16-255).
@@ -108,24 +114,29 @@ pub fn nearest_256(r: u8, g: u8, b: u8) -> u8 {
     let gi = nearest_axis(g);
     let bi = nearest_axis(b);
     let cube_idx = 16 + 36 * ri + 6 * gi + bi;
-    let cr = AXIS[ri as usize] as i32;
-    let cg = AXIS[gi as usize] as i32;
-    let cb = AXIS[bi as usize] as i32;
-    let d_cube = sq(r as i32 - cr) + sq(g as i32 - cg) + sq(b as i32 - cb);
+    let cr = i32::from(AXIS[ri as usize]);
+    let cg = i32::from(AXIS[gi as usize]);
+    let cb = i32::from(AXIS[bi as usize]);
+    let d_cube = sq(i32::from(r) - cr) + sq(i32::from(g) - cg) + sq(i32::from(b) - cb);
 
     // Greyscale candidate: simple average for ramp placement.
-    let avg = ((r as u16 + g as u16 + b as u16) / 3) as i32;
+    let avg = i32::from((u16::from(r) + u16::from(g) + u16::from(b)) / 3);
     let gi_raw = (avg - 8 + 5) / 10; // +5 for rounding
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "clamp(0,23) → u8"
+    )]
     let gi_clamped = gi_raw.clamp(0, 23) as u8;
     let grey_idx = 232 + gi_clamped;
-    let gv = 8 + 10 * gi_clamped as i32;
-    let d_grey = sq(r as i32 - gv) + sq(g as i32 - gv) + sq(b as i32 - gv);
+    let gv = 8 + 10 * i32::from(gi_clamped);
+    let d_grey = sq(i32::from(r) - gv) + sq(i32::from(g) - gv) + sq(i32::from(b) - gv);
 
     if d_grey < d_cube { grey_idx } else { cube_idx }
 }
 
 /// Precomputed lookup: 256-color index → nearest basic 16-color index.
-/// Eliminates cube_to_rgb + nearest_basic computation from the hot path.
+/// Eliminates `cube_to_rgb` + `nearest_basic` computation from the hot path.
 static NEAREST_16_TABLE: [u8; 256] = {
     let mut t = [0u8; 256];
     // 0..=15: identity
@@ -153,6 +164,10 @@ static NEAREST_16_TABLE: [u8; 256] = {
 };
 
 /// Const-evaluable nearest basic color (0-15) by squared Euclidean distance.
+#[allow(
+    clippy::cast_lossless,
+    reason = "const fn cannot use From::from (Rust stable, as of 1.85)"
+)]
 const fn nearest_basic_const(r: u8, g: u8, b: u8) -> u8 {
     let mut best = 0u8;
     let mut best_dist = i32::MAX;
@@ -183,9 +198,18 @@ pub fn nearest_16(idx: u8) -> u8 {
 pub fn nearest_greyscale(r: u8, g: u8, b: u8) -> u8 {
     // Y = 0.2126*R + 0.7152*G + 0.0722*B
     // Use fixed-point: multiply by 10000, divide at end.
-    let y = (2126 * r as u32 + 7152 * g as u32 + 722 * b as u32 + 5000) / 10000;
+    let y = (2126 * u32::from(r) + 7152 * u32::from(g) + 722 * u32::from(b) + 5000) / 10000;
+    #[allow(
+        clippy::cast_possible_wrap,
+        reason = "max y = 255000 / 10000 = 255, fits i32"
+    )]
     let y = y as i32;
     let gi_raw = (y - 8 + 5) / 10; // +5 for rounding
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "clamp(0,23) → u8"
+    )]
     let gi_clamped = gi_raw.clamp(0, 23) as u8;
     232 + gi_clamped
 }
