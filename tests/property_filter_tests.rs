@@ -5,7 +5,7 @@ use strip_ansi::{FilterConfig, SeqGroup, SeqKind, filter_strip, strip};
 
 // ── Generators ──────────────────────────────────────────────────────
 
-/// All SeqGroup variants for random selection.
+/// All `SeqGroup` variants for random selection.
 const ALL_GROUPS: &[SeqGroup] = &[
     SeqGroup::Csi,
     SeqGroup::Osc,
@@ -18,7 +18,7 @@ const ALL_GROUPS: &[SeqGroup] = &[
     SeqGroup::Fe,
 ];
 
-/// All SeqKind variants for random sub-preserved selection.
+/// All `SeqKind` variants for random sub-preserved selection.
 const ALL_KINDS: &[SeqKind] = &[
     SeqKind::CsiSgr,
     SeqKind::CsiCursor,
@@ -40,7 +40,7 @@ const ALL_KINDS: &[SeqKind] = &[
 ];
 
 /// Generate an arbitrary [`FilterConfig`] with random mode, preserved
-/// group bits, and sub-preserved SeqKind values (0–4 items).
+/// group bits, and sub-preserved `SeqKind` values (0–4 items).
 fn arb_filter_config() -> impl Strategy<Value = FilterConfig> {
     (
         // mode: true = StripAll, false = StripExcept
@@ -139,7 +139,7 @@ use strip_ansi::{ClassifyingParser, FilterStream, SeqAction};
 
 // ── Sequence generators (adapted from property_classifier_tests.rs) ──
 
-/// Generate a well-formed CSI sequence: ESC [ params final_byte
+/// Generate a well-formed CSI sequence: ESC [ params `final_byte`
 fn arb_ansi_csi() -> impl Strategy<Value = Vec<u8>> {
     (
         0u8..50,
@@ -236,8 +236,8 @@ fn arb_ansi_sequence() -> impl Strategy<Value = Vec<u8>> {
 
 // ── Helper: determine SeqGroup from well-formed sequence bytes ──────
 
-/// Determine the SeqGroup of a well-formed ANSI sequence by feeding
-/// it through ClassifyingParser.
+/// Determine the `SeqGroup` of a well-formed ANSI sequence by feeding
+/// it through `ClassifyingParser`.
 fn classify_seq_group(seq: &[u8]) -> SeqGroup {
     let mut cp = ClassifyingParser::new();
     let mut kind = SeqKind::Unknown;
@@ -332,7 +332,7 @@ fn arb_mixed_ansi_input() -> impl Strategy<Value = Vec<u8>> {
 
 // ── Generator: FilterConfig with at least one preserved sub-kind ────
 
-/// Generate a (FilterConfig, SeqKind) pair where the config preserves
+/// Generate a (`FilterConfig`, `SeqKind`) pair where the config preserves
 /// at least the returned sub-kind via `no_strip_kind()`.
 fn arb_filter_config_with_preserved() -> impl Strategy<Value = (FilterConfig, SeqKind)> {
     prop::sample::select(CSI_SUBKINDS).prop_map(|pair| {
@@ -615,8 +615,7 @@ fn sgr_basic_only_mask_strips_pure_truecolor() {
     let result = filter_strip(&truecolor, &config);
     assert!(
         result.is_empty(),
-        "pure truecolor SGR should be stripped by BASIC-only mask, got {:?}",
-        result
+        "pure truecolor SGR should be stripped by BASIC-only mask, got {result:?}"
     );
 }
 
@@ -828,14 +827,14 @@ fn debug_idempotency_regression() {
                 );
             }
         }
-        if once.len() != twice.len() {
-            panic!(
-                "Same up to {} but lengths differ: {} vs {}",
-                min_len,
-                once.len(),
-                twice.len()
-            );
-        }
+        assert_eq!(
+            once.len(),
+            twice.len(),
+            "Same up to {} but lengths differ: {} vs {}",
+            min_len,
+            once.len(),
+            twice.len()
+        );
     }
 }
 
@@ -879,8 +878,8 @@ fn debug_streaming_esc_inside_seq() {
     let mut streaming = Vec::new();
     stream.push(input, &config, &mut streaming);
 
-    println!("stateless: {:?}", stateless);
-    println!("streaming: {:?}", streaming);
+    println!("stateless: {stateless:?}");
+    println!("streaming: {streaming:?}");
 
     assert_eq!(
         &streaming, &*stateless,
@@ -941,13 +940,13 @@ fn debug_p6_regression_exact() {
                 );
             }
         }
-        if streaming.len() != stateless.len() {
-            panic!(
-                "Same up to {} but lengths differ: {} vs {}",
-                min_len,
-                streaming.len(),
-                stateless.len()
-            );
-        }
+        assert_eq!(
+            streaming.len(),
+            stateless.len(),
+            "Same up to {} but lengths differ: {} vs {}",
+            min_len,
+            streaming.len(),
+            stateless.len()
+        );
     }
 }

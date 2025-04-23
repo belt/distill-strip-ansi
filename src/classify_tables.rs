@@ -1,13 +1,13 @@
-//! Lookup tables for ClassifyingParser — eliminates branches in the
+//! Lookup tables for `ClassifyingParser` — eliminates branches in the
 //! hot path for sequence kind classification and parameter operations.
 //!
-//! Layer 1: STATE_TABLE (in state_table.rs) — base parser transitions.
+//! Layer 1: `STATE_TABLE` (in `state_table.rs`) — base parser transitions.
 //! Layer 2: These tables — kind classification + param operation dispatch.
 
 use crate::classifier::SeqKind;
 
-/// Maps ESC introducer byte → initial SeqKind.
-/// Used on StartSeq (ESC leaving ground).
+/// Maps ESC introducer byte → initial `SeqKind`.
+/// Used on `StartSeq` (ESC leaving ground).
 /// Index: byte value (0..255).
 #[rustfmt::skip]
 pub(crate) static INTRODUCER_KIND: [SeqKind; 256] = {
@@ -31,7 +31,7 @@ pub(crate) static INTRODUCER_KIND: [SeqKind; 256] = {
     t
 };
 
-/// Maps CSI final byte → SeqKind (for non-param-dependent cases).
+/// Maps CSI final byte → `SeqKind` (for non-param-dependent cases).
 /// Param-dependent cases (t→21=CsiQuery, n→6=CsiQuery) are handled
 /// with a post-lookup fixup — still just one branch instead of many.
 /// Index: byte value (0..255).
@@ -60,7 +60,7 @@ pub(crate) static CSI_FINAL_KIND: [SeqKind; 256] = {
     t
 };
 
-/// Maps CSI final byte → the first_param value that triggers CsiQuery.
+/// Maps CSI final byte → the `first_param` value that triggers `CsiQuery`.
 /// 0 = no query variant for this final byte.
 #[rustfmt::skip]
 pub(crate) static CSI_QUERY_PARAM: [u16; 256] = {
@@ -70,20 +70,20 @@ pub(crate) static CSI_QUERY_PARAM: [u16; 256] = {
     t
 };
 
-/// Parameter operation for the InSeq phase.
+/// Parameter operation for the `InSeq` phase.
 /// Tells the classifier what to do with each byte during a sequence body.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
 pub(crate) enum ParamOp {
     /// No parameter operation (non-CSI body byte, or non-digit).
     Noop = 0,
-    /// Digit: accumulate into param_value (param_value = param_value * 10 + digit).
+    /// Digit: accumulate into `param_value` (`param_value` = `param_value` * 10 + digit).
     Digit = 1,
     /// Semicolon: finalize current param, reset accumulator.
     Semicolon = 2,
 }
 
-/// Maps byte → ParamOp for CSI parameter accumulation.
+/// Maps byte → `ParamOp` for CSI parameter accumulation.
 /// Index: byte value (0..255).
 #[rustfmt::skip]
 pub(crate) static PARAM_OP: [ParamOp; 256] = {
@@ -102,12 +102,12 @@ pub(crate) static PARAM_OP: [ParamOp; 256] = {
     t
 };
 
-/// SGR finalization result: packed (new_param_state, sgr_content_bits).
-/// Encoding: bits [7:4] = new ParamState (0-5), bits [3:0] = SgrContent bits to OR.
-/// Index: [param_state as usize][param_value.min(255) as usize]
+/// SGR finalization result: packed (`new_param_state`, `sgr_content_bits`).
+/// Encoding: bits [7:4] = new `ParamState` (0-5), bits [3:0] = `SgrContent` bits to OR.
+/// Index: [`param_state` as usize][`param_value`.min(255) as usize]
 ///
-/// ParamState: 0=Inactive, 1=Normal, 2=AwaitMode, 3=Skip1, 4=Skip2, 5=Skip3
-/// SgrContent: bit 0=BASIC(1), bit 1=EXTENDED(2), bit 2=TRUECOLOR(4)
+/// `ParamState`: 0=Inactive, 1=Normal, 2=AwaitMode, 3=Skip1, 4=Skip2, 5=Skip3
+/// `SgrContent`: bit 0=BASIC(1), bit 1=EXTENDED(2), bit 2=TRUECOLOR(4)
 #[rustfmt::skip]
 pub(crate) static SGR_TABLE: [[u8; 256]; 6] = {
     // Helper: pack (state, bits) into u8.
@@ -190,7 +190,7 @@ pub(crate) static SGR_TABLE: [[u8; 256]; 6] = {
 };
 
 /// DCS phase transition table.
-/// Index: [phase][byte] → new_phase | 0x80 (bit 7 = set DCS_IS_QUERY flag).
+/// Index: [phase][byte] → `new_phase` | 0x80 (bit 7 = set `DCS_IS_QUERY` flag).
 /// Phase 0: skip introducer. Phase 1: expect '$'. Phase 2: expect 'q'. Phase 3: done.
 #[rustfmt::skip]
 pub(crate) static DCS_PHASE: [[u8; 256]; 4] = {

@@ -5,7 +5,7 @@ use strip_ansi::{ClassifyingParser, SeqAction, SeqKind, SgrContent, map_osc_numb
 
 // ── Generators ──────────────────────────────────────────────────────
 
-/// Generate a well-formed CSI sequence: ESC [ params final_byte
+/// Generate a well-formed CSI sequence: ESC [ params `final_byte`
 fn arb_ansi_csi() -> impl Strategy<Value = Vec<u8>> {
     (
         0u8..50,
@@ -211,7 +211,7 @@ enum SgrParam {
 }
 
 impl SgrParam {
-    /// The SgrContent bits this param contributes.
+    /// The `SgrContent` bits this param contributes.
     fn content(&self) -> SgrContent {
         match self {
             SgrParam::Basic(_) => SgrContent::BASIC,

@@ -75,7 +75,23 @@ pub fn detect_sgr_mask() -> Option<SgrContent> {
 
 /// Returns `true` if `TERM` is literally `"dumb"`.
 fn is_term_dumb() -> bool {
-    std::env::var("TERM").map(|v| v == "dumb").unwrap_or(false)
+    std::env::var("TERM").is_ok_and(|v| v == "dumb")
+}
+
+/// Shared untrusted-TERM classifier.
+///
+/// Single source of truth for the "is TERM non-empty and non-dumb?"
+/// predicate. Both [`detect_preset_untrusted`] and
+/// [`detect_sgr_mask_untrusted`] route through here so their policies
+/// cannot drift. If one grows stricter (e.g. require a `color` suffix),
+/// the other must move in lockstep.
+///
+/// Returns `true` when `TERM` is set to something other than empty
+/// or `"dumb"`. Trusted signal: TERM is the only env var a caller
+/// can't trivially spoof from an unprivileged context that also
+/// matters for attack-surface decisions.
+fn untrusted_term_has_color() -> bool {
+    matches!(std::env::var("TERM"), Ok(term) if !term.is_empty() && term != "dumb")
 }
 
 /// Detect the appropriate [`TerminalPreset`] for stdout, ignoring
@@ -86,15 +102,17 @@ fn is_term_dumb() -> bool {
 /// - `FORCE_COLOR`, `FORCE_HYPERLINK`, `COLORTERM`
 /// - `TERM_PROGRAM`, `TERM_PROGRAM_VERSION`, `VTE_VERSION`
 ///
-/// Trusted signals: `isatty(stdout)`, `TERM`.
+/// Trusted signals: `isatty(stdout)`, `TERM`, `NO_COLOR`.
 ///
-/// Fallback from `TERM` alone:
-/// - `"256color"` suffix → `BASIC | EXTENDED`
-/// - `"color"` suffix → `BASIC`
-/// - `"dumb"` → strip all
-/// - else → `BASIC` (conservative)
+/// Decision is binary:
+/// - not a TTY, `NO_COLOR` set, `TERM=dumb`, or `TERM` unset/empty
+///   → [`Dumb`](TerminalPreset::Dumb)
+/// - otherwise → [`Sanitize`](TerminalPreset::Sanitize)
 ///
-/// Always caps at [`Sanitize`](TerminalPreset::Sanitize).
+/// The finer-grained `BASIC`/`EXTENDED`/`TRUECOLOR` distinctions live
+/// in [`detect_sgr_mask_untrusted`]. Both functions share the same
+/// "TERM is color-capable?" heuristic via [`untrusted_term_has_color`]
+/// so their policies stay aligned.
 #[must_use]
 pub fn detect_preset_untrusted() -> TerminalPreset {
     // Not a TTY → strip everything.
@@ -112,14 +130,10 @@ pub fn detect_preset_untrusted() -> TerminalPreset {
         return TerminalPreset::Dumb;
     }
 
-    // Ignore attacker-controllable env vars entirely.
-    // FORCE_COLOR, FORCE_HYPERLINK, COLORTERM, TERM_PROGRAM,
-    // TERM_PROGRAM_VERSION, VTE_VERSION are all untrusted.
-    //
-    // Only trust: isatty(stdout) [checked above] and TERM.
-    let has_color = matches!(std::env::var("TERM"), Ok(term) if !term.is_empty() && term != "dumb");
-
-    if !has_color {
+    // Ignore attacker-controllable env vars (FORCE_COLOR, FORCE_HYPERLINK,
+    // COLORTERM, TERM_PROGRAM, TERM_PROGRAM_VERSION, VTE_VERSION). Only
+    // TERM and isatty(stdout) are considered trusted.
+    if !untrusted_term_has_color() {
         return TerminalPreset::Dumb;
     }
 
@@ -132,12 +146,19 @@ pub fn detect_preset_untrusted() -> TerminalPreset {
 /// Ignores `COLORTERM`, `TERM_PROGRAM`, `VTE_VERSION`, and other
 /// attacker-controllable env vars. Falls back to conservative
 /// heuristics based on the `TERM` value.
+///
+/// Routes through [`untrusted_term_has_color`] for the base
+/// "TERM is color-capable?" predicate, then refines by suffix:
+/// - `"256color"` suffix → `BASIC | EXTENDED`
+/// - `"color"` suffix → `BASIC`
+/// - else (non-empty, non-dumb) → `BASIC` (conservative)
 #[must_use]
 pub fn detect_sgr_mask_untrusted() -> Option<SgrContent> {
-    let term = std::env::var("TERM").ok()?;
-    if term.is_empty() || term == "dumb" {
+    if !untrusted_term_has_color() {
         return None;
     }
+    // Safe to unwrap: `untrusted_term_has_color` guarantees Ok + non-empty.
+    let term = std::env::var("TERM").ok()?;
 
     if term.ends_with("256color") {
         Some(SgrContent::BASIC.union(SgrContent::EXTENDED))

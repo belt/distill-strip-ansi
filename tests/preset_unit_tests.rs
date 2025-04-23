@@ -118,10 +118,8 @@ fn preset_gradient_is_monotonic() {
             if !narrower.should_strip(kind) {
                 assert!(
                     !wider.should_strip(kind),
-                    "{:?} preserves {kind:?} but {:?} strips it — \
+                    "{narrower_preset:?} preserves {kind:?} but {wider_preset:?} strips it — \
                      gradient violated",
-                    narrower_preset,
-                    wider_preset,
                 );
             }
         }
@@ -536,8 +534,7 @@ fn sanitize_strips_all_echoback_vectors_comprehensive() {
         let result = filter_strip(seq, &config);
         assert!(
             result.is_empty(),
-            "sanitize must strip echoback vector {name}, but got {:?}",
-            result
+            "sanitize must strip echoback vector {name}, but got {result:?}"
         );
     }
 }
@@ -558,8 +555,7 @@ fn detect_preset_only_returns_safe_presets() {
     ];
     assert!(
         safe_presets.contains(&preset),
-        "detect_preset() returned {:?}, which exceeds sanitize ceiling",
-        preset
+        "detect_preset() returned {preset:?}, which exceeds sanitize ceiling"
     );
 }
 
@@ -574,7 +570,6 @@ fn detect_preset_untrusted_only_returns_safe_presets() {
     ];
     assert!(
         safe_presets.contains(&preset),
-        "detect_preset_untrusted() returned {:?}, which exceeds sanitize ceiling",
-        preset
+        "detect_preset_untrusted() returned {preset:?}, which exceeds sanitize ceiling"
     );
 }

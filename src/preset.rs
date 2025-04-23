@@ -51,7 +51,7 @@ pub enum TerminalPreset {
     /// Preserve safe CSI, safe OSC, and Fe sequences while stripping
     /// all known echoback vectors.
     ///
-    /// Strips: CsiQuery, CsiDeviceStatus, OscClipboard, OscOther,
+    /// Strips: `CsiQuery`, `CsiDeviceStatus`, `OscClipboard`, `OscOther`,
     /// Dcs, Apc, Pm, Sos, Ss2, Ss3.
     ///
     /// This is the auto-detect ceiling — `detect_preset()` never
@@ -67,7 +67,7 @@ pub enum TerminalPreset {
 
     /// Preserve all escape sequences (strip nothing).
     ///
-    /// Use: fully capable terminals (iTerm2, Kitty, WezTerm, foot).
+    /// Use: fully capable terminals (iTerm2, Kitty, `WezTerm`, foot).
     /// Alias: `modern`.
     Full,
 }

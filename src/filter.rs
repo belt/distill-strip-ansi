@@ -16,7 +16,7 @@
 //! - Group membership: O(1) bit-field test
 //! - Sub-kind membership: bounded linear scan (≤4 inline, spills to heap)
 //! - `is_strip_all()` / `is_pass_all()`: O(1) predicate checks
-//! - `filter_strip()` with StripAll delegates to SIMD-optimized `strip()`
+//! - `filter_strip()` with `StripAll` delegates to SIMD-optimized `strip()`
 //! - No-ESC and pass-all fast paths return borrowed (zero alloc)
 
 #![forbid(unsafe_code)]
@@ -60,7 +60,7 @@ pub struct FilterConfig {
     preserved: u16,
     /// Sub-kind-level preservation overrides.
     sub_preserved: SmallVec<[SeqKind; 4]>,
-    /// SGR content mask: preserve a CsiSgr sequence when
+    /// SGR content mask: preserve a `CsiSgr` sequence when
     /// `(detail.sgr_content & sgr_preserve_mask) != 0`.
     /// `SgrContent::empty()` (= 0) means fall through to `should_strip(kind)`.
     sgr_preserve_mask: SgrContent,
@@ -453,7 +453,7 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct FilterStream {
     cp: ClassifyingParser,
-    /// Embedded strip stream for StripAll fast path — same base
+    /// Embedded strip stream for `StripAll` fast path — same base
     /// Parser as `strip()`, guaranteeing identical output.
     ss: crate::stream::StripStream,
     strip_current: bool,

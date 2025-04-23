@@ -86,7 +86,7 @@ pub enum OscType {
     Unknown = 0,
     /// Title — OSC 0, 1, or 2 (icon name / window title).
     Title = 1,
-    /// WorkingDir — OSC 7 (current working directory).
+    /// `WorkingDir` — OSC 7 (current working directory).
     WorkingDir = 2,
     /// Hyperlink — OSC 8.
     Hyperlink = 3,
@@ -94,9 +94,9 @@ pub enum OscType {
     Notify = 4,
     /// Clipboard — OSC 52.
     Clipboard = 5,
-    /// ShellInteg — OSC 133 (shell integration / semantic prompts).
+    /// `ShellInteg` — OSC 133 (shell integration / semantic prompts).
     ShellInteg = 6,
-    /// ITerm2 — OSC 1337 (iTerm2 proprietary).
+    /// `ITerm2` — OSC 1337 (iTerm2 proprietary).
     ITerm2 = 7,
     /// Other — any OSC number not listed above.
     Other = 8,
@@ -197,7 +197,7 @@ pub enum SeqKind {
     CsiOther = 7,
 
     // (8–16 are non-CSI and Unknown — see below)
-    /// `t` with first_param=21 or `n` with first_param=6 — dangerous
+    /// `t` with `first_param=21` or `n` with `first_param=6` — dangerous
     /// query sequences (CVE-2003-0063 title report, cursor position report)
     CsiQuery = 17,
 
@@ -229,7 +229,7 @@ pub enum SeqKind {
 /// with a single indexed load.
 #[rustfmt::skip]
 static KIND_TO_GROUP: [SeqGroup; 18] = {
-    use SeqGroup::*;
+    use SeqGroup::{Apc, Csi, Dcs, Fe, Osc, Pm, Sos, Ss2, Ss3};
     let mut t = [Fe; 18]; // Unknown(16) defaults to Fe
     // CSI sub-kinds: 0–7 + 17
     t[0]  = Csi; // CsiSgr
@@ -428,7 +428,7 @@ impl ClassifyingParser {
     /// Returns the underlying parser state.
     ///
     /// Useful for memchr-skip optimizations: callers can detect
-    /// passthrough states (OscString, DcsPassthrough, StringPassthrough)
+    /// passthrough states (`OscString`, `DcsPassthrough`, `StringPassthrough`)
     /// and skip body bytes directly to the terminator.
     #[inline]
     #[must_use]

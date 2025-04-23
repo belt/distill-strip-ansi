@@ -5,7 +5,7 @@ use strip_ansi::{TerminalPreset, filter_strip};
 
 // ── Generators ──────────────────────────────────────────────────────
 
-/// Generate a well-formed CSI sequence: ESC [ params final_byte
+/// Generate a well-formed CSI sequence: ESC [ params `final_byte`
 fn arb_ansi_csi() -> impl Strategy<Value = Vec<u8>> {
     (
         0u8..50,
@@ -127,8 +127,7 @@ fn p5_detect_preset_never_exceeds_sanitize() {
                 | TerminalPreset::Vt100
                 | TerminalPreset::Sanitize
         ),
-        "detect_preset() returned {:?}, which exceeds sanitize ceiling",
-        preset
+        "detect_preset() returned {preset:?}, which exceeds sanitize ceiling"
     );
 }
 
@@ -143,8 +142,7 @@ fn p5_detect_preset_untrusted_never_exceeds_sanitize() {
                 | TerminalPreset::Vt100
                 | TerminalPreset::Sanitize
         ),
-        "detect_preset_untrusted() returned {:?}, which exceeds sanitize ceiling",
-        preset
+        "detect_preset_untrusted() returned {preset:?}, which exceeds sanitize ceiling"
     );
 }
 
@@ -288,8 +286,7 @@ fn p6_requires_unsafe_partition_exhaustive() {
         assert_eq!(
             preset.requires_unsafe(),
             expected,
-            "requires_unsafe() mismatch for {:?}",
-            preset
+            "requires_unsafe() mismatch for {preset:?}"
         );
     }
 }
