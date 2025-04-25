@@ -7,26 +7,26 @@ use strip_ansi::unicode_map::UnicodeMap;
 
 /// Generate an arbitrary valid Unicode char.
 fn arb_char() -> impl Strategy<Value = char> {
-    (0u32..=0x10FFFF)
+    (0u32..=0x0010_FFFF)
         .prop_filter("valid unicode", |&cp| char::from_u32(cp).is_some())
         .prop_map(|cp| char::from_u32(cp).unwrap())
 }
 
 /// Generate a char known to be in a builtin range.
 fn arb_fullwidth_ascii() -> impl Strategy<Value = char> {
-    (0xFF01u32..=0xFF5Eu32).prop_map(|cp| char::from_u32(cp).unwrap())
+    (0x0000_FF01u32..=0x0000_FF5Eu32).prop_map(|cp| char::from_u32(cp).unwrap())
 }
 
 fn arb_math_bold_upper() -> impl Strategy<Value = char> {
-    (0x1D400u32..=0x1D419u32).prop_map(|cp| char::from_u32(cp).unwrap())
+    (0x0001_D400u32..=0x0001_D419u32).prop_map(|cp| char::from_u32(cp).unwrap())
 }
 
 fn arb_math_bold_lower() -> impl Strategy<Value = char> {
-    (0x1D41Au32..=0x1D433u32).prop_map(|cp| char::from_u32(cp).unwrap())
+    (0x0001_D41Au32..=0x0001_D433u32).prop_map(|cp| char::from_u32(cp).unwrap())
 }
 
 fn arb_circled_upper() -> impl Strategy<Value = char> {
-    (0x24B6u32..=0x24CFu32).prop_map(|cp| char::from_u32(cp).unwrap())
+    (0x0000_24B6u32..=0x0000_24CFu32).prop_map(|cp| char::from_u32(cp).unwrap())
 }
 
 fn arb_circled_lower() -> impl Strategy<Value = char> {

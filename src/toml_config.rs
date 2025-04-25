@@ -53,7 +53,7 @@ pub struct StripAnsiConfig {
 /// General configuration settings.
 #[derive(Clone, Debug, Deserialize)]
 pub struct GeneralConfig {
-    /// Buffer size in bytes. Default: 32768. Valid range: 1024..=16_777_216.
+    /// Buffer size in bytes. Default: 32768. Valid range: `1024..=16_777_216`.
     #[serde(default = "default_buffer_size")]
     pub buffer_size: usize,
 
@@ -87,7 +87,7 @@ pub struct FilterToml {
     #[serde(default)]
     pub no_strip: Vec<String>,
 
-    /// Preset name (overrides no_strip when present).
+    /// Preset name (overrides `no_strip` when present).
     #[serde(default)]
     pub preset: Option<String>,
 
@@ -117,7 +117,7 @@ impl StripAnsiConfig {
     /// Convert the parsed configuration into a validated [`FilterConfig`].
     ///
     /// Validates:
-    /// - `buffer_size` is in range 1024..=16_777_216
+    /// - `buffer_size` is in range `1024..=16_777_216`
     /// - All names in `no_strip` are known group or sub-kind names
     /// - Duplicates are silently ignored
     /// - Empty `no_strip` produces `FilterConfig::strip_all()`
@@ -186,7 +186,7 @@ enum FilterName {
     OscType(OscType),
 }
 
-/// Parse a snake_case filter name into a group, sub-kind, or OSC type.
+/// Parse a `snake_case` filter name into a group, sub-kind, or OSC type.
 fn parse_filter_name(name: &str) -> Result<FilterName, ConfigError> {
     match name {
         // Group names

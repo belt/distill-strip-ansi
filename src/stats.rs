@@ -95,13 +95,13 @@ impl Stats {
                     || byte == b'\r'
                     || byte == 0x0B
                     || byte == 0x0C;
-                if !is_ws {
+                if is_ws {
+                    self.in_word = false;
+                } else {
                     if !self.in_word {
                         self.words += 1;
                     }
                     self.in_word = true;
-                } else {
-                    self.in_word = false;
                 }
                 if byte & 0xC0 != 0x80 {
                     self.chars += 1;
@@ -128,9 +128,9 @@ impl Stats {
         }
     }
 
-    /// Check a completed sequence for threats. Call on EndSeq after record().
+    /// Check a completed sequence for threats. Call on `EndSeq` after `record()`.
     pub fn check_threat(&mut self, detail: &crate::classifier::SeqDetail) {
-        if let Some(type_name) = classify_threat(detail) {
+        if let Some(type_name) = classify_threat(*detail) {
             self.threats.push(ThreatHit {
                 type_name,
                 kind: detail.kind,
@@ -235,7 +235,7 @@ static KIND_NAMES: [&str; NUM_KINDS] = [
 
 // ── Builtin threat classification ───────────────────────────────────
 
-fn classify_threat(detail: &crate::classifier::SeqDetail) -> Option<&'static str> {
+fn classify_threat(detail: crate::classifier::SeqDetail) -> Option<&'static str> {
     match detail.kind {
         SeqKind::Dcs => {
             if detail.dcs_is_query {

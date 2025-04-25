@@ -142,7 +142,7 @@ impl UnicodeMap {
                 // Single range covers this page — direct check.
                 let r = &self.all_ranges[idx as usize];
                 if cp >= r.from_start && cp <= r.from_end {
-                    let target_cp = (cp as i64 + r.offset as i64) as u32;
+                    let target_cp = (i64::from(cp) + i64::from(r.offset)) as u32;
                     return char::from_u32(target_cp);
                 }
                 // Page has a range but cp is outside it — no match.
@@ -151,7 +151,7 @@ impl UnicodeMap {
                 // Multiple ranges overlap this page (rare).
                 for r in &self.all_ranges {
                     if cp >= r.from_start && cp <= r.from_end {
-                        let target_cp = (cp as i64 + r.offset as i64) as u32;
+                        let target_cp = (i64::from(cp) + i64::from(r.offset)) as u32;
                         return char::from_u32(target_cp);
                     }
                 }
@@ -189,7 +189,7 @@ impl UnicodeMap {
             if idx < MULTI_RANGE {
                 let r = &self.all_ranges[idx as usize];
                 if cp >= r.from_start && cp <= r.from_end {
-                    let target_cp = (cp as i64 + r.offset as i64) as u32;
+                    let target_cp = (i64::from(cp) + i64::from(r.offset)) as u32;
                     if let Some(tc) = char::from_u32(target_cp) {
                         out.push(tc);
                         return true;
@@ -199,7 +199,7 @@ impl UnicodeMap {
             } else if idx == MULTI_RANGE {
                 for r in &self.all_ranges {
                     if cp >= r.from_start && cp <= r.from_end {
-                        let target_cp = (cp as i64 + r.offset as i64) as u32;
+                        let target_cp = (i64::from(cp) + i64::from(r.offset)) as u32;
                         if let Some(tc) = char::from_u32(target_cp) {
                             out.push(tc);
                             return true;
@@ -382,15 +382,15 @@ fn builtin_math_latin_bold() -> CharMappingSet {
         ranges: vec![
             // Bold uppercase: U+1D400–1D419 → A–Z
             RangeMapping {
-                from_start: 0x1D400,
-                from_end: 0x1D419,
-                offset: 0x0041_i32 - 0x1D400_i32,
+                from_start: 0x0001_D400,
+                from_end: 0x0001_D419,
+                offset: 0x0041_i32 - 0x0001_D400_i32,
             },
             // Bold lowercase: U+1D41A–1D433 → a–z
             RangeMapping {
-                from_start: 0x1D41A,
-                from_end: 0x1D433,
-                offset: 0x0061_i32 - 0x1D41A_i32,
+                from_start: 0x0001_D41A,
+                from_end: 0x0001_D433,
+                offset: 0x0061_i32 - 0x0001_D41A_i32,
             },
         ],
         pairs: vec![],
@@ -467,6 +467,11 @@ fn builtin_enclosed_circled_letters() -> CharMappingSet {
 
 /// Superscript and subscript digits, letters, operators (~42 chars).
 fn builtin_superscript_subscript() -> CharMappingSet {
+    let mut pairs = Vec::with_capacity(42);
+    pairs.extend(superscript_subscript_pairs_scattered_digits());
+    pairs.extend(superscript_subscript_pairs_superscript());
+    pairs.extend(superscript_subscript_pairs_subscript());
+
     CharMappingSet {
         type_name: "superscript_subscript".into(),
         description: "Superscript/subscript forms → plain ASCII".into(),
@@ -486,130 +491,146 @@ fn builtin_superscript_subscript() -> CharMappingSet {
                 offset: 0x0030_i32 - 0x2080_i32,
             },
         ],
-        pairs: vec![
-            // Superscript digits (scattered)
-            PairMapping {
-                from: '\u{2070}',
-                target: vec!['0'],
-            }, // ⁰
-            PairMapping {
-                from: '\u{00B9}',
-                target: vec!['1'],
-            }, // ¹
-            PairMapping {
-                from: '\u{00B2}',
-                target: vec!['2'],
-            }, // ²
-            PairMapping {
-                from: '\u{00B3}',
-                target: vec!['3'],
-            }, // ³
-            // Superscript operators
-            PairMapping {
-                from: '\u{207A}',
-                target: vec!['+'],
-            }, // ⁺
-            PairMapping {
-                from: '\u{207B}',
-                target: vec!['-'],
-            }, // ⁻
-            PairMapping {
-                from: '\u{207C}',
-                target: vec!['='],
-            }, // ⁼
-            PairMapping {
-                from: '\u{207D}',
-                target: vec!['('],
-            }, // ⁽
-            PairMapping {
-                from: '\u{207E}',
-                target: vec![')'],
-            }, // ⁾
-            // Superscript letters
-            PairMapping {
-                from: '\u{2071}',
-                target: vec!['i'],
-            }, // ⁱ
-            PairMapping {
-                from: '\u{207F}',
-                target: vec!['n'],
-            }, // ⁿ
-            // Subscript operators
-            PairMapping {
-                from: '\u{208A}',
-                target: vec!['+'],
-            }, // ₊
-            PairMapping {
-                from: '\u{208B}',
-                target: vec!['-'],
-            }, // ₋
-            PairMapping {
-                from: '\u{208C}',
-                target: vec!['='],
-            }, // ₌
-            PairMapping {
-                from: '\u{208D}',
-                target: vec!['('],
-            }, // ₍
-            PairMapping {
-                from: '\u{208E}',
-                target: vec![')'],
-            }, // ₎
-            // Subscript letters
-            PairMapping {
-                from: '\u{2090}',
-                target: vec!['a'],
-            }, // ₐ
-            PairMapping {
-                from: '\u{2091}',
-                target: vec!['e'],
-            }, // ₑ
-            PairMapping {
-                from: '\u{2092}',
-                target: vec!['o'],
-            }, // ₒ
-            PairMapping {
-                from: '\u{2093}',
-                target: vec!['x'],
-            }, // ₓ
-            PairMapping {
-                from: '\u{2094}',
-                target: vec!['\u{0259}'],
-            }, // ₔ → ə (schwa)
-            PairMapping {
-                from: '\u{2095}',
-                target: vec!['h'],
-            }, // ₕ
-            PairMapping {
-                from: '\u{2096}',
-                target: vec!['k'],
-            }, // ₖ
-            PairMapping {
-                from: '\u{2097}',
-                target: vec!['l'],
-            }, // ₗ
-            PairMapping {
-                from: '\u{2098}',
-                target: vec!['m'],
-            }, // ₘ
-            PairMapping {
-                from: '\u{2099}',
-                target: vec!['n'],
-            }, // ₙ
-            PairMapping {
-                from: '\u{209A}',
-                target: vec!['p'],
-            }, // ₚ
-            PairMapping {
-                from: '\u{209B}',
-                target: vec!['s'],
-            }, // ₛ
-            PairMapping {
-                from: '\u{209C}',
-                target: vec!['t'],
-            }, // ₜ
-        ],
+        pairs,
     }
+}
+
+/// Scattered superscript digits 0–3 (not contiguous with U+2074–2079).
+fn superscript_subscript_pairs_scattered_digits() -> Vec<PairMapping> {
+    vec![
+        PairMapping {
+            from: '\u{2070}',
+            target: vec!['0'],
+        }, // ⁰
+        PairMapping {
+            from: '\u{00B9}',
+            target: vec!['1'],
+        }, // ¹
+        PairMapping {
+            from: '\u{00B2}',
+            target: vec!['2'],
+        }, // ²
+        PairMapping {
+            from: '\u{00B3}',
+            target: vec!['3'],
+        }, // ³
+    ]
+}
+
+/// Superscript operators (⁺⁻⁼⁽⁾) and letters (ⁱⁿ).
+fn superscript_subscript_pairs_superscript() -> Vec<PairMapping> {
+    vec![
+        // Superscript operators
+        PairMapping {
+            from: '\u{207A}',
+            target: vec!['+'],
+        }, // ⁺
+        PairMapping {
+            from: '\u{207B}',
+            target: vec!['-'],
+        }, // ⁻
+        PairMapping {
+            from: '\u{207C}',
+            target: vec!['='],
+        }, // ⁼
+        PairMapping {
+            from: '\u{207D}',
+            target: vec!['('],
+        }, // ⁽
+        PairMapping {
+            from: '\u{207E}',
+            target: vec![')'],
+        }, // ⁾
+        // Superscript letters
+        PairMapping {
+            from: '\u{2071}',
+            target: vec!['i'],
+        }, // ⁱ
+        PairMapping {
+            from: '\u{207F}',
+            target: vec!['n'],
+        }, // ⁿ
+    ]
+}
+
+/// Subscript operators (₊₋₌₍₎) and letters (ₐₑₒₓ…).
+fn superscript_subscript_pairs_subscript() -> Vec<PairMapping> {
+    vec![
+        // Subscript operators
+        PairMapping {
+            from: '\u{208A}',
+            target: vec!['+'],
+        }, // ₊
+        PairMapping {
+            from: '\u{208B}',
+            target: vec!['-'],
+        }, // ₋
+        PairMapping {
+            from: '\u{208C}',
+            target: vec!['='],
+        }, // ₌
+        PairMapping {
+            from: '\u{208D}',
+            target: vec!['('],
+        }, // ₍
+        PairMapping {
+            from: '\u{208E}',
+            target: vec![')'],
+        }, // ₎
+        // Subscript letters
+        PairMapping {
+            from: '\u{2090}',
+            target: vec!['a'],
+        }, // ₐ
+        PairMapping {
+            from: '\u{2091}',
+            target: vec!['e'],
+        }, // ₑ
+        PairMapping {
+            from: '\u{2092}',
+            target: vec!['o'],
+        }, // ₒ
+        PairMapping {
+            from: '\u{2093}',
+            target: vec!['x'],
+        }, // ₓ
+        PairMapping {
+            from: '\u{2094}',
+            target: vec!['\u{0259}'],
+        }, // ₔ → ə (schwa)
+        PairMapping {
+            from: '\u{2095}',
+            target: vec!['h'],
+        }, // ₕ
+        PairMapping {
+            from: '\u{2096}',
+            target: vec!['k'],
+        }, // ₖ
+        PairMapping {
+            from: '\u{2097}',
+            target: vec!['l'],
+        }, // ₗ
+        PairMapping {
+            from: '\u{2098}',
+            target: vec!['m'],
+        }, // ₘ
+        PairMapping {
+            from: '\u{2099}',
+            target: vec!['n'],
+        }, // ₙ
+        PairMapping {
+            from: '\u{209A}',
+            target: vec!['p'],
+        }, // ₚ
+        PairMapping {
+            from: '\u{209B}',
+            target: vec!['s'],
+        }, // ₛ
+        PairMapping {
+            from: '\u{209C}',
+            target: vec!['t'],
+        }, // ₜ
+    ]
 }
 
 // ── TOML loading ────────────────────────────────────────────────────
@@ -692,15 +713,14 @@ mod toml_loader {
 
         if from_end < from_start {
             return Err(format!(
-                "range from_end ({:04X}) < from_start ({:04X})",
-                from_end, from_start
+                "range from_end ({from_end:04X}) < from_start ({from_start:04X})"
             ));
         }
 
         let offset = to_start as i32 - from_start as i32;
 
         // Validate that all target codepoints are valid Unicode.
-        let last_target = (from_end as i64 + offset as i64) as u32;
+        let last_target = (i64::from(from_end) + i64::from(offset)) as u32;
         if char::from_u32(last_target).is_none() {
             return Err(format!(
                 "range target end U+{last_target:04X} is not a valid Unicode codepoint"
@@ -786,9 +806,8 @@ mod toml_loader {
             let set = load_file(path)?;
             self.merge_set(set).map_err(|dup| {
                 format!(
-                    "distill-ansi: --unicode-map: rejecting duplicate type {:?} \
+                    "distill-ansi: --unicode-map: rejecting duplicate type {dup:?} \
                      (already loaded)",
-                    dup,
                 )
             })
         }

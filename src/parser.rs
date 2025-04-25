@@ -41,7 +41,7 @@ pub enum State {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Parser {
     /// State stored as repr(u8) value directly, avoiding the
-    /// STATE_FROM_INDEX indirection in the hot path.
+    /// `STATE_FROM_INDEX` indirection in the hot path.
     state_byte: u8,
 }
 

@@ -55,20 +55,21 @@ fn arb_filter_toml() -> impl Strategy<Value = String> {
         prop::collection::hash_set(prop::sample::select(all_names), 0..=23),
     )
         .prop_map(|(buffer_size, mode, no_strip_set)| {
+            use std::fmt::Write;
             let mut toml = String::new();
 
             // [general] section
             toml.push_str("[general]\n");
-            toml.push_str(&format!("buffer_size = {buffer_size}\n"));
+            let _ = writeln!(toml, "buffer_size = {buffer_size}");
             if let Some(m) = mode {
-                toml.push_str(&format!("mode = \"{m}\"\n"));
+                let _ = writeln!(toml, "mode = \"{m}\"");
             }
 
             // [filter] section
             toml.push_str("\n[filter]\n");
             let names: Vec<&str> = no_strip_set.into_iter().collect();
             let quoted: Vec<String> = names.iter().map(|n| format!("\"{n}\"")).collect();
-            toml.push_str(&format!("no_strip = [{}]\n", quoted.join(", ")));
+            let _ = writeln!(toml, "no_strip = [{}]", quoted.join(", "));
 
             toml
         })

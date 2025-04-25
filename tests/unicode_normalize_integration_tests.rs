@@ -3,7 +3,7 @@
 use strip_ansi::unicode_map::UnicodeMap;
 
 /// Apply unicode normalization to a UTF-8 string using the given map.
-/// This simulates what transform_line() will do for content bytes.
+/// This simulates what `transform_line()` will do for content bytes.
 fn normalize_str(input: &str, map: &UnicodeMap) -> String {
     let mut output = String::with_capacity(input.len());
     let mut char_buf = Vec::new();

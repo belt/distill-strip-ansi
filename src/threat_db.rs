@@ -19,7 +19,7 @@ use crate::classifier::{SeqDetail, SeqKind};
 /// Pattern fields used to match a [`SeqDetail`] against a threat entry.
 #[derive(Clone, Debug, Deserialize)]
 pub struct ThreatMatch {
-    /// SeqKind name: "Dcs", "Osc", "CsiQuery", etc.
+    /// `SeqKind` name: "Dcs", "Osc", "`CsiQuery`", etc.
     pub kind: String,
     /// OSC number to match (e.g. 50 for font query).
     pub osc_number: Option<u16>,
@@ -34,7 +34,7 @@ pub struct ThreatMatch {
 /// A single threat pattern with metadata.
 #[derive(Clone, Debug, Deserialize)]
 pub struct ThreatEntry {
-    /// Unique threat type name (e.g. "dcs_decrqss", "osc_50").
+    /// Unique threat type name (e.g. "`dcs_decrqss`", "`osc_50`").
     #[serde(rename = "type")]
     pub type_name: String,
     /// Pattern to match against classified sequences.
@@ -47,8 +47,8 @@ pub struct ThreatEntry {
     /// Reference URI (NVD, advisory, etc.).
     #[serde(rename = "ref")]
     pub reference: Option<String>,
-    /// Resolved SeqKind — avoids string comparison in classify().
-    /// Populated at construction time from match_pattern.kind.
+    /// Resolved `SeqKind` — avoids string comparison in `classify()`.
+    /// Populated at construction time from `match_pattern.kind`.
     #[serde(skip)]
     resolved_kind: Option<SeqKind>,
 }
@@ -171,7 +171,7 @@ impl ThreatDb {
         &self.entries
     }
 
-    /// Resolve kind strings to SeqKind enums for all entries.
+    /// Resolve kind strings to `SeqKind` enums for all entries.
     fn resolve_kinds(&mut self) {
         for entry in &mut self.entries {
             entry.resolved_kind = parse_seq_kind(&entry.match_pattern.kind);
@@ -179,7 +179,7 @@ impl ThreatDb {
     }
 }
 
-/// Parse a SeqKind name string to the enum variant.
+/// Parse a `SeqKind` name string to the enum variant.
 fn parse_seq_kind(name: &str) -> Option<SeqKind> {
     match name {
         "CsiSgr" => Some(SeqKind::CsiSgr),

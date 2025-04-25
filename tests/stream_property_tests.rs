@@ -54,7 +54,7 @@ proptest! {
     fn p5_streaming_eq_multi_chunk((input, mut splits) in arb_multi_chunked_input()) {
         let stateless = strip_ansi::strip(&input);
 
-        splits.sort();
+        splits.sort_unstable();
         splits.dedup();
         // Clamp splits to input length
         let splits: Vec<usize> = splits.into_iter().filter(|&s| s <= input.len()).collect();

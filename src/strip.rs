@@ -186,7 +186,7 @@ pub fn strip_in_place(buf: &mut Vec<u8>) -> usize {
 
     while src < len {
         // Find next ESC from current position.
-        let next_esc = memchr(0x1B, &buf[src..]).map(|p| src + p).unwrap_or(len);
+        let next_esc = memchr(0x1B, &buf[src..]).map_or(len, |p| src + p);
 
         // Copy ground bytes.
         let ground_len = next_esc - src;
@@ -214,9 +214,6 @@ pub fn strip_in_place(buf: &mut Vec<u8>) -> usize {
             if parser.is_passthrough() {
                 let skip = passthrough_skip(parser.state(), &buf[src..len]);
                 src += skip;
-            }
-            if parser.is_ground() && action != Action::Emit {
-                break;
             }
             if parser.is_ground() {
                 break;

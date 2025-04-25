@@ -534,7 +534,7 @@ fn can_in_osc8_preserves_link_text() {
     let input = b"\x1b]8;;http://example.com\x18Link Text\x1b]8;;\x07";
     let mut p = Parser::new();
     let mut emitted = Vec::new();
-    for &b in input.iter() {
+    for &b in input {
         if p.feed(b) == Action::Emit {
             emitted.push(b);
         }
