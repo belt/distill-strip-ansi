@@ -5,13 +5,13 @@ use std::fs;
 const FIXTURES_DIR: &str = "tests/fixtures";
 
 fn get_fixture_path(name: &str) -> String {
-    format!("{}/{}", FIXTURES_DIR, name)
+    format!("{FIXTURES_DIR}/{name}")
 }
 
 fn read_fixture(name: &str) -> String {
     let path = get_fixture_path(name);
     let content =
-        fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read fixture: {}", name));
+        fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read fixture: {name}"));
     // Normalize \r\n → \n so fixtures work on Windows where git
     // may check out files with CRLF line endings.
     content.replace("\r\n", "\n")

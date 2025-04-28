@@ -234,3 +234,20 @@ pub struct Args {
     #[arg(long, value_name = "PATH")]
     pub config: Option<String>,
 }
+
+impl Args {
+    /// Returns `true` if threats should be reported to stderr.
+    ///
+    /// Always returns `false` when the `filter` feature is disabled,
+    /// as threat reporting requires the filter feature.
+    pub fn should_report_threats(&self) -> bool {
+        #[cfg(feature = "filter")]
+        {
+            !self.no_threat_report
+        }
+        #[cfg(not(feature = "filter"))]
+        {
+            false
+        }
+    }
+}

@@ -78,7 +78,14 @@ fn open_writer(args: &Args) -> Result<Box<dyn Write>, std::io::Error> {
 #[cfg(feature = "filter")]
 fn build_filter_config(args: &Args) -> Result<FilterConfig, ExitCode> {
     // Start from TOML if --config is provided.
+    //
+    // This is consumed only in the `cfg(not(feature = "terminal-detect"))`
+    // branch below, so when terminal-detect is active (the default) the
+    // binding is unused. The `#[allow(unused_variables)]` documents this
+    // — still compute it so `--config` errors surface early, which is the
+    // established CLI behavior.
     #[cfg(feature = "toml-config")]
+    #[cfg_attr(feature = "terminal-detect", allow(unused_variables))]
     let base_from_toml = if let Some(ref path) = args.config {
         let toml = match strip_ansi::StripAnsiConfig::from_file(std::path::Path::new(path)) {
             Ok(c) => c,
@@ -168,17 +175,12 @@ fn build_filter_config(args: &Args) -> Result<FilterConfig, ExitCode> {
         }
     };
 
-    // If TOML was loaded and no --preset was given, merge TOML as base
-    // (auto-detect takes precedence, but TOML --no-strip entries are
-    // additive when auto-detect is not available).
-    #[cfg(feature = "toml-config")]
-    if args.preset.is_none() {
-        if let Some(ref _toml_config) = base_from_toml {
-            // When auto-detect is active, it already chose the right
-            // base. TOML no_strip entries are not merged on top to
-            // avoid surprising behavior. Use --preset to override.
-        }
-    }
+    // TOML base_from_toml is consumed by the `cfg(not(feature = "terminal-detect"))`
+    // branch above. When terminal-detect is active, auto-detect chooses the base
+    // and --config is currently only used as a source for `threat_db` elsewhere
+    // (see below). TOML no_strip entries are intentionally NOT merged on top of
+    // auto-detect to avoid surprising behavior; users wanting to override should
+    // pass an explicit `--preset`.
 
     // Overlay CLI --no-strip-* flags (additive).
     if args.no_strip_csi {
@@ -359,13 +361,13 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
                         || b == b'\r'
                         || b == 0x0B
                         || b == 0x0C;
-                    if !is_ws {
+                    if is_ws {
+                        in_word = false;
+                    } else {
                         if !in_word {
                             wc_words += 1;
                         }
                         in_word = true;
-                    } else {
-                        in_word = false;
                     }
                     if b & 0xC0 != 0x80 {
                         wc_chars += 1;
@@ -471,7 +473,7 @@ fn write_head_limited(
 /// Write `slice` with cat-style transforms applied.
 ///
 /// - `show_nonprinting`: render control chars as `^X` and high bytes as `M-X`
-/// - `show_tabs`: render `\t` as `^I` (subset of show_nonprinting)
+/// - `show_tabs`: render `\t` as `^I` (subset of `show_nonprinting`)
 /// - `show_ends`: append `$` before each `\n`
 /// - `number_lines`: prefix each line with right-justified line number
 struct CatState {
@@ -576,15 +578,16 @@ struct ThreatInfo<'a> {
 /// Output: `[strip-ansi:threat] type=X line=N pos=N offset=N len=N [cve=X] [ref=URI]`
 #[cfg(feature = "filter")]
 fn format_threat(info: &ThreatInfo<'_>) -> String {
+    use std::fmt::Write;
     let mut s = format!(
         "[strip-ansi:threat] type={} line={} pos={} offset={} len={}",
         info.threat_type, info.line, info.pos, info.offset, info.len
     );
     if let Some(cve) = info.cve {
-        s.push_str(&format!(" cve={}", cve));
+        let _ = write!(s, " cve={cve}");
     }
     if let Some(r) = info.reference {
-        s.push_str(&format!(" ref={}", r));
+        let _ = write!(s, " ref={r}");
     }
     s
 }
@@ -642,7 +645,7 @@ impl LineTracker {
 ///
 /// Returns the threat type string if the detail matches, `None` otherwise.
 #[cfg(feature = "filter")]
-fn is_threat(detail: &SeqDetail) -> Option<&'static str> {
+fn is_threat(detail: SeqDetail) -> Option<&'static str> {
     match detail.kind {
         SeqKind::Dcs => {
             if detail.dcs_is_query {
@@ -770,7 +773,7 @@ fn run_check_threats_fail(
                     #[cfg(feature = "toml-config")]
                     if let Some(entry) = matched {
                         threats_found = true;
-                        if !args.no_threat_report {
+                        if args.should_report_threats() {
                             let len = byte_offset - seq_start_offset + 1;
                             let info = ThreatInfo {
                                 threat_type: &entry.type_name,
@@ -785,9 +788,9 @@ fn run_check_threats_fail(
                         }
                     } else if matched.is_none() && threat_db.is_none() {
                         // No ThreatDb — fall back to hardcoded is_threat.
-                        if let Some(threat_type) = is_threat(&detail) {
+                        if let Some(threat_type) = is_threat(detail) {
                             threats_found = true;
-                            if !args.no_threat_report {
+                            if args.should_report_threats() {
                                 let (cve, reference) = lookup_cve(threat_type);
                                 let len = byte_offset - seq_start_offset + 1;
                                 let info = ThreatInfo {
@@ -804,9 +807,9 @@ fn run_check_threats_fail(
                         }
                     }
                     #[cfg(not(feature = "toml-config"))]
-                    if let Some(threat_type) = is_threat(&detail) {
+                    if let Some(threat_type) = is_threat(detail) {
                         threats_found = true;
-                        if !args.no_threat_report {
+                        if args.should_report_threats() {
                             let (cve, reference) = lookup_cve(threat_type);
                             let len = byte_offset - seq_start_offset + 1;
                             let info = ThreatInfo {
@@ -900,7 +903,7 @@ fn run_check_threats_strip(
                     };
                     #[cfg(feature = "toml-config")]
                     if let Some(entry) = matched {
-                        if !args.no_threat_report {
+                        if args.should_report_threats() {
                             let len = byte_offset - seq_start_offset + 1;
                             let info = ThreatInfo {
                                 threat_type: &entry.type_name,
@@ -914,8 +917,8 @@ fn run_check_threats_strip(
                             eprintln!("{}", format_threat(&info));
                         }
                     } else if matched.is_none() && threat_db.is_none() {
-                        if let Some(threat_type) = is_threat(&detail) {
-                            if !args.no_threat_report {
+                        if let Some(threat_type) = is_threat(detail) {
+                            if args.should_report_threats() {
                                 let (cve, reference) = lookup_cve(threat_type);
                                 let len = byte_offset - seq_start_offset + 1;
                                 let info = ThreatInfo {
@@ -932,8 +935,8 @@ fn run_check_threats_strip(
                         }
                     }
                     #[cfg(not(feature = "toml-config"))]
-                    if let Some(threat_type) = is_threat(&detail) {
-                        if !args.no_threat_report {
+                    if let Some(threat_type) = is_threat(detail) {
+                        if args.should_report_threats() {
                             let (cve, reference) = lookup_cve(threat_type);
                             let len = byte_offset - seq_start_offset + 1;
                             let info = ThreatInfo {

@@ -145,7 +145,7 @@ fn main() -> ExitCode {
         None => Box::new(io::BufWriter::new(io::stdout().lock())),
     };
 
-    if let Err(e) = run_transform(reader, &mut writer, depth, &palette, &unicode_map) {
+    if let Err(e) = run_transform(reader, &mut writer, depth, &palette, unicode_map.as_ref()) {
         if e.kind() != io::ErrorKind::BrokenPipe {
             eprintln!("distill-ansi: {e}");
             return ExitCode::from(1);
@@ -182,11 +182,11 @@ fn run_transform(
     mut reader: Box<dyn BufRead>,
     writer: &mut dyn Write,
     depth: ColorDepth,
-    _palette: &PaletteTransform,
-    #[cfg(feature = "unicode-normalize")] unicode_map: &Option<UnicodeMap>,
-    #[cfg(not(feature = "unicode-normalize"))] _unicode_map: &Option<()>,
+    palette: &PaletteTransform,
+    #[cfg(feature = "unicode-normalize")] unicode_map: Option<&UnicodeMap>,
+    #[cfg(not(feature = "unicode-normalize"))] _unicode_map: Option<&()>,
 ) -> io::Result<()> {
-    let color_no_op = depth == ColorDepth::Truecolor && _palette.is_identity();
+    let color_no_op = depth == ColorDepth::Truecolor && palette.is_identity();
 
     #[cfg(feature = "unicode-normalize")]
     let unicode_active = unicode_map.is_some();
@@ -215,17 +215,17 @@ fn run_transform(
         }
 
         output_buf.clear();
-        if !color_no_op {
+        if color_no_op {
+            output_buf.extend_from_slice(chunk);
+        } else {
             transform_chunk(
                 chunk,
                 depth,
-                _palette,
+                palette,
                 &mut cp,
                 &mut seq_buf,
                 &mut output_buf,
             );
-        } else {
-            output_buf.extend_from_slice(chunk);
         }
 
         #[cfg(feature = "unicode-normalize")]
@@ -248,7 +248,7 @@ fn run_transform(
 fn transform_chunk(
     input: &[u8],
     depth: ColorDepth,
-    _palette: &PaletteTransform,
+    palette: &PaletteTransform,
     cp: &mut ClassifyingParser,
     seq_buf: &mut Vec<u8>,
     output: &mut Vec<u8>,
@@ -287,7 +287,7 @@ fn transform_chunk(
                         if cp.current_kind() == SeqKind::CsiSgr
                             && cp.sgr_content() != SgrContent::empty()
                         {
-                            let rewritten = rewrite_sgr_params(seq_buf, depth);
+                            let rewritten = rewrite_sgr_params(seq_buf, depth, palette);
                             output.extend_from_slice(&rewritten);
                         } else {
                             output.extend_from_slice(seq_buf);
@@ -345,7 +345,7 @@ fn transform_chunk(
                     if cp.current_kind() == SeqKind::CsiSgr
                         && cp.sgr_content() != SgrContent::empty()
                     {
-                        let rewritten = rewrite_sgr_params(seq_buf, depth);
+                        let rewritten = rewrite_sgr_params(seq_buf, depth, palette);
                         output.extend_from_slice(&rewritten);
                     } else {
                         output.extend_from_slice(seq_buf);
@@ -519,9 +519,9 @@ fn resolve_tag(tag: &str) -> Vec<&'static str> {
     }
 }
 
-/// Resolve a `--no-unicode-map` spec to builtin type_names to remove.
+/// Resolve a `--no-unicode-map` spec to builtin `type_name`s to remove.
 /// For `@security`, returns the security builtins.
-/// For `@ascii-normalize`, returns all builtin type_names.
+/// For `@ascii-normalize`, returns all builtin `type_name`s.
 #[cfg(feature = "unicode-normalize")]
 fn resolve_remove_builtins(spec: &str) -> Vec<&'static str> {
     match spec {
@@ -560,7 +560,7 @@ fn resolve_remove_builtins(spec: &str) -> Vec<&'static str> {
     }
 }
 
-/// Build the UnicodeMap from CLI args.
+/// Build the `UnicodeMap` from CLI args.
 ///
 /// Returns `Ok(Some(map))` when normalization is active,
 /// `Ok(None)` when all builtins have been removed and no TOML loaded,
@@ -612,7 +612,7 @@ fn build_unicode_map(args: &Args) -> Result<Option<UnicodeMap>, ExitCode> {
             }
         } else {
             // Treat as shipped file name.
-            if !toml_names.contains(&spec.to_string()) {
+            if !toml_names.contains(spec) {
                 toml_names.push(spec.clone());
             }
         }
