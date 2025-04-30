@@ -3,7 +3,7 @@ members = [".", "benches/harness", "benches/ecosystem"]
 
 [package]
 name = "distill-strip-ansi"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -40,6 +40,11 @@ unicode-normalize = ["transform"]
 toml-config = ["filter", "std", "dep:serde", "dep:toml", "dep:thiserror"]
 cross-validate = ["dep:strip-ansi-escapes", "dep:fast-strip-ansi", "dep:console"]
 
+# Empty switch feature — gates the `internals_iai` bench target via
+# `required-features`. The bench dep (`iai-callgrind`) lives in
+# `[dev-dependencies]` because Cargo forbids optional dev-deps.
+iai-callgrind = []
+
 [dependencies]
 memchr = { version = "2.7" }
 smallvec = { version = "1.13", optional = true }
@@ -63,15 +68,31 @@ console = { version = "0.16", optional = true }
 
 [dev-dependencies]
 proptest = { version = "1.6" }
-assert_cmd = { version = "2.0" }
+assert_cmd = { version = "2.2.1" }
 insta = { version = "1.47" }
 criterion = { version = "0.7", features = ["html_reports"] }
 tempfile = "3.27.0"
 distill-bench-harness = { path = "benches/harness" }
 
+# Deterministic instruction-count benchmarking via Valgrind/Callgrind.
+# Always a dev-dep (optional dev-deps aren't allowed by Cargo), but
+# only used by the `internals_iai` bench target, which gates its own
+# compilation on the `iai-callgrind` feature. Default features are
+# just the proc-macro + runner IPC — cheap to compile, no valgrind
+# linkage at build time.
+iai-callgrind = "0.16.1"
+
 [[bench]]
 name = "internals"
 harness = false
+
+# Instruction-count benchmark — host-independent currency for
+# capacity planning (vCPU sizing, cost-per-MB modeling). Runs under
+# Valgrind/Callgrind, only compiled when `iai-callgrind` is active.
+[[bench]]
+name = "internals_iai"
+harness = false
+required-features = ["iai-callgrind"]
 
 # ── Build Profiles ───────────────────────────────────────────────────
 #
@@ -80,7 +101,7 @@ harness = false
 # boundaries — codegen-units=1 lets LLVM inline without relying on
 # #[inline] hints alone. Thin LTO balances build speed vs optimization.
 #
-# Both target systems (Haswell i7-4790K, Coffee Lake i7-9750H) share
+# Author systems (Haswell i7-4790K, Coffee Lake i7-9750H) share
 # the x86-64-v3 ISA level. target-cpu is set in .cargo/config.toml.
 
 [profile.release]
@@ -92,3 +113,62 @@ panic = "abort"
 [profile.bench]
 lto = "thin"
 codegen-units = 1
+# Do NOT strip symbols: iai-callgrind drives valgrind's
+# `--toggle-collect=*::__iai_callgrind_wrapper_mod::*` to scope
+# instrumentation to the benched code only. Without symbols the
+# toggle never fires and every metric reads zero.
+# [profile.release] sets `strip = "symbols"` for ship binaries;
+# we inherit everything else and override just that.
+strip = false
+debug = "line-tables-only"
+
+# ── Lints ────────────────────────────────────────────────────────────
+#
+# Project-wide lint policy. Baseline is default rustc + clippy warnings
+# treated as errors in CI (via `-Dwarnings` in workflow env). This table
+# adds pedantic opt-in for high-signal lints while muting the ones that
+# are pure noise for this codebase:
+#
+# - unreadable_literal: `palette.rs` sRGB gamma tables had 1000+ literal
+#   floats generated from a well-known formula. Now fixed with underscores
+#   while preserving provenance readability.
+# - many_single_char_names: color-math routines use r/g/b/i/d/y/u/v
+#   consistently with the literature (`doc/COLOR-TRANSFORMS.md`). Renaming
+#   hurts readability.
+# - module_name_repetitions: common in library crates that re-export
+#   public types (`TransformSlice` in `transform_stream`).
+# - missing_errors_doc, missing_panics_doc: tracked separately in an
+#   #issue; will be enabled once doc-comments are swept.
+#
+# Everything else defaults to clippy::pedantic::warn. CI enforces with
+# `-Dwarnings`. Local `cargo clippy` stays noisy; `cargo clippy -- -D warnings`
+# mirrors CI.
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# Documentation/style — low signal for this codebase:
+many_single_char_names = "allow"      # color math (r/g/b/i/d/y/u/v)
+module_name_repetitions = "allow"     # library re-exports
+missing_errors_doc = "allow"          # tracked separately
+missing_panics_doc = "allow"          # tracked separately
+wildcard_imports = "allow"            # `use super::*` in tests is idiomatic
+match_same_arms = "allow"             # preset aliases read cleaner un-merged
+single_match_else = "allow"           # explicit matches read better than let-else
+manual_let_else = "allow"             # same — readability over terseness
+needless_pass_by_value = "allow"      # String source strings, shorter-lived
+too_many_lines = "allow"              # CLI dispatch chains naturally exceed 100
+ref_option = "warn"                   # swept: Option<&T> over &Option<T>
+large_stack_arrays = "allow"          # 32KB read buffers are intentional
+struct_excessive_bools = "allow"      # clap Args structs
+format_push_string = "warn"           # swept: use write!/writeln! instead
+float_cmp = "allow"                   # test code asserts exact-zero identity
+single_char_pattern = "allow"         # "m" vs 'm' has no runtime cost
+# Cast hygiene — keep intentional-truncation allows off the default list.
+# `cast_lossless` catches real future drift risk in lib code; tests/benches
+# assert on intermediate `as i16` widenings where `From` reads worse, so
+# this is muted globally. Review incoming lib changes manually.
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+cast_precision_loss = "allow"
+cast_possible_wrap = "allow"
+cast_lossless = "allow"

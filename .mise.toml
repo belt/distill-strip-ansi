@@ -6,11 +6,60 @@
 "cargo:cargo-tarpaulin" = "latest"
 "cargo:cargo-insta" = "latest"
 
+# Supply-chain / binary-provenance (used by CI bootstrap + release).
+# Note: cargo-audit/cargo-update/valgrind are expected to be installed by the
+# distribution package manager on dev-host (pacman: cargo-audit,
+# cargo-update, valgrind)
+"cargo:cargo-deny" = "latest"
+"cargo:cargo-auditable" = "latest"
+
+# Deterministic benchmarking — instruction-count metrics via Cachegrind.
+# Complements criterion wallclock benches; unaffected by CPU frequency,
+# scheduling, or thermal noise. Useful for regression detection on
+# sub-microsecond hot paths where criterion CV exceeds 5%.
+#
+# Requires valgrind installed system-wide (brew install valgrind on
+# macOS with some caveats, apt install valgrind on Debian/Ubuntu).
+"cargo:iai-callgrind-runner" = "latest"
+
 [env]
 CARGO_INCREMENTAL = "0"
 RUST_BACKTRACE = "short"   # concise traces — full backtraces flood agent logs
 NO_COLOR = "1"             # suppress ANSI in any tool that respects this
 CARGO_TERM_COLOR = "never" # cargo: plain text output
+
+# ── Local CI parity ──────────────────────────────────────────────
+# Mirrors .github/workflows/ci.yml stages without docker/act.
+# Run before push: mise run ci
+#
+# For release prep: mise run release:dry-run
+
+# Usage: mise run ci:lockfiles
+[tasks."ci:lockfiles"]
+description = "Verify sub-workspace lockfiles are up-to-date"
+run = """
+set -e
+cargo update --workspace --manifest-path fuzz/Cargo.toml
+if ! git diff --quiet fuzz/Cargo.lock 2>/dev/null; then
+  echo "err: fuzz/Cargo.lock is stale — commit the updated lockfile" >&2
+  exit 1
+fi
+echo "ok: fuzz/Cargo.lock is current"
+"""
+
+# Usage: mise run ci
+[tasks.ci]
+description = "Full local CI gate (mirrors GitHub CI before push)"
+depends = ["fmt", "clippy", "deny", "ci:lockfiles", "test"]
+
+# Usage: mise run release:dry-run
+[tasks."release:dry-run"]
+description = "CI gate + crates.io publish dry-run"
+depends = ["ci", "msrv"]
+run = """
+set -e
+cargo publish --dry-run --locked --allow-dirty
+"""
 
 # Usage: mise x fmt
 [tasks.fmt]
@@ -23,14 +72,15 @@ cargo fmt --quiet --check
 [tasks.msrv]
 description = "Verify compilation against minimum supported Rust version"
 run = """
-cargo test --locked
+out=$(cargo test --locked --quiet 2>&1) || { echo "$out"; exit 1; }
+echo "ok: msrv tests passed"
 """
 
 # Usage: mise x deny
 [tasks.deny]
 description = "Audit dependencies for security and license compliance"
 run = """
-cargo deny check --log-level warn "$@"
+cargo deny --log-level warn check "$@"
 """
 
 # Usage: mise x clippy
@@ -45,8 +95,9 @@ env -u RUSTC_WORKSPACE_WRAPPER \
 [tasks.test]
 description = "Execute fast test suite"
 run = """
-env -u RUSTC_WORKSPACE_WRAPPER \
-  cargo nextest run "$@"
+out=$(env -u RUSTC_WORKSPACE_WRAPPER \
+  cargo nextest run --status-level skip --final-status-level fail "$@" 2>&1) || { echo "$out"; exit 1; }
+echo "$out" | grep 'Summary' || echo "ok: tests passed"
 """
 
 # Usage: mise x test-cargo
@@ -66,8 +117,7 @@ env RUST_LOG=warn -u RUSTC_WRAPPER -u RUSTC_WORKSPACE_WRAPPER \
     --skip-clean \
     --target-dir target/tarpaulin \
     --engine llvm \
-    --out html \
-    --out Xml \
+    --out html --out Xml \
     --output-dir target/tarpaulin \
     --post-test-delay 2 \
     -j 4 \
@@ -110,4 +160,59 @@ RUSTFLAGS="-Cprofile-use=$PGO_DIR/merged.profdata" \
   cargo build --release --quiet
 
 echo "==> PGO build complete: target/release/strip-ansi"
+"""
+
+# Usage: mise x bench
+#
+# Default criterion run. For noise-free sub-microsecond numbers, see:
+#   mise x bench:callgrind  (deterministic, instruction-count)
+[tasks.bench]
+description = "Run criterion benchmarks and regenerate doc/BENCHMARKS.md"
+run = """
+./bin/generate-benchmarks-md.py "$@"
+"""
+
+# Usage: mise x bench:quick
+[tasks."bench:quick"]
+description = "Fast criterion pass (lower statistical power — do NOT publish)"
+run = """
+BENCH_QUICK=1 ./bin/generate-benchmarks-md.py "$@"
+"""
+
+# Usage: mise x bench:callgrind
+#
+# iai-callgrind runs benches under Callgrind: instruction counts,
+# L1/LL cache accesses, branch mispredicts. Zero variance run-to-run
+# on a given ISA — right tool when criterion CV > 5% or CI regression gates
+# are not flaky.
+# 
+# Requires `valgrind` on PATH. Install via system package manager.
+#
+# Drives the generator in iai mode so both `BENCHMARKS.md` and
+# `BENCHMARKS-REPRODUCE.md` get regenerated with `Ir/MiB` columns
+# (where applicable) and up-to-date environment info.
+[tasks."bench:callgrind"]
+description = "Deterministic instruction-count benchmarks via iai-callgrind"
+run = """
+if ! command -v valgrind >/dev/null; then
+  echo 'err: valgrind not installed. Check distro package manager' >&2
+  exit 1
+fi
+./bin/generate-benchmarks-md.py --features iai-callgrind "$@"
+"""
+
+# Usage: mise x tools:update
+#
+# Snapshot of cargo-installed tools against crates.io. `cargo
+# install-update -a` applies updates; `-l` is a dry-run.
+# `cargo-update` itself comes from the distribution package
+# manager on this host (pacman: cargo-update), not from mise.
+[tasks."tools:update"]
+description = "Check cargo install-update against latest crates.io versions"
+run = """
+if ! command -v cargo-install-update >/dev/null 2>&1; then
+  echo 'err: cargo-update not installed. Check distro package manager' >&2
+  exit 1
+fi
+cargo install-update -l
 """

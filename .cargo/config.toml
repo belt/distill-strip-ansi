@@ -41,3 +41,16 @@ rustflags = ["-C", "target-cpu=x86-64-v3"]
 
 [target.x86_64-apple-darwin]
 rustflags = ["-C", "target-cpu=x86-64-v3"]
+
+# aarch64-apple-darwin (Apple Silicon M1+):
+#
+# Intentionally unset — the default aarch64 baseline is more than
+# enough for this crate. NEON is always available on Apple Silicon
+# (it's baseline AArch64), and `memchr` handles runtime SIMD dispatch
+# internally. Pinning to `apple-m1` / `apple-m3` would fragment the
+# binary across Apple Silicon generations for no measurable gain on
+# this workload (linear byte scans, table lookups, no FP math in the
+# hot path). Revisit if palette/SGR matrix code ever shows up in a
+# flamegraph.
+[target.aarch64-apple-darwin]
+# rustflags = []  # intentionally empty — default codegen

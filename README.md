@@ -153,7 +153,7 @@ without recompiling:
 strip-ansi --check-threats --threat-db custom-threats.toml < input.log
 ```
 
-See [doc/SECURITY.md](doc/SECURITY.md) for the threat
+See [SECURITY.md](SECURITY.md) for the threat
 model and [doc/threat-db.toml](doc/threat-db.toml) for
 the database format.
 

@@ -18,6 +18,12 @@ contributions from everyone who respects our
 5. Run the full validation suite:
 
    ```sh
+   mise run ci
+   ```
+
+   Or without mise:
+
+   ```sh
    cargo fmt --check
    cargo clippy --all-targets --all-features
    cargo test --all-features
