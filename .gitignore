@@ -1,0 +1,42 @@
+# Rust build artifacts
+/target/
+**/target/
+
+# Cargo lock file (uncomment if building a library)
+# Cargo.lock
+
+# Backup files
+**/*.rs.bk
+**/*.bk
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Profiling / Debugging
+flamegraph.svg
+perf.data
+perf.data.old
+*.profraw
+*.profdata
+
+# Benchmark artifacts
+/tmp/
+doc/BENCH_ENV.toml
+
+# Test artifacts
+*.deleted
+
+# Session breadcrumbs (local-only, not for git)
+BREADCRUMBS.md
+BREADCRUMBS.perpetual-learning.md
+
+# Coverage
+*.profraw
+coverage/
+lcov.info
+tarpaulin-report.json

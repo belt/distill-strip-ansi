@@ -1,0 +1,74 @@
+[workspace]
+members = [".", "benches/harness", "benches/ecosystem"]
+
+[package]
+name = "distill-strip-ansi"
+version = "0.5.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/belt/distill-strip-ansi"
+description = "Strip ANSI escape sequences from byte streams"
+keywords = ["ansi", "terminal", "escape-sequences", "strip", "cli"]
+categories = ["command-line-utilities", "text-processing"]
+exclude = ["fuzz/", "tests/fixtures/*.txt", "benches/"]
+
+[lib]
+name = "strip_ansi"
+
+[[bin]]
+name = "strip-ansi"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[[bin]]
+name = "distill-ansi"
+path = "src/distill_ansi_main.rs"
+required-features = ["distill-ansi-cli"]
+
+[features]
+default = ["std", "cli", "filter", "transform", "downgrade-color", "augment-color", "unicode-normalize"]
+std = []
+filter = ["dep:smallvec"]
+transform = ["filter"]
+downgrade-color = ["transform"]
+augment-color = ["transform"]
+cli = ["std", "dep:clap", "dep:sigpipe", "terminal-detect"]
+distill-ansi-cli = ["std", "downgrade-color", "augment-color", "unicode-normalize", "terminal-detect", "dep:clap", "dep:sigpipe"]
+terminal-detect = ["filter", "std", "dep:supports-color", "dep:supports-hyperlinks"]
+unicode-normalize = ["transform"]
+toml-config = ["filter", "std", "dep:serde", "dep:toml", "dep:thiserror"]
+cross-validate = ["dep:strip-ansi-escapes", "dep:fast-strip-ansi", "dep:console"]
+
+[dependencies]
+memchr = { version = "2.7" }
+smallvec = { version = "1.13", optional = true }
+clap = { version = "4.5", features = ["derive"], optional = true }
+sigpipe = { version = "0.1", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+toml = { version = "1.1", optional = true }
+thiserror = { version = "2.0", optional = true }
+supports-color = { version = "3.0", optional = true }
+supports-hyperlinks = { version = "3.2", optional = true }
+
+# Cross-validation only — gated behind `cross-validate` feature so
+# competitor crates never appear in the default dependency tree.
+# `cargo audit` / `cargo deny` won't flag their CVEs as ours.
+#
+#   cargo test --features cross-validate
+#
+strip-ansi-escapes = { version = "0.2", optional = true }
+fast-strip-ansi = { version = "0.13", optional = true }
+console = { version = "0.16", optional = true }
+
+[dev-dependencies]
+proptest = { version = "1.6" }
+assert_cmd = { version = "2.0" }
+insta = { version = "1.47" }
+criterion = { version = "0.7", features = ["html_reports"] }
+tempfile = "3.27.0"
+distill-bench-harness = { path = "benches/harness" }
+
+[[bench]]
+name = "internals"
+harness = false
