@@ -1,0 +1,12 @@
+Plain text line.
+SGR color: [31mred[0m
+SGR style: [1mbold[22m
+Cursor up: [5A
+Cursor down: [3B
+Cursor forward: [10C
+Cursor back: [5D
+Cursor pos: [10;20H
+Erase line: [2K
+Erase display: [2J
+OSC title: ]0;Terminal Title
+OSC hyperlink: ]8;;https://example.comLink]8;;

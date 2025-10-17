@@ -1,0 +1,7 @@
+This is normal text.
+This is red: red
+This is bold: bold
+This is underline: underline
+This is reset: reset
+Multiple colors: red and green and blue
+All SGR codes: 

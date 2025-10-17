@@ -1,0 +1,7 @@
+This is normal text.
+This is red: [31mred[0m
+This is bold: [1mbold[0m
+This is underline: [4munderline[0m
+This is reset: [0mreset[0m
+Multiple colors: [31mred[0m and [32mgreen[0m and [34mblue[0m
+All SGR codes: [0m[1m[2m[3m[4m[5m[6m[7m[8m[9m[21m[22m[23m[24m[25m[26m[27m[28m[29m[30m[31m[32m[33m[34m[35m[36m[37m[38m[39m[40m[41m[42m[43m[44m[45m[46m[47m[48m[49m
