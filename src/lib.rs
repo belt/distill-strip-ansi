@@ -57,7 +57,8 @@ mod detect;
 
 #[cfg(feature = "terminal-detect")]
 pub use detect::{
-    detect_preset, detect_preset_untrusted, detect_sgr_mask, detect_sgr_mask_untrusted,
+    detect_hyperlinks, detect_hyperlinks_untrusted, detect_preset, detect_preset_untrusted,
+    detect_sgr_mask, detect_sgr_mask_untrusted,
 };
 
 #[cfg(feature = "toml-config")]

@@ -126,7 +126,32 @@ fn build_filter_config(args: &Args) -> Result<FilterConfig, ExitCode> {
         // Auto-detect when no --preset is given.
         #[cfg(feature = "terminal-detect")]
         {
-            strip_ansi::detect_preset().to_filter_config()
+            let preset = strip_ansi::detect_preset();
+            if preset == TerminalPreset::Dumb {
+                FilterConfig::strip_all()
+            } else {
+                // Build Sanitize-equivalent config, but only include
+                // OSC hyperlinks when the terminal supports them.
+                let mut cfg = FilterConfig::strip_all()
+                    .no_strip_kind(SeqKind::CsiSgr)
+                    .no_strip_kind(SeqKind::CsiCursor)
+                    .no_strip_kind(SeqKind::CsiErase)
+                    .no_strip_kind(SeqKind::CsiScroll)
+                    .no_strip_kind(SeqKind::CsiMode)
+                    .no_strip_kind(SeqKind::CsiWindow)
+                    .no_strip_kind(SeqKind::CsiOther)
+                    .no_strip_group(SeqGroup::Fe)
+                    .no_strip_osc_type(strip_ansi::OscType::Title)
+                    .no_strip_osc_type(strip_ansi::OscType::Notify)
+                    .no_strip_osc_type(strip_ansi::OscType::WorkingDir)
+                    .no_strip_osc_type(strip_ansi::OscType::ShellInteg);
+
+                if strip_ansi::detect_hyperlinks() {
+                    cfg = cfg.no_strip_osc_type(strip_ansi::OscType::Hyperlink);
+                }
+
+                cfg
+            }
         }
         #[cfg(not(feature = "terminal-detect"))]
         {

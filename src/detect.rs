@@ -148,3 +148,38 @@ pub fn detect_sgr_mask_untrusted() -> Option<SgrContent> {
         Some(SgrContent::BASIC)
     }
 }
+
+/// Detect whether stdout supports OSC 8 hyperlinks.
+///
+/// Uses the `supports-hyperlinks` crate which checks `TERM_PROGRAM`,
+/// `VTE_VERSION`, and other signals to determine if the terminal
+/// can render clickable hyperlinks.
+///
+/// Returns `false` when stdout is not a TTY or when hyperlink
+/// support cannot be determined.
+///
+/// OSC 8 hyperlinks are not a security concern (no echoback vector),
+/// so this is purely a UX signal: avoid emitting sequences that the
+/// terminal would render as garbage or ignore.
+#[must_use]
+pub fn detect_hyperlinks() -> bool {
+    supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout)
+}
+
+/// Detect hyperlink support from trusted signals only (untrusted mode).
+///
+/// Like [`detect_hyperlinks`], but ignores attacker-controllable env
+/// vars (`FORCE_HYPERLINK`, `TERM_PROGRAM`, `VTE_VERSION`).
+///
+/// Falls back to `false` — conservative default when env cannot be
+/// trusted. Only `isatty(stdout)` and `TERM` are considered trusted.
+///
+/// In untrusted mode, hyperlink support cannot be reliably determined
+/// from `TERM` alone (no standard suffix convention), so this always
+/// returns `false`.
+#[must_use]
+pub fn detect_hyperlinks_untrusted() -> bool {
+    // TERM alone cannot indicate hyperlink support — no convention.
+    // Conservative: assume no hyperlinks in untrusted environments.
+    false
+}
