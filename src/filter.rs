@@ -352,7 +352,7 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
     let mut cp = ClassifyingParser::new();
     let mut seq_buf: [u8; 16] = [0; 16];
     let mut seq_buf_len: usize = 0;
-    let mut seq_spill: Vec<u8> = Vec::new();
+    let mut seq_spill: Option<Vec<u8>> = None;
     let mut in_seq = false;
     let mut remaining = input;
 
@@ -376,14 +376,16 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
                     in_seq = true;
                     seq_buf[0] = remaining[i];
                     seq_buf_len = 1;
-                    seq_spill.clear();
+                    if let Some(ref mut spill) = seq_spill {
+                        spill.clear();
+                    }
                 }
                 SeqAction::InSeq => {
                     if seq_buf_len < 16 {
                         seq_buf[seq_buf_len] = remaining[i];
                         seq_buf_len += 1;
                     } else {
-                        seq_spill.push(remaining[i]);
+                        seq_spill.get_or_insert_with(Vec::new).push(remaining[i]);
                     }
                 }
                 SeqAction::EndSeq => {
@@ -396,12 +398,16 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
                     };
                     if !strip_current {
                         output.extend_from_slice(&seq_buf[..seq_buf_len]);
-                        if !seq_spill.is_empty() {
-                            output.extend_from_slice(&seq_spill);
+                        if let Some(ref spill) = seq_spill {
+                            if !spill.is_empty() {
+                                output.extend_from_slice(spill);
+                            }
                         }
                         output.push(remaining[i]);
                     }
-                    seq_spill.clear();
+                    if let Some(ref mut spill) = seq_spill {
+                        spill.clear();
+                    }
                     remaining = &remaining[i + 1..];
                     broke_on_end = true;
                     break;

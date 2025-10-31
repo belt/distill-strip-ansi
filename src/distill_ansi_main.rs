@@ -8,7 +8,7 @@
 
 #![forbid(unsafe_code)]
 
-use std::io::{self, BufRead, BufReader, Write};
+use std::io::{self, BufRead, BufReader, Read, Write};
 use std::process::ExitCode;
 
 use clap::Parser;
@@ -195,51 +195,128 @@ fn run_transform(
 
     let full_no_op = color_no_op && !unicode_active;
 
-    let mut buf = Vec::with_capacity(8192);
+    // Streaming buffer — reused across iterations.
+    let mut read_buf = [0u8; 32 * 1024];
+    // Reusable state for transform_chunk.
+    let mut cp = ClassifyingParser::new();
+    let mut seq_buf: Vec<u8> = Vec::with_capacity(64);
+    let mut output_buf: Vec<u8> = Vec::with_capacity(32 * 1024);
+
     loop {
-        buf.clear();
-        let n = reader.read_until(b'\n', &mut buf)?;
+        let n = reader.read(&mut read_buf)?;
         if n == 0 {
             break;
         }
+        let chunk = &read_buf[..n];
 
         if full_no_op {
-            writer.write_all(&buf)?;
+            writer.write_all(chunk)?;
             continue;
         }
 
-        let mut transformed = if color_no_op {
-            buf.clone()
+        output_buf.clear();
+        if !color_no_op {
+            transform_chunk(
+                chunk,
+                depth,
+                _palette,
+                &mut cp,
+                &mut seq_buf,
+                &mut output_buf,
+            );
         } else {
-            transform_line(&buf, depth, _palette)
-        };
+            output_buf.extend_from_slice(chunk);
+        }
 
         #[cfg(feature = "unicode-normalize")]
         if let Some(map) = unicode_map {
-            transformed = normalize_content(&transformed, map);
+            let normalized = normalize_content(&output_buf, map);
+            writer.write_all(&normalized)?;
+            continue;
         }
 
-        writer.write_all(&transformed)?;
+        writer.write_all(&output_buf)?;
     }
     writer.flush()
 }
 
-/// Transform a single line/chunk: rewrite SGR color sequences.
-fn transform_line(input: &[u8], depth: ColorDepth, _palette: &PaletteTransform) -> Vec<u8> {
+/// Transform a chunk: rewrite SGR color sequences, reusing caller-provided state.
+///
+/// The `ClassifyingParser` carries state across calls for sequences that
+/// span chunk boundaries. `seq_buf` and `output` are reused across calls
+/// to avoid per-chunk allocation.
+fn transform_chunk(
+    input: &[u8],
+    depth: ColorDepth,
+    _palette: &PaletteTransform,
+    cp: &mut ClassifyingParser,
+    seq_buf: &mut Vec<u8>,
+    output: &mut Vec<u8>,
+) {
     use memchr::memchr;
 
-    // Fast path: no ESC byte.
-    if memchr(0x1B, input).is_none() {
-        return input.to_vec();
+    // Fast path: no ESC byte and parser in ground state.
+    if cp.is_ground() && memchr(0x1B, input).is_none() {
+        output.extend_from_slice(input);
+        return;
     }
 
-    let mut cp = ClassifyingParser::new();
-    let mut output = Vec::with_capacity(input.len());
-    let mut seq_buf: Vec<u8> = Vec::new();
-    let mut in_seq = false;
+    let mut in_seq = !cp.is_ground();
     let mut remaining = input;
 
     while !remaining.is_empty() {
+        // If we're mid-sequence from a previous chunk, continue parsing.
+        if in_seq {
+            let mut i = 0;
+            let mut broke_on_end = false;
+            while i < remaining.len() {
+                let action = cp.feed(remaining[i]);
+                match action {
+                    SeqAction::StartSeq => {
+                        in_seq = true;
+                        seq_buf.clear();
+                        seq_buf.push(remaining[i]);
+                    }
+                    SeqAction::InSeq => {
+                        seq_buf.push(remaining[i]);
+                    }
+                    SeqAction::EndSeq => {
+                        seq_buf.push(remaining[i]);
+                        in_seq = false;
+
+                        if cp.current_kind() == SeqKind::CsiSgr
+                            && cp.sgr_content() != SgrContent::empty()
+                        {
+                            let rewritten = rewrite_sgr_params(seq_buf, depth);
+                            output.extend_from_slice(&rewritten);
+                        } else {
+                            output.extend_from_slice(seq_buf);
+                        }
+
+                        seq_buf.clear();
+                        remaining = &remaining[i + 1..];
+                        broke_on_end = true;
+                        break;
+                    }
+                    SeqAction::Emit => {
+                        let b = remaining[i];
+                        if in_seq && (b == 0x18 || b == 0x1A) {
+                            // Abort byte — suppress.
+                        } else {
+                            output.push(b);
+                        }
+                        in_seq = false;
+                    }
+                }
+                i += 1;
+            }
+            if !broke_on_end {
+                // Chunk ended mid-sequence — state carries to next call.
+                return;
+            }
+            continue;
+        }
+
         let pos = memchr(0x1B, remaining).unwrap_or(remaining.len());
         output.extend_from_slice(&remaining[..pos]);
         remaining = &remaining[pos..];
@@ -247,6 +324,7 @@ fn transform_line(input: &[u8], depth: ColorDepth, _palette: &PaletteTransform) 
             break;
         }
 
+        // Process escape sequence byte-by-byte.
         let mut i = 0;
         let mut broke_on_end = false;
         while i < remaining.len() {
@@ -267,12 +345,10 @@ fn transform_line(input: &[u8], depth: ColorDepth, _palette: &PaletteTransform) 
                     if cp.current_kind() == SeqKind::CsiSgr
                         && cp.sgr_content() != SgrContent::empty()
                     {
-                        // Rewrite SGR color params.
-                        let rewritten = rewrite_sgr_params(&seq_buf, depth);
+                        let rewritten = rewrite_sgr_params(seq_buf, depth);
                         output.extend_from_slice(&rewritten);
                     } else {
-                        // Non-SGR or no color content — pass through.
-                        output.extend_from_slice(&seq_buf);
+                        output.extend_from_slice(seq_buf);
                     }
 
                     seq_buf.clear();
@@ -294,27 +370,20 @@ fn transform_line(input: &[u8], depth: ColorDepth, _palette: &PaletteTransform) 
         }
 
         if !broke_on_end {
-            remaining = &[];
+            // Chunk ended mid-sequence — state carries to next call.
+            return;
         }
     }
-
-    output
 }
 
 // ── Unicode normalization ───────────────────────────────────────────
 
 #[cfg(feature = "unicode-normalize")]
 fn normalize_content(input: &[u8], map: &UnicodeMap) -> Vec<u8> {
-    use memchr::memchr;
-
-    // Fast path: no bytes >= 0x80 means pure ASCII — nothing to normalize.
+    // Fast path: no bytes >= 0xC2 means pure ASCII — nothing to normalize.
+    // All multi-byte UTF-8 sequences start with a lead byte >= 0xC2.
     // (All builtin sources are >= U+00B2, which is 0xC2 0xB2 in UTF-8.)
-    if memchr(0xC2, input).is_none()
-        && memchr(0xC3, input).is_none()
-        && memchr(0xE2, input).is_none()
-        && memchr(0xEF, input).is_none()
-        && memchr(0xF0, input).is_none()
-    {
+    if !input.iter().any(|&b| b >= 0xC2) {
         return input.to_vec();
     }
 

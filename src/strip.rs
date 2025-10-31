@@ -27,12 +27,14 @@ pub(crate) fn passthrough_skip(state: State, remaining: &[u8]) -> usize {
             match (a, b) {
                 (Some(x), Some(y)) => x.min(y),
                 (Some(x), None) | (None, Some(x)) => x,
-                (None, None) => 0,
+                // No terminator in buffer — all bytes are body.
+                // Caller will exit the loop and handle chunk-end.
+                (None, None) => remaining.len(),
             }
         }
         // DCS/String: terminates on ESC(1B), CAN(18), SUB(1A).
         State::DcsPassthrough | State::StringPassthrough => {
-            memchr3(0x1B, 0x18, 0x1A, remaining).unwrap_or(0)
+            memchr3(0x1B, 0x18, 0x1A, remaining).unwrap_or(remaining.len())
         }
         _ => 0,
     }
