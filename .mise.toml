@@ -82,3 +82,32 @@ run = """
 # We use uvx to fetch and run diff-cover invisibly
 env uvx diff-cover target/tarpaulin/cobertura.xml --no-color --compare-branch=main --fail-under=95
 """
+
+# Usage: mise x pgo
+[tasks.pgo]
+description = "Build with Profile-Guided Optimization (instrument → profile → rebuild)"
+run = """
+set -e
+PGO_DIR="target/pgo-data"
+rm -rf "$PGO_DIR"
+mkdir -p "$PGO_DIR"
+
+echo "==> Instrumenting..."
+RUSTFLAGS="-Cprofile-generate=$PGO_DIR" \
+  cargo build --release --quiet
+
+echo "==> Collecting profiles..."
+./target/release/strip-ansi < tests/fixtures/ansi-heavy.txt > /dev/null
+./target/release/strip-ansi < tests/fixtures/docker-build.raw.txt > /dev/null
+./target/release/strip-ansi < tests/fixtures/cargo-test.raw.txt > /dev/null
+./target/release/distill-ansi < tests/fixtures/ansi-heavy.txt > /dev/null
+
+echo "==> Merging profiles..."
+llvm-profdata merge -o "$PGO_DIR/merged.profdata" "$PGO_DIR"
+
+echo "==> Rebuilding with PGO..."
+RUSTFLAGS="-Cprofile-use=$PGO_DIR/merged.profdata" \
+  cargo build --release --quiet
+
+echo "==> PGO build complete: target/release/strip-ansi"
+"""

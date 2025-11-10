@@ -20,3 +20,24 @@ progress.when = "never" # options: "auto" (default), "always", "never" (best for
 # Requires Rust ≥ 1.70 (stabilized). Already the default since 1.70 but
 # explicit here so older toolchains (MSRV = 1.85) still benefit.
 git-fetch-with-cli = false   # use libgit2 (faster, no git subprocess noise)
+
+# ── Target CPU ───────────────────────────────────────────────────────
+#
+# x86-64-v3 = Haswell baseline: SSE4.2, AVX2, BMI1/2, FMA, POPCNT,
+# MOVBE, F16C, LZCNT. Safe for both development systems:
+#   - Intel i7-4790K (Haswell, 2014) — Linux workstation
+#   - Intel i7-9750H (Coffee Lake, 2019) — MacBook Pro
+#
+# Enables compiler auto-vectorization with AVX2/FMA for:
+#   - palette.rs matrix multiply (FMA: 9 fused multiply-add ops)
+#   - downgrade.rs distance calculations
+#   - general scalar optimization (BMI2 PDEP/PEXT, LZCNT/TZCNT)
+#
+# memchr uses runtime SIMD detection regardless of this flag.
+# This setting affects compiler-generated code only.
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "target-cpu=x86-64-v3"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "target-cpu=x86-64-v3"]
