@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -306,6 +307,20 @@ class Environment:
         except (subprocess.CalledProcessError, FileNotFoundError):
             return "—"
 
+    @staticmethod
+    def dep_count_lib(spec: str, features: str) -> str:
+        """Count library-only deps (no CLI features)."""
+        try:
+            out = subprocess.check_output(
+                ["cargo", "tree", "-p", spec, "-e", "normal",
+                 "--no-default-features", "--features", features,
+                 "--depth", "999", "--prefix", "none"],
+                stderr=subprocess.DEVNULL, text=True)
+            crates = {l.strip().split()[0] for l in out.strip().splitlines() if l.strip()}
+            return str(len(crates) - 1)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return "—"
+
 
 # ═══════════════════════════════════════════════════════════════════
 # Report builder
@@ -326,6 +341,10 @@ class BenchmarkReport:
         self.lines.extend(lines)
 
     def generate(self) -> str:
+        template = self._load_template()
+        if template:
+            return self._render_template(template)
+        # Fallback: procedural generation (no template found).
         self._title()
         self._notation()
         self._highlights()
@@ -334,7 +353,61 @@ class BenchmarkReport:
         self._howto()
         self._details()
         self._scaling()
-        return "\n".join(self.lines)
+        return re.sub(r'\n{3,}', '\n\n', "\n".join(self.lines))
+
+    def _load_template(self) -> str | None:
+        """Load doc/BENCHMARKS.md.in if it exists."""
+        tmpl_path = Path("doc/BENCHMARKS.md.in")
+        if tmpl_path.exists():
+            return tmpl_path.read_text()
+        return None
+
+    def _render_template(self, template: str) -> str:
+        """Fill {{MARKER}} placeholders in the template with dynamic data."""
+        sections: dict[str, str] = {}
+
+        # HIGHLIGHTS
+        self.lines = []
+        self._highlights_content()
+        sections["HIGHLIGHTS"] = "\n".join(self.lines).strip()
+
+        # ENV
+        self.lines = []
+        self._environment_content()
+        sections["ENV"] = "\n".join(self.lines).strip()
+
+        # VERSIONS
+        self.lines = []
+        self._versions_content()
+        sections["VERSIONS"] = "\n".join(self.lines).strip()
+
+        # FOOTPRINTS
+        self.lines = []
+        self._footprints_content()
+        sections["FOOTPRINTS"] = "\n".join(self.lines).strip()
+
+        # HOWTO
+        self.lines = []
+        self._howto_content()
+        sections["HOWTO"] = "\n".join(self.lines).strip()
+
+        # DETAILS
+        self.lines = []
+        self._details_content()
+        sections["DETAILS"] = "\n".join(self.lines).strip()
+
+        # SCALING
+        self.lines = []
+        self._scaling_content()
+        sections["SCALING"] = "\n".join(self.lines).strip()
+
+        result = template
+        for key, value in sections.items():
+            result = result.replace("{{" + key + "}}", value)
+
+        # Collapse any resulting triple+ newlines to double.
+        result = re.sub(r'\n{3,}', '\n\n', result)
+        return result
 
     def _title(self) -> None:
         self.emit(
@@ -361,6 +434,10 @@ class BenchmarkReport:
         ))
 
     def _highlights(self) -> None:
+        self.emit("", "## Highlights for Humans", "")
+        self._highlights_content()
+
+    def _highlights_content(self) -> None:
         d = self.data
         # Use 4 KiB dirty if available, otherwise closest size.
         highlight_size = 4096
@@ -373,7 +450,6 @@ class BenchmarkReport:
         clean = d.get_internal("strip", "clean", clean_size) if clean_size <= 16384 \
             else d.get_point("distill", "clean", clean_size)
 
-        self.emit("", "## Highlights for Humans", "")
         if ours.ns:
             self.emit(f"- {fmt_mibs(ours.ns, highlight_size)} MiB/s dirty throughput ({fmt_size_label(highlight_size)}, ~20% ANSI)")
         if clean.ns:
@@ -385,14 +461,15 @@ class BenchmarkReport:
         )
 
     def _environment(self) -> None:
+        self.emit("", "## Environmental Concerns", "")
+        self._environment_content()
+        self.emit("", "### Crate Versions", "")
+        self._versions_content()
+
+    def _environment_content(self) -> None:
         env = Environment.detect()
-        versions = Environment.crate_versions()
         cache = self.data.cache_info
         wall = self.data.wall_secs
-
-        self.emit("", "## Environmental Concerns", "", "<!-- BENCH:ENV:START -->", "")
-
-        # System info + cache hierarchy + bench metadata in one block.
         env_rows = [[k, v] for k, v in env]
         if cache:
             env_rows.append(["L1d", fmt_bytes(cache.get("l1d"))])
@@ -402,51 +479,22 @@ class BenchmarkReport:
         env_rows.append(["Sizes", f"{len(self.dirty_sizes)} tiers (hardware-adaptive)"])
         if wall > 0:
             env_rows.append(["Bench time", fmt_duration(wall)])
-
         self.emit(md_table([Col("Key"), Col("Value")], env_rows))
-        self.emit("", "<!-- BENCH:ENV:END -->")
 
-        self.emit("", "### Crate Versions", "", "<!-- BENCH:VERSIONS:START -->", "")
+    def _versions_content(self) -> None:
+        versions = Environment.crate_versions()
         self.emit(md_table(
             [Col("Crate"), Col("Version", "right")],
             [[f"`{n}`", v] for n, v in versions],
         ))
-        self.emit("", "<!-- BENCH:VERSIONS:END -->")
 
     def _footprints(self) -> None:
-        bin_path = self.target_dir / "release" / "strip-ansi"
-        bin_size = fmt_bytes(bin_path.stat().st_size) if bin_path.exists() else "—"
-
-        def crate_resources(crate_name: str) -> tuple[str, str, str]:
-            """Returns (peak_rss, rss_delta, cpu_total) from largest size."""
-            sizes_data = self.data.resources.get(crate_name, {})
-            for sz in reversed(self.dirty_sizes):
-                snap = sizes_data.get(str(sz), {})
-                if snap.get("peak_rss"):
-                    cpu = snap.get("cpu_user_us", 0) + snap.get("cpu_sys_us", 0)
-                    return (
-                        fmt_bytes(snap["peak_rss"]),
-                        fmt_bytes(snap.get("rss_delta")),
-                        fmt_cpu_us(cpu),
-                    )
-            return "—", "—", "—"
-
         self.emit(
             "", "## Crate Footprints", "",
-            "<!-- BENCH:FOOTPRINT:START -->", "",
         )
-        cols = [Col("Crate"), Col("Binary", "right"),
-                Col("Deps", "right"), Col("Peak RSS", "right"),
-                Col("RSS Δ", "right"), Col("CPU", "right")]
-        rows = []
-        for _, crate_name, display in CRATES:
-            peak, delta, cpu = crate_resources(crate_name)
-            binary = bin_size if crate_name == "distill-strip-ansi" else "n/a"
-            spec = f"{crate_name}@0.15.11" if crate_name == "console" else crate_name
-            rows.append([display, binary, Environment.dep_count(spec), peak, delta, cpu])
-        self.emit(md_table(cols, rows))
+        self._footprints_content()
         self.emit(
-            "", "<!-- BENCH:FOOTPRINT:END -->", "",
+            "",
             "No crate uses temp files or disk I/O — stdin only.",
             "Peak RSS, RSS Δ, and CPU measured at largest bench size.",
             "RSS Δ reflects allocator page retention after the last",
@@ -456,12 +504,72 @@ class BenchmarkReport:
             "outside the timed loop — no measurement overhead.",
         )
 
+    def _footprints_content(self) -> None:
+        bin_path = self.target_dir / "release" / "strip-ansi"
+        bin_size = fmt_bytes(bin_path.stat().st_size) if bin_path.exists() else "—"
+
+        def crate_resources(crate_name: str) -> tuple[str, str, str]:
+            """Returns (peak_rss, rss_delta, cpu_total) from largest size."""
+            sizes_data = self.data.resources.get(crate_name, {})
+            # Try dirty_sizes in reverse (largest first).
+            for sz in reversed(self.dirty_sizes):
+                snap = sizes_data.get(str(sz), {})
+                if snap.get("peak_rss"):
+                    cpu = snap.get("cpu_user_us", 0) + snap.get("cpu_sys_us", 0)
+                    return (
+                        fmt_bytes(snap["peak_rss"]),
+                        fmt_bytes(snap.get("rss_delta")),
+                        fmt_cpu_us(cpu),
+                    )
+            # Fallback: grab the entry with the largest size key.
+            if sizes_data and isinstance(sizes_data, dict):
+                numeric_keys = sorted(
+                    (int(k) for k in sizes_data if k.isdigit()),
+                    reverse=True,
+                )
+                for k in numeric_keys:
+                    snap = sizes_data.get(str(k), {})
+                    if snap.get("peak_rss"):
+                        cpu = snap.get("cpu_user_us", 0) + snap.get("cpu_sys_us", 0)
+                        return (
+                            fmt_bytes(snap["peak_rss"]),
+                            fmt_bytes(snap.get("rss_delta")),
+                            fmt_cpu_us(cpu),
+                        )
+            return "—", "—", "—"
+
+        # Library dep counts (no CLI features) for apples-to-apples.
+        lib_features = "std,filter,transform,downgrade-color,augment-color,unicode-normalize"
+
+        cols = [Col("Crate"), Col("Deps", "right"), Col("Peak RSS", "right"),
+                Col("RSS Δ", "right"), Col("CPU", "right")]
+        rows = []
+        for _, crate_name, display in CRATES:
+            peak, delta, cpu = crate_resources(crate_name)
+            if crate_name == "distill-strip-ansi":
+                deps = Environment.dep_count_lib(crate_name, lib_features)
+            else:
+                deps = Environment.dep_count(crate_name)
+            rows.append([display, deps, peak, delta, cpu])
+        self.emit(md_table(cols, rows))
+
+        # Binary note (CLI includes clap and other deps beyond library).
+        cli_deps = Environment.dep_count("distill-strip-ansi")
+        self.emit(
+            "",
+            f"`strip-ansi` binary: {bin_size}, {cli_deps} deps",
+            "(includes `clap` for CLI argument parsing).",
+        )
+
     def _howto(self) -> None:
+        self.emit("", "## HOWTO: Reproduce", "")
+        self._howto_content()
+
+    def _howto_content(self) -> None:
         wall = self.data.wall_secs
         est = f" (~{fmt_duration(wall)})" if wall > 0 else ""
 
         self.emit(
-            "", "## HOWTO: Reproduce", "",
             "```bash",
             f"# Quick run: up to 2×L3 cache{est}",
             "./bin/generate-benchmarks-md.py",
@@ -523,6 +631,9 @@ class BenchmarkReport:
             "(conversion outside timed loop). `distill-strip-ansi`",
             "used as baseline (Relative = time / baseline time).",
         )
+        self._details_content()
+
+    def _details_content(self) -> None:
 
         # Representative detail sizes: smallest, 4K, a cache boundary,
         # a large size, and the largest.
@@ -530,10 +641,8 @@ class BenchmarkReport:
 
         for size in detail_sizes:
             label = fmt_size_label(size)
-            self.emit("", f"### Dirty {label}", "",
-                      f"<!-- BENCH:ECO_DIRTY_{size}:START -->", "")
+            self.emit("", f"### Dirty {label}", "")
             self.emit(self._eco_card("dirty", size))
-            self.emit(f"<!-- BENCH:ECO_DIRTY_{size}:END -->")
 
         # Real-world workloads — sizes discovered from criterion data.
         cargo_size = self.cargo_size or 0
@@ -542,15 +651,11 @@ class BenchmarkReport:
         cargo_label = fmt_size_label(cargo_size) if cargo_size else "?"
         osc8_label = fmt_size_label(osc8_size) if osc8_size else "?"
 
-        self.emit("", f"### Cargo Output ({cargo_label})", "",
-                  "<!-- BENCH:ECO_CARGO:START -->", "")
+        self.emit("", f"### Cargo Output ({cargo_label})", "")
         self.emit(self._eco_card("cargo", cargo_size))
-        self.emit("<!-- BENCH:ECO_CARGO:END -->")
 
-        self.emit("", f"### OSC 8 Hyperlinks ({osc8_label})", "",
-                  "<!-- BENCH:ECO_OSC8:START -->", "")
+        self.emit("", f"### OSC 8 Hyperlinks ({osc8_label})", "")
         self.emit(self._eco_card("osc8", osc8_size))
-        self.emit("<!-- BENCH:ECO_OSC8:END -->")
 
         # ── Features unique to distill-strip-ansi ──
         self._unique_features()
@@ -564,7 +669,9 @@ class BenchmarkReport:
             "RSS Δ and CPU shown at largest size only — small-size",
             "values are dominated by benchmark harness overhead.",
         )
+        self._scaling_content()
 
+    def _scaling_content(self) -> None:
         largest = self.dirty_sizes[-1] if self.dirty_sizes else 0
         versions = dict(Environment.crate_versions())
 
@@ -761,6 +868,13 @@ class BenchmarkReport:
             res_key = f"{group}/{bench}"
             res_size = str(actual_size) if actual_size else ""
             res = self.data.resources.get(res_key, {}).get(res_size, {})
+            # Fallback: if exact size miss, grab first available entry.
+            if not res:
+                entries = self.data.resources.get(res_key, {})
+                if entries and isinstance(entries, dict):
+                    first_key = next(iter(entries), None)
+                    if first_key and isinstance(entries.get(first_key), dict):
+                        res = entries[first_key]
             rss_d = fmt_bytes(res.get("rss_delta"))
             cpu_total = res.get("cpu_user_us", 0) + res.get("cpu_sys_us", 0)
             cpu_s = fmt_cpu_us(cpu_total) if cpu_total else "—"
@@ -823,9 +937,21 @@ class BenchmarkReport:
     def _estimate_complexity(self, mibs: list[float], sizes: list[int] | None = None) -> str:
         """Estimate O-notation from time scaling per memory tier.
 
-        Checks time(2x)/time(x) ratio within each tier. Uses the
-        median ratio (not max) to avoid single-point anomalies at
-        cache boundaries triggering false super-linear classification.
+        Checks time(2x)/time(x) ratio within each tier. Requires a
+        supermajority (≥75%) of same-tier ratios to exceed the threshold
+        before classifying as super-linear. Median alone is insufficient
+        — a single noisy pair at the median position could flip the result.
+
+        Thresholds (v0.6.0):
+          ≤ 1.5 → O(n)       (accommodates TLB/DRAM bandwidth variance)
+          ≤ 2.5 → O(n log n)
+          ≤ 5.0 → O(n²)
+
+        Prior threshold of 1.3 false-positived on systems without CPU
+        isolation: TLB pressure at 32 MiB (8192 pages > 1536 L2 TLB
+        entries on Haswell) adds ~30% measured overhead that isn't
+        algorithmic. Combined with supermajority, this eliminates
+        hardware-induced false classifications.
         """
         if len(mibs) < 3 or not sizes or len(sizes) != len(mibs):
             return "O(?)"
@@ -871,15 +997,23 @@ class BenchmarkReport:
         if not ratios:
             return "O(?)"
 
-        # Use median ratio — robust against single-point anomalies.
-        ratios.sort()
-        median = ratios[len(ratios) // 2]
+        # Require at least 2 same-tier pairs for a meaningful
+        # supermajority vote. A single pair is too noisy — cache
+        # boundary effects at exactly L1d/L2/L3 size can produce
+        # ratio > 1.5 without algorithmic super-linearity.
+        if len(ratios) < 2:
+            return "O(n)" if ratios[0] <= 2.5 else "O(?)"
 
-        if median <= 1.3:
+        # Supermajority: ≥75% of ratios must exceed threshold.
+        def exceeds_pct(threshold: float) -> bool:
+            count = sum(1 for r in ratios if r > threshold)
+            return count >= len(ratios) * 0.75
+
+        if not exceeds_pct(1.5):
             return "O(n)"
-        if median <= 2.5:
+        if not exceeds_pct(2.5):
             return "O(n log n)"
-        if median <= 5.0:
+        if not exceeds_pct(5.0):
             return "O(n²)"
         return "O(n²+)"
 
@@ -896,6 +1030,7 @@ ECOSYSTEM_BENCH_CMDS = [
     ["cargo", "bench", "-p", "ecosystem-bench", "--bench", "strip_escapes"],
 ]
 OUTPUT_FILE = Path("doc/BENCHMARKS.md")
+TEMPLATE_FILE = Path("doc/BENCHMARKS.md.in")
 TARGET_DIR = Path("target")
 
 
@@ -914,11 +1049,20 @@ def main() -> None:
         env["CARGO_TARGET_DIR"] = str(TARGET_DIR.resolve())
         if args.max_size:
             env["BENCH_MAX_SIZE"] = args.max_size
+        failed: list[str] = []
         for cmd in [BENCH_CMD] + ECOSYSTEM_BENCH_CMDS:
             print(f"Running: {' '.join(cmd)}", file=sys.stderr)
             r = subprocess.run(cmd, env=env)
             if r.returncode != 0:
-                sys.exit(r.returncode)
+                failed.append(" ".join(cmd))
+                print(f"  ⚠ failed (exit {r.returncode}), continuing…",
+                      file=sys.stderr)
+        if failed:
+            print(f"\n⚠ {len(failed)} bench(es) failed — report may be incomplete:",
+                  file=sys.stderr)
+            for f in failed:
+                print(f"  • {f}", file=sys.stderr)
+            print(file=sys.stderr)
 
     data = BenchData(TARGET_DIR)
     report = BenchmarkReport(data, TARGET_DIR)

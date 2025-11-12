@@ -44,6 +44,7 @@ impl ResourceTracker {
 
     /// Capture RSS and CPU before a benchmark.
     pub fn before(&self, point: CapturePoint<'_>) {
+        trim_allocator();
         let rss = current_rss_bytes();
         let (user, sys) = cpu_times_us();
         let mut map = self.data.lock().unwrap();
@@ -152,6 +153,24 @@ pub fn flush_resources(params: FlushParams<'_>) {
 }
 
 // ── OS-level resource queries ───────────────────────────────────
+
+/// Release free allocator pages back to the OS before measurement.
+///
+/// On Linux, glibc's malloc retains freed pages (RSS stays high).
+/// `malloc_trim(0)` forces release so `rss_before` reflects actual
+/// resident usage, not allocator page cache from prior benchmarks.
+/// Without this, sequential benchmarks in the same process show
+/// `rss_delta = 0` because the heap never shrinks between groups.
+#[allow(unsafe_code)]
+fn trim_allocator() {
+    #[cfg(target_os = "linux")]
+    {
+        unsafe extern "C" {
+            fn malloc_trim(pad: libc::size_t) -> libc::c_int;
+        }
+        unsafe { malloc_trim(0) };
+    }
+}
 
 /// Merge new resource data into existing JSON, preserving data from
 /// previous bench binary runs. Each binary only knows about its own
