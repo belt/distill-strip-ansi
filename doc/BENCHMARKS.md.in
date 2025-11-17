@@ -1,0 +1,111 @@
+# Benchmarks
+
+Criterion.rs statistical benchmarks across the Rust ANSI
+stripping ecosystem: `distill-strip-ansi`, `fast-strip-ansi`,
+`strip-ansi-escapes`, and `console`.
+
+## Symbolic Notation
+
+| Symbol | Meaning                         |
+| ------ | ------------------------------- |
+| ns     | nanoseconds (10⁻⁹ s)            |
+| µs     | microseconds (10⁻⁶ s)           |
+| ms     | milliseconds (10⁻³ s)           |
+| MiB/s  | mebibytes/sec (2²⁰ B/s)         |
+| GiB/s  | gibibytes/sec (2³⁰ B/s)         |
+| ×      | multiplier (baseline = distill) |
+| RSS Δ  | memory retained after bench     |
+| CPU    | user+sys CPU time (bench)       |
+
+## Highlights for Humans
+
+{{HIGHLIGHTS}}
+
+## Environmental Concerns
+
+{{ENV}}
+
+### Crate Versions
+
+{{VERSIONS}}
+
+## Crate Footprints
+
+{{FOOTPRINTS}}
+
+No crate uses temp files or disk I/O — stdin only.
+Peak RSS, RSS Δ, and CPU measured at largest bench size.
+RSS Δ reflects allocator page retention after the last
+Criterion iteration — not a leak. CPU is user+sys time
+for the benchmark (not wall clock). Resource snapshots
+captured via `task_info` (macOS) / `getrusage` (POSIX)
+outside the timed loop — no measurement overhead.
+
+## Build Configuration (v0.6.0+)
+
+Release builds use LTO and target-cpu tuning for maximum throughput.
+Both development systems share the x86-64-v3 ISA level (Haswell+).
+
+| Setting         | Value        | Effect                        |
+| --------------- | ------------ | ----------------------------- |
+| `lto`           | `"thin"`     | Cross-module inlining         |
+| `codegen-units` | `1`          | Full optimizer visibility     |
+| `target-cpu`    | `x86-64-v3`  | AVX2/FMA auto-vectorization   |
+| `panic`         | `"abort"`    | No unwind tables              |
+| `strip`         | `"symbols"`  | Reduced binary size           |
+
+The `[profile.bench]` mirrors `lto` and `codegen-units` so
+criterion numbers reflect release performance.
+
+### Target CPU: x86-64-v3
+
+Author systems (Intel i7-4790K Haswell, Intel i7-9750H Coffee Lake)
+support the x86-64-v3 microarchitecture level:
+
+- SSE4.2, AVX, AVX2, FMA, BMI1, BMI2, POPCNT, MOVBE, F16C, LZCNT
+
+This enables FMA instructions for `palette.rs` matrix multiply
+and AVX2 for auto-vectorizable loops. The `memchr` crate uses
+runtime SIMD detection independently of this flag.
+
+### Profile-Guided Optimization (PGO)
+
+For maximum throughput (CI release builds):
+
+```bash
+# 1. Instrument
+RUSTFLAGS="-Cprofile-generate=/tmp/pgo-data" cargo build --release
+
+# 2. Collect profiles
+./target/release/strip-ansi < tests/fixtures/ansi-heavy.txt > /dev/null
+cargo bench --bench internals -- --profile-time 5
+
+# 3. Merge and rebuild
+llvm-profdata merge -o /tmp/pgo-data/merged.profdata /tmp/pgo-data
+RUSTFLAGS="-Cprofile-use=/tmp/pgo-data/merged.profdata" cargo build --release
+```
+
+Expected gain: 10-20% on hot paths. The 15×256 state table
+benefits most from trained branch prediction.
+
+## HOWTO: Reproduce
+
+{{HOWTO}}
+
+## Details That Matter
+
+All crates: `&[u8]` input. `console`: `&str`
+(conversion outside timed loop). `distill-strip-ansi`
+used as baseline (Relative = time / baseline time).
+
+{{DETAILS}}
+
+## Scaling
+
+Dirty throughput (MiB/s) across input sizes.
+Constant bar length = O(n). Shrinking = super-linear.
+
+RSS Δ and CPU shown at largest size only — small-size
+values are dominated by benchmark harness overhead.
+
+{{SCALING}}
