@@ -123,6 +123,32 @@ classified by final byte + first_param). The classifier wraps
 No transitive dependencies beyond these. `no_std` compatible
 (requires `alloc`).
 
+## Build Optimization
+
+Release builds use LTO and target-cpu tuning. The hot path
+crosses module boundaries (parser → strip → stream → filter),
+so cross-module inlining is critical.
+
+```toml
+[profile.release]
+lto = "thin"           # cross-module inlining
+codegen-units = 1      # full optimizer visibility
+strip = "symbols"      # smaller binary
+panic = "abort"        # no unwind tables (CLI binaries)
+```
+
+Target CPU: `x86-64-v3` (Haswell baseline). Both development
+systems (i7-4790K, i7-9750H) support this ISA level. Enables
+AVX2/FMA auto-vectorization for palette math without sacrificing
+portability between the two systems.
+
+The `memchr` crate uses runtime SIMD detection (AVX2 on both
+systems) regardless of compile-time target-cpu — it handles
+its own dispatch internally.
+
+PGO (Profile-Guided Optimization) is supported for release
+builds. See [BENCHMARKS.md](BENCHMARKS.md) for the workflow.
+
 ## Performance
 
 Benchmarked on Intel Core i7-9750H @ 2.60GHz with
