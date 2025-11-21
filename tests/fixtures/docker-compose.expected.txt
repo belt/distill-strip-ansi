@@ -1,0 +1,20 @@
+compose: building 1 service (production)
+  docker: resolve ruby:3.4.8-slim CACHED
+  docker: [hardened-base] CACHED
+  docker: [ore-fetch] verify ore installer ✔ 0.8s
+  docker: [yq-fetch] verify yq v4.47.2 ✔ 1.2s
+  docker: [base 1/5] apt-get install 6 runtime deps ✔ 12.3s
+    apt: tini curl libcurl4 libffi8 libjemalloc2 libgit2-1.8 ✔
+  docker: [base 2/5] ore install --system ✔ 0.4s
+  docker: [base 3/5] gem update --system 3.6.2 ✔ 2.1s
+  docker: [gems-base 1/3] build toolchain ✔ 8.7s
+  docker: [gems-base 2/3] bundle lock ✔ 1.3s
+  docker: [gems-production 1/1] ore install 23 gems ✔ 18.4s
+    bundler: 23 gems installed ✔
+  docker: [production] COPY + labels ✔ 0.4s
+  docker: export → api-client:production-ruby3.4.8 247.3MB ✔ 1.2s
+compose: network api-client_default ✔
+compose: production-1 created → started
+compose: production-1 healthcheck ✔ 22s
+compose: production-1 ready
+  production-1 | ApiClient 2.1.0 ready (Ruby 3.4.8)
