@@ -1,0 +1,22 @@
+---
+source: strip-ansi/tests/snapshot_tests.rs
+expression: strip_to_string(input)
+---
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 523B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/rust:1.75-slim
+#2 DONE 1.2s
+
+#3 [1/4] FROM docker.io/library/rust:1.75-slim@sha256:abc123
+#3 DONE 0.0s
+
+#4 [2/4] COPY Cargo.toml Cargo.lock ./
+#4 DONE 0.1s
+
+#5 [3/4] RUN cargo build --release
+#5 0.543    Compiling libc v0.2.150
+#5 2.123    Compiling memchr v2.7.1
+#5 5.678     Finished `release` profile [optimized] target(s) in 5.67s
+#5 DONE 6.0s

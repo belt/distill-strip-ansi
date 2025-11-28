@@ -1,0 +1,8 @@
+---
+source: strip-ansi/tests/snapshot_tests.rs
+expression: strip_to_string(input)
+---
+error[E0433]: failed to resolve: use of undeclared crate
+--> src/main.rs:5:5
+|
+5 | use serde::Deserialize;

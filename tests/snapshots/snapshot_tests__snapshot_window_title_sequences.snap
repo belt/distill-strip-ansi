@@ -1,0 +1,9 @@
+---
+source: strip-ansi/tests/snapshot_tests.rs
+expression: strip_to_string(input)
+---
+$ cargo test
+running 3 tests
+test a ... ok
+test b ... ok
+test c ... ok
