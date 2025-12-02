@@ -3,7 +3,7 @@ members = [".", "benches/harness", "benches/ecosystem"]
 
 [package]
 name = "distill-strip-ansi"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -72,3 +72,23 @@ distill-bench-harness = { path = "benches/harness" }
 [[bench]]
 name = "internals"
 harness = false
+
+# ── Build Profiles ───────────────────────────────────────────────────
+#
+# Release: LTO + single codegen unit for maximum cross-module inlining.
+# The hot path (parser → strip → stream → filter) crosses module
+# boundaries — codegen-units=1 lets LLVM inline without relying on
+# #[inline] hints alone. Thin LTO balances build speed vs optimization.
+#
+# Both target systems (Haswell i7-4790K, Coffee Lake i7-9750H) share
+# the x86-64-v3 ISA level. target-cpu is set in .cargo/config.toml.
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
+
+[profile.bench]
+lto = "thin"
+codegen-units = 1

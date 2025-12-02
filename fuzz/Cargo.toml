@@ -1,6 +1,6 @@
 [package]
-name = "strip-ansi-fuzz"
-version = "0.0.0"
+name = "distill-strip-ansi-fuzz"
+version = "0.0.1"
 publish = false
 edition = "2024"
 

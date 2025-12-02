@@ -183,14 +183,14 @@ See [doc/DESIGN.md](doc/DESIGN.md) for the architecture and
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false, features = ["std"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.6", default-features = false, features = ["std"] }
 ```
 
 For `no_std` (requires `alloc`):
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false }
+strip-ansi = { package = "distill-strip-ansi", version = "0.6", default-features = false }
 ```
 
 ## Feature Flags
