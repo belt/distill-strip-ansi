@@ -31,9 +31,11 @@ doc/BENCH_ENV.toml
 # Test artifacts
 *.deleted
 
+# mise local
+.mise.local.toml
+
 # Session breadcrumbs (local-only, not for git)
 BREADCRUMBS.md
-BREADCRUMBS.perpetual-learning.md
 
 # Coverage
 *.profraw
