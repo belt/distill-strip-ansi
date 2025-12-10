@@ -1,0 +1,41 @@
+In file included from src/main.c:1:
+include/header.h:5:2: error: unknown type name 'foo_t'
+    5 |  foo_t bar;
+      |  ^~~~~
+src/main.c:10:5: error: expected ';' after expression
+   10 |     int x = 42
+      |                ^
+      |                ;
+src/main.c:15:10: warning: unused variable 'y' [-Wunused-variable]
+   15 |     int y = 0;
+      |          ^
+src/main.c:20:14: warning: implicit declaration of function 'foo' [-Wimplicit-function-declaration]
+   20 |     int r = foo(42);
+      |              ^~~
+include/header.h:12:18: note: forward declaration of 'struct baz'
+   12 |  struct baz *ptr;
+      |                  ^
+src/main.c:25:1: warning: control reaches end of non-void function [-Wreturn-type]
+   25 | }
+      | ^
+src/util.c:8:22: error: use of undeclared identifier 'MAX_BUF'
+    8 |     char buf[MAX_BUF];
+      |                      ^
+src/util.c:15:5: warning: format specifies type 'int' but the argument has type 'long' [-Wformat]
+   15 |     printf("%d", val);
+      |             ~~   ^~~
+      |             %ld
+In file included from src/util.c:2:
+In file included from include/util.h:3:
+include/types.h:7:1: error: redefinition of 'result_t'
+    7 | typedef int result_t;
+      | ^
+include/types.h:3:1: note: previous definition is here
+    3 | typedef long result_t;
+      | ^
+src/main.c:30:9: fatal error: no-such-header.h: No such file or directory
+   30 | #include <no-such-header.h>
+      |         ^~~~~~~~~~~~~~~~~~~
+compilation terminated.
+4 errors generated.
+2 warnings generated.

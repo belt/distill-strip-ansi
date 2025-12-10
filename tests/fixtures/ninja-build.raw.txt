@@ -1,0 +1,31 @@
+[1/12] Compiling src/main.c
+[2/12] Compiling src/util.c
+[3/12] Compiling src/parser.c
+[4/12] Compiling src/lexer.c
+src/lexer.c:42:10: warning: unused variable 'tok'
+[5/12] Compiling src/codegen.c
+[6/12] Compiling src/optimizer.c
+[7/12] Compiling src/backend.c
+[8/12] Compiling src/frontend.c
+src/frontend.c:128:5: error: expected ';' after expression
+    return result
+           ^
+           ;
+[9/12] Compiling src/driver.c
+[10/12] Compiling src/config.c
+[11/12] Compiling src/debug.c
+[12/12] Compiling src/platform.c
+[1/12] Linking build/main.o
+[2/12] Linking build/util.o
+[3/12] Linking build/parser.o
+[4/12] Linking build/lexer.o
+[5/12] Linking build/codegen.o
+[6/12] Linking build/optimizer.o
+[7/12] Linking build/backend.o
+[8/12] Linking build/frontend.o
+[9/12] Linking build/driver.o
+[10/12] Linking build/config.o
+[11/12] Linking build/debug.o
+[12/12] Linking libfoo.so
+ld: warning: duplicate symbol 'init_module'
+Build complete: 12 targets built

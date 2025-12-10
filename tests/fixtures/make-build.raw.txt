@@ -1,0 +1,35 @@
+make[1]: Entering directory '/home/user/project/src'
+gcc -Wall -Wextra -O2 -c -o main.o main.c
+gcc -Wall -Wextra -O2 -c -o utils.o utils.c
+utils.c:42:10: warning: unused variable 'tmp' [-Wunused-variable]
+   42 |     int tmp = 0;
+      |          ^~~
+gcc -Wall -Wextra -O2 -c -o parser.o parser.c
+parser.c:87:5: error: implicit declaration of function 'parse_token' [-Werror=implicit-function-declaration]
+   87 |     parse_token(input, &result);
+      |     ^~~~~~~~~~~
+parser.c:87:5: note: did you mean 'parse_tokens'?
+gcc -Wall -Wextra -O2 -c -o config.o config.c
+gcc -Wall -Wextra -O2 -c -o logger.o logger.c
+gcc -Wall -Wextra -O2 -c -o network.o network.c
+network.c:123:18: warning: comparison of integer expressions of different signedness: 'int' and 'size_t' [-Wsign-compare]
+  123 |     for (int i = 0; i < len; i++) {
+      |                       ^
+gcc -Wall -Wextra -O2 -c -o crypto.o crypto.c
+gcc -Wall -Wextra -O2 -c -o thread_pool.o thread_pool.c
+ar rcs libproject.a main.o utils.o parser.o config.o logger.o network.o crypto.o thread_pool.o
+make[1]: Leaving directory '/home/user/project/src'
+make[2]: Entering directory '/home/user/project/tests'
+gcc -Wall -Wextra -O2 -I../src -c -o test_utils.o test_utils.c
+gcc -Wall -Wextra -O2 -I../src -c -o test_parser.o test_parser.c
+test_parser.c:15:22: warning: initialization of 'char *' from incompatible pointer type [-Wincompatible-pointer-types]
+   15 |     char *input = (int *)test_data;
+      |                      ^
+gcc -Wall -Wextra -O2 -I../src -c -o test_config.o test_config.c
+gcc -o test_runner test_utils.o test_parser.o test_config.o -L../src -lproject
+make[2]: Leaving directory '/home/user/project/tests'
+make[1]: Entering directory '/home/user/project/docs'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/user/project/docs'
+make: Leaving directory '/home/user/project'
+make[1]: *** [Makefile:42: parser.o] Error 1
