@@ -1,0 +1,27 @@
+$ bun install
+bun install v1.1.38 (a3e54ac9)
+Resolving dependencies...
+Resolving: react@18.3.1
+Resolving: react-dom@18.3.1
+Resolving: typescript@5.4.5
+Resolving: @types/react@18.3.3
+Resolving: vite@5.4.2
+Resolving: eslint@9.8.0
+Resolving: prettier@3.3.3
+Installed react@18.3.1
+Installed react-dom@18.3.1
+Installed typescript@5.4.5
+Installed @types/react@18.3.3
+Installed vite@5.4.2
+Installed eslint@9.8.0
+Installed prettier@3.3.3
+Installed @vitejs/plugin-react@4.3.1
+Installed tailwindcss@3.4.10
+Installed postcss@8.4.41
+Installed autoprefixer@10.4.20
+warning: peer dependency "react@^18.0.0" not met
+error: Failed to resolve "nonexistent-pkg@^1.0.0"
+Installed @types/node@22.1.0
+Installed zod@3.23.8
+Installed @tanstack/react-query@5.51.23
+15 packages installed [142.00ms]

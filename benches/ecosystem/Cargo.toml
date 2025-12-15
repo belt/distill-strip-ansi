@@ -1,0 +1,38 @@
+# Ecosystem comparison benchmarks — isolated from the main crate's
+# dependency tree so competitor CVEs don't flag as ours.
+#
+# Each crate gets its own bench binary, all sharing
+# distill-bench-harness for identical measurement.
+#
+# Run all:   cargo bench -p ecosystem-bench
+# Run one:   cargo bench -p ecosystem-bench --bench distill
+# Run two:   cargo bench -p ecosystem-bench --bench distill --bench fast_strip
+[package]
+name = "ecosystem-bench"
+version = "0.0.1"
+edition = "2024"
+publish = false
+
+[[bench]]
+name = "distill"
+harness = false
+
+[[bench]]
+name = "fast_strip"
+harness = false
+
+[[bench]]
+name = "console_bench"
+harness = false
+
+[[bench]]
+name = "strip_escapes"
+harness = false
+
+[dependencies]
+distill-bench-harness = { path = "../harness" }
+strip-ansi = { package = "distill-strip-ansi", path = "../..", features = ["filter"] }
+fast-strip-ansi = "0.13"
+strip-ansi-escapes = "0.2"
+console = "0.16"
+criterion = { version = "0.7", features = ["html_reports"] }

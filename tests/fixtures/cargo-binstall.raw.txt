@@ -1,0 +1,28 @@
+INFO resolve: Resolving package: 'cargo-nextest'
+INFO resolve: Fetching crate info from crates.io for cargo-nextest
+INFO resolve: Found cargo-nextest v0.9.72
+INFO resolve: Checking for available binary packages
+INFO install: Installing cargo-nextest v0.9.72
+INFO install: Fetching package from https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.72/cargo-nextest-0.9.72-x86_64-unknown-linux-gnu.tar.gz
+INFO install: Installing to /home/user/.cargo/bin/cargo-nextest
+INFO install: Done
+INFO resolve: Resolving package: 'cargo-binstall'
+INFO resolve: Fetching crate info from crates.io for cargo-binstall
+INFO resolve: Found cargo-binstall v1.6.4
+INFO install: Installing cargo-binstall v1.6.4
+INFO install: Fetching package from https://github.com/cargo-bins/cargo-binstall/releases/download/v1.6.4/cargo-binstall-x86_64-unknown-linux-gnu.tgz
+INFO install: Installing to /home/user/.cargo/bin/cargo-binstall
+INFO install: Done
+INFO resolve: Resolving package: 'some-crate'
+INFO resolve: Fetching crate info from crates.io for some-crate
+WARN: cargo-binstall was unable to fetch a pre-built binary for 'some-crate'
+WARN: falling back to building from source for 'some-crate'
+warning: build from source may take a while
+error: failed to compile some-crate v0.1.0
+INFO resolve: Resolving package: 'ripgrep'
+INFO resolve: Fetching crate info from crates.io for ripgrep
+INFO resolve: Found ripgrep v14.1.0
+INFO install: Installing ripgrep v14.1.0
+INFO install: Fetching package from https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz
+INFO install: Installing to /home/user/.cargo/bin/rg
+INFO install: Done
