@@ -1,0 +1,20 @@
+[package]
+name = "strip-ansi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "strip-ansi"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+console = { workspace = true }
+bstr = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+assert_cmd = { workspace = true }
+insta = { workspace = true }
