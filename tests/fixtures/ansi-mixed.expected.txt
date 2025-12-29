@@ -1,0 +1,12 @@
+Plain text line.
+SGR color: red
+SGR style: bold
+Cursor up: 
+Cursor down: 
+Cursor forward: 
+Cursor back: 
+Cursor pos: 
+Erase line: 
+Erase display: 
+OSC title: 
+OSC hyperlink: Link

@@ -11,8 +11,9 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { workspace = true }
-console = { workspace = true }
+strip-ansi-escapes = "0.2"
 bstr = { workspace = true }
+sigpipe = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

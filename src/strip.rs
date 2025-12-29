@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::io::{self, BufRead, Write};
 
 use bstr::io::BufReadExt;
@@ -7,17 +6,8 @@ use bstr::io::BufReadExt;
 /// Returns Ok(()) on success, or the first I/O error.
 pub fn run_strip<R: BufRead, W: Write>(mut reader: R, writer: &mut W) -> io::Result<()> {
     reader.for_byte_line_with_terminator(|line| {
-        let lossy = String::from_utf8_lossy(line);
-        let stripped = console::strip_ansi_codes(&lossy);
-        match stripped {
-            Cow::Borrowed(_) => {
-                // No ANSI found — write original bytes (zero-alloc fast path).
-                writer.write_all(line)?;
-            }
-            Cow::Owned(ref s) => {
-                writer.write_all(s.as_bytes())?;
-            }
-        }
+        let stripped = strip_ansi_escapes::strip(line);
+        writer.write_all(&stripped)?;
         Ok(true)
     })
 }
