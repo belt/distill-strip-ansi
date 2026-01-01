@@ -1,3 +1,4 @@
+use assert_cmd::cargo;
 use assert_cmd::Command;
 use std::fs;
 
@@ -12,9 +13,13 @@ fn read_fixture(name: &str) -> String {
     fs::read_to_string(&path).expect(&format!("Failed to read fixture: {}", name))
 }
 
+fn cmd() -> Command {
+    Command::new(cargo::cargo_bin!("strip-ansi"))
+}
+
 #[test]
 fn fixture_ansi_sgr() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
     let raw = read_fixture("ansi-sgr.raw.txt");
     let expected = read_fixture("ansi-sgr.expected.txt");
 
@@ -32,7 +37,7 @@ fn fixture_ansi_sgr() {
 
 #[test]
 fn fixture_ansi_mixed() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
     let raw = read_fixture("ansi-mixed.raw.txt");
     let expected = read_fixture("ansi-mixed.expected.txt");
 
@@ -50,7 +55,7 @@ fn fixture_ansi_mixed() {
 
 #[test]
 fn fixture_plain_text() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
     let raw = read_fixture("plain-text.raw.txt");
     let expected = read_fixture("plain-text.expected.txt");
 
@@ -68,7 +73,7 @@ fn fixture_plain_text() {
 
 #[test]
 fn help_flag() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
 
     cmd.arg("--help");
 
@@ -81,7 +86,7 @@ fn help_flag() {
 
 #[test]
 fn version_flag() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
 
     cmd.arg("--version");
 
@@ -94,7 +99,7 @@ fn version_flag() {
 
 #[test]
 fn unknown_flag() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
 
     cmd.arg("--bogus");
 
@@ -107,7 +112,7 @@ fn unknown_flag() {
 
 #[test]
 fn check_with_ansi() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
     cmd.arg("--check").write_stdin("\x1b[31mred\x1b[0m");
 
     let output = cmd.output().unwrap();
@@ -120,7 +125,7 @@ fn check_with_ansi() {
 
 #[test]
 fn check_with_clean() {
-    let mut cmd = Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = cmd();
     cmd.arg("--check").write_stdin("plain text");
 
     let output = cmd.output().unwrap();

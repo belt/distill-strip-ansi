@@ -41,7 +41,7 @@ proptest! {
     fn check_mode_correctness(input in prop::collection::vec(any::<u8>(), 0..4096)) {
         let has_ansi = input.contains(&0x1B);
 
-        let mut cmd = assert_cmd::Command::cargo_bin("strip-ansi")?;
+        let mut cmd = assert_cmd::Command::new(assert_cmd::cargo::cargo_bin!("strip-ansi"));
         cmd.arg("--check")
             .write_stdin(input);
 
@@ -74,7 +74,7 @@ proptest! {
 
 #[test]
 fn empty_input_produces_empty() {
-    let mut cmd = assert_cmd::Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = assert_cmd::Command::new(assert_cmd::cargo::cargo_bin!("strip-ansi"));
     cmd.write_stdin("");
 
     let output = cmd.output().unwrap();
@@ -86,7 +86,7 @@ fn empty_input_produces_empty() {
 
 #[test]
 fn check_stderr_diagnostic() {
-    let mut cmd = assert_cmd::Command::cargo_bin("strip-ansi").unwrap();
+    let mut cmd = assert_cmd::Command::new(assert_cmd::cargo::cargo_bin!("strip-ansi"));
     cmd.arg("--check")
         .write_stdin("\x1b[31mred\x1b[0m");
 
