@@ -1,13 +1,24 @@
 use std::io::{self, BufRead, Write};
 
 use bstr::io::BufReadExt;
+use memchr::memchr;
 
 /// Strip mode: process each line, write stripped output.
+///
+/// Uses a two-tier fast path:
+/// 1. `memchr` scan for ESC (0x1B) — clean lines write directly (zero alloc)
+/// 2. `strip_ansi_escapes::Writer` wraps output for dirty lines (no intermediate Vec)
+///
 /// Returns Ok(()) on success, or the first I/O error.
 pub fn run_strip<R: BufRead, W: Write>(mut reader: R, writer: &mut W) -> io::Result<()> {
     reader.for_byte_line_with_terminator(|line| {
-        let stripped = strip_ansi_escapes::strip(line);
-        writer.write_all(&stripped)?;
+        if memchr(0x1B, line).is_some() {
+            // Dirty line: strip inline through Writer filter
+            strip_ansi_escapes::Writer::new(&mut *writer).write_all(line)?;
+        } else {
+            // Clean line: direct pass-through, zero allocation
+            writer.write_all(line)?;
+        }
         Ok(true)
     })
 }
@@ -17,7 +28,7 @@ pub fn run_strip<R: BufRead, W: Write>(mut reader: R, writer: &mut W) -> io::Res
 pub fn run_check<R: BufRead>(mut reader: R) -> io::Result<bool> {
     let mut found = false;
     reader.for_byte_line_with_terminator(|line| {
-        if line.contains(&0x1B) {
+        if memchr(0x1B, line).is_some() {
             found = true;
             Ok(false) // short-circuit: stop iteration
         } else {
