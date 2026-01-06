@@ -23,17 +23,23 @@ pub fn run_strip<R: BufRead, W: Write>(mut reader: R, writer: &mut W) -> io::Res
     })
 }
 
-/// Check mode: scan for ANSI presence.
+/// Check mode: scan for ANSI presence via raw buffer chunks.
+///
+/// Skips line iteration entirely — only needs to find a single `0x1B` byte
+/// anywhere in the stream. Uses `fill_buf` + `memchr` on each chunk for
+/// minimal overhead.
+///
 /// Returns Ok(true) if ANSI found, Ok(false) if clean.
 pub fn run_check<R: BufRead>(mut reader: R) -> io::Result<bool> {
-    let mut found = false;
-    reader.for_byte_line_with_terminator(|line| {
-        if memchr(0x1B, line).is_some() {
-            found = true;
-            Ok(false) // short-circuit: stop iteration
-        } else {
-            Ok(true) // continue
+    loop {
+        let buf = reader.fill_buf()?;
+        if buf.is_empty() {
+            return Ok(false);
         }
-    })?;
-    Ok(found)
+        if memchr(0x1B, buf).is_some() {
+            return Ok(true);
+        }
+        let len = buf.len();
+        reader.consume(len);
+    }
 }

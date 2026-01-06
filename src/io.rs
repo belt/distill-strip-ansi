@@ -16,8 +16,9 @@ impl<'a> OutputBuffer<'a> {
     /// - TTY → `LineWriter::new(lock)`
     /// - Pipe/file → `BufWriter::with_capacity(32 * 1024, lock)`
     pub fn new(stdout: &'a io::Stdout) -> Self {
+        let is_tty = stdout.is_terminal();
         let lock = stdout.lock();
-        if io::stdout().is_terminal() {
+        if is_tty {
             OutputBuffer::Line(LineWriter::new(lock))
         } else {
             OutputBuffer::Buf(BufWriter::with_capacity(32 * 1024, lock))

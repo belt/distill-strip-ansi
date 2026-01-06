@@ -19,7 +19,7 @@ fn main() -> ExitCode {
     let args = Args::parse();
 
     let stdin = std::io::stdin();
-    let reader = BufReader::with_capacity(8192, stdin.lock());
+    let reader = BufReader::with_capacity(32 * 1024, stdin.lock());
 
     if args.check {
         run_check_mode(reader)
