@@ -36,7 +36,9 @@ proptest! {
 }
 
 // Feature: strip-ansi, Property 3: Check mode correctness
+// Reduced case count: each iteration spawns a subprocess.
 proptest! {
+    #![proptest_config(ProptestConfig::with_cases(16))]
     #[test]
     fn check_mode_correctness(input in prop::collection::vec(any::<u8>(), 0..4096)) {
         let has_ansi = input.contains(&0x1B);

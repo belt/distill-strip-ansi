@@ -41,3 +41,31 @@ impl Write for OutputBuffer<'_> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn output_buffer_new_selects_strategy() {
+        let stdout = io::stdout();
+        let is_tty = stdout.is_terminal();
+        let buf = OutputBuffer::new(&stdout);
+        // Variant must match the terminal detection result.
+        if is_tty {
+            assert!(matches!(buf, OutputBuffer::Line(_)));
+        } else {
+            assert!(matches!(buf, OutputBuffer::Buf(_)));
+        }
+    }
+
+    #[test]
+    fn output_buffer_write_and_flush() {
+        let stdout = io::stdout();
+        let mut buf = OutputBuffer::new(&stdout);
+        let n = buf.write(b"test data\n").unwrap();
+        assert_eq!(n, 10);
+        buf.flush().unwrap();
+    }
+}

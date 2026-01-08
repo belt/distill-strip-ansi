@@ -43,3 +43,50 @@ pub fn run_check<R: BufRead>(mut reader: R) -> io::Result<bool> {
         reader.consume(len);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn run_strip_clean_lines_passthrough() {
+        let input = b"hello world\nno ansi here\n";
+        let mut output = Vec::new();
+        run_strip(Cursor::new(input), &mut output).unwrap();
+        assert_eq!(output, input);
+    }
+
+    #[test]
+    fn run_strip_dirty_lines_stripped() {
+        let input = b"\x1b[32mgreen\x1b[0m\n";
+        let mut output = Vec::new();
+        run_strip(Cursor::new(input), &mut output).unwrap();
+        assert_eq!(output, b"green\n");
+    }
+
+    #[test]
+    fn run_strip_mixed_clean_and_dirty() {
+        let input = b"clean line\n\x1b[1mbold\x1b[0m\nanother clean\n";
+        let mut output = Vec::new();
+        run_strip(Cursor::new(input), &mut output).unwrap();
+        assert_eq!(output, b"clean line\nbold\nanother clean\n");
+    }
+
+    #[test]
+    fn run_check_detects_ansi() {
+        let input = b"normal\n\x1b[31mred\x1b[0m\n";
+        assert!(run_check(Cursor::new(input)).unwrap());
+    }
+
+    #[test]
+    fn run_check_clean_returns_false() {
+        let input = b"no ansi at all\njust plain text\n";
+        assert!(!run_check(Cursor::new(input)).unwrap());
+    }
+
+    #[test]
+    fn run_check_empty_returns_false() {
+        assert!(!run_check(Cursor::new(b"")).unwrap());
+    }
+}
