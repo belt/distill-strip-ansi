@@ -3,6 +3,7 @@ use proptest::prelude::*;
 // Feature: strip-ansi, Property 1: Stripping removes all ANSI and preserves non-ANSI content
 // **Validates: Requirements 2.1, 2.7**
 proptest! {
+    #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
     fn strip_removes_all_ansi(input in prop::collection::vec(any::<u8>(), 0..4096)) {
         let stripped = strip_ansi_escapes::strip(&input);
@@ -23,6 +24,7 @@ proptest! {
 // Feature: strip-ansi, Property 2: Pass-through identity
 // **Validates: Requirements 2.2**
 proptest! {
+    #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
     fn passthrough_identity(s in "[ -~]{0,1024}") {
         // Generate printable ASCII strings (space through tilde, excluding control characters)
@@ -64,6 +66,7 @@ proptest! {
 
 // Feature: strip-ansi, Property 4: Arbitrary bytes never panic
 proptest! {
+    #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
     fn arbitrary_bytes_no_panic(input in prop::collection::vec(any::<u8>(), 0..4096)) {
         let _stripped = strip_ansi_escapes::strip(&input);

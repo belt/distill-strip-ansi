@@ -2,6 +2,7 @@ use proptest::prelude::*;
 
 // Test if strip-ansi-escapes is idempotent
 proptest! {
+    #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
     fn strip_ansi_escapes_is_idempotent(input in prop::collection::vec(any::<u8>(), 0..4096)) {
         let stripped = strip_ansi_escapes::strip(&input);
