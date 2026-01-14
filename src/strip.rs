@@ -89,4 +89,21 @@ mod tests {
     fn run_check_empty_returns_false() {
         assert!(!run_check(Cursor::new(b"")).unwrap());
     }
+
+    #[test]
+    fn run_check_multi_chunk_finds_ansi_later() {
+        // First chunk is clean, second chunk has ESC — exercises the
+        // consume-and-continue loop body (line 34).
+        let mut data = vec![b'A'; 8192]; // clean chunk
+        data.extend_from_slice(b"\x1b[31mred\x1b[0m");
+        assert!(run_check(Cursor::new(&data)).unwrap());
+    }
+
+    #[test]
+    fn run_check_multi_chunk_all_clean() {
+        // Multiple clean chunks, no ESC anywhere.
+        let data = vec![b'X'; 16384];
+        assert!(!run_check(Cursor::new(&data)).unwrap());
+    }
+
 }
