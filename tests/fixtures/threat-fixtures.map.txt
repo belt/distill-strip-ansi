@@ -1,0 +1,26 @@
+# Threat map for smtp-threats.raw.txt and http-threats.raw.txt
+#
+# Each fixture contains all 6 builtin threat types:
+#
+#   csi_21t      — title report echoback (CVE-2003-0063)
+#   csi_6n       — cursor position report
+#   dcs_decrqss  — DECRQSS echoback (CVE-2008-2383)
+#   osc_50       — font query echoback (CVE-2022-45063)
+#   osc_clipboard — OSC 52 clipboard access
+#   dcs_other    — non-query DCS
+#
+# smtp-threats.raw.txt:
+#   Line 1:  csi_21t      (in 220 banner)
+#   Line 6:  csi_6n       (in EHLO response)
+#   Line 25: dcs_decrqss  (in message body, deploy log)
+#   Line 26: osc_50       (in message body, deploy log)
+#   Line 27: osc_clipboard (in message body, deploy log)
+#   Line 28: dcs_other    (in message body, deploy log)
+#
+# http-threats.raw.txt:
+#   Line 8:  csi_21t      (in HTTP status line)
+#   Line 10: csi_6n       (in response header)
+#   Line 17: dcs_decrqss  (in JSON body, pipeline log)
+#   Line 18: osc_50       (in JSON body, pipeline log)
+#   Line 19: osc_clipboard (in JSON body, pipeline log)
+#   Line 20: dcs_other    (in JSON body, pipeline log)

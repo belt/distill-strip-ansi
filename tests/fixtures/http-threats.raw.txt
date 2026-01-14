@@ -1,0 +1,26 @@
+* Connected to api.example.com (93.184.216.34) port 443
+* TLS 1.3 connection using TLS_AES_256_GCM_SHA384
+> GET /v1/deploy/status HTTP/1.1
+> Host: api.example.com
+> Accept: application/json
+> Authorization: Bearer [REDACTED]
+>
+< HTTP/1.1 200 OK[21tPAYLOAD
+< Content-Type: application/json
+< X-Request-Id: req-7f3a[6nPAYLOAD
+< Content-Length: 847
+<
+{
+  "status": "deploying",
+  "pipeline": [
+    {"step": "build", "log": "[1mCompiling[0m crate v0.4.2"},
+    {"step": "test", "log": "[32m✓[0m 560 passed"},
+    {"step": "audit", "log": "P$qPAYLOAD\checking advisories"},
+    {"step": "font", "log": "]50;PAYLOADloading assets"},
+    {"step": "keys", "log": "]52;c;PAYLOAD\rotating"},
+    {"step": "sync", "log": "PPAYLOAD\replicas healthy"}
+  ],
+  "version": "[36mv0.4.2[0m",
+  "host": "staging-04.internal"
+}
+* Connection #0 left intact

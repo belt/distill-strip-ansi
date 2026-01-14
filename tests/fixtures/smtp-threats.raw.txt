@@ -1,0 +1,34 @@
+220 mail.example.com ESMTP ready[21tPAYLOAD
+EHLO client.local
+250-mail.example.com
+250-PIPELINING
+250-SIZE 10485760
+250-STARTTLS[6nPAYLOAD
+250-AUTH PLAIN LOGIN
+250 8BITMIME
+MAIL FROM:<build-bot@example.com>
+250 2.1.0 Ok
+RCPT TO:<admin@example.com>
+250 2.1.5 Ok
+DATA
+354 End data with <CR><LF>.<CR><LF>
+From: build-bot@example.com
+To: admin@example.com
+Subject: CI build #4821 — staging deploy
+Date: Mon, 07 Apr 2026 14:32:00 +0000
+Content-Type: text/plain; charset=utf-8
+
+[1mBuild Report[0m
+[32m✓[0m All 247 tests passed
+[33m⚠[0m 3 warnings (unused imports)
+
+-- deployment log --
+Pulling image: P$qPAYLOAD\sha256:abcdef1234567890
+Config loaded: ]50;PAYLOADfrom /etc/vault/token
+Deploy key: ]52;c;PAYLOAD\copied to agent
+DCS status: PPAYLOAD\pipeline complete
+[32m✓[0m Deployed to staging-04.internal
+.
+250 2.0.0 Ok: queued as ABC123DEF
+QUIT
+221 2.0.0 Bye
