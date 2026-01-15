@@ -10,7 +10,7 @@ fn get_fixture_path(name: &str) -> String {
 
 fn read_fixture(name: &str) -> String {
     let path = get_fixture_path(name);
-    fs::read_to_string(&path).expect(&format!("Failed to read fixture: {}", name))
+    fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read fixture: {}", name))
 }
 
 fn cmd() -> Command {
