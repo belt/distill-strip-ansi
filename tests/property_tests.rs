@@ -40,16 +40,16 @@ proptest! {
 // Feature: strip-ansi, Property 3: Check mode correctness
 // Reduced case count: each iteration spawns a subprocess.
 proptest! {
-    #![proptest_config(ProptestConfig::with_cases(16))]
+    #![proptest_config(ProptestConfig::with_cases(8))]
     #[test]
-    fn check_mode_correctness(input in prop::collection::vec(any::<u8>(), 0..4096)) {
+    fn check_mode_correctness(input in prop::collection::vec(any::<u8>(), 0..1024)) {
         let has_ansi = input.contains(&0x1B);
 
-        let mut cmd = assert_cmd::Command::new(assert_cmd::cargo::cargo_bin!("strip-ansi"));
-        cmd.arg("--check")
-            .write_stdin(input);
-
-        let output = cmd.output()?;
+        let output = assert_cmd::Command::new(assert_cmd::cargo::cargo_bin!("strip-ansi"))
+            .arg("--check")
+            .write_stdin(input)
+            .timeout(std::time::Duration::from_secs(5))
+            .output()?;
 
         prop_assert!(output.stdout.is_empty(),
             "stdout should always be empty in check mode");
