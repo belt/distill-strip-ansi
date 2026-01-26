@@ -1,109 +1,189 @@
-use std::io::{self, BufRead, Write};
+use alloc::borrow::Cow;
+use alloc::string::String;
+use alloc::vec::Vec;
 
-use bstr::io::BufReadExt;
 use memchr::memchr;
 
-/// Strip mode: process each line, write stripped output.
+use crate::parser::{Action, Parser};
+
+/// Strip ANSI escape sequences from a byte slice.
 ///
-/// Uses a two-tier fast path:
-/// 1. `memchr` scan for ESC (0x1B) — clean lines write directly (zero alloc)
-/// 2. `strip_ansi_escapes::Writer` wraps output for dirty lines (no intermediate Vec)
+/// Returns `Cow::Borrowed` when no allocation is needed:
+/// - No ESC bytes → borrowed input
+/// - Only trailing escapes → borrowed prefix
+/// - Only leading escapes → borrowed suffix
 ///
-/// Returns Ok(()) on success, or the first I/O error.
-pub fn run_strip<R: BufRead, W: Write>(mut reader: R, writer: &mut W) -> io::Result<()> {
-    reader.for_byte_line_with_terminator(|line| {
-        if memchr(0x1B, line).is_some() {
-            // Dirty line: strip inline through Writer filter
-            strip_ansi_escapes::Writer::new(&mut *writer).write_all(line)?;
-        } else {
-            // Clean line: direct pass-through, zero allocation
-            writer.write_all(line)?;
+/// Returns `Cow::Owned` when escapes are interleaved with content.
+#[must_use]
+pub fn strip(input: &[u8]) -> Cow<'_, [u8]> {
+    let Some(esc) = memchr(0x1B, input) else {
+        return Cow::Borrowed(input);
+    };
+
+    // Speculative: are all bytes from first ESC onward part of escapes?
+    let mut parser = Parser::new();
+    let mut first_emit = None;
+    for (i, &b) in input[esc..].iter().enumerate() {
+        if parser.feed(b) == Action::Emit {
+            first_emit = Some(esc + i);
+            break;
         }
-        Ok(true)
-    })
+    }
+
+    let Some(emit_pos) = first_emit else {
+        // All bytes from ESC onward are escape — trailing escapes only.
+        return Cow::Borrowed(&input[..esc]);
+    };
+
+    // Leading escapes only? Parser back in ground, no more ESC after emit_pos.
+    if esc == 0 && parser.is_ground() && memchr(0x1B, &input[emit_pos..]).is_none() {
+        return Cow::Borrowed(&input[emit_pos..]);
+    }
+
+    // Full strip: memchr ground-state loop.
+    let mut output = Vec::with_capacity(input.len());
+    // Copy the clean prefix before first ESC.
+    output.extend_from_slice(&input[..esc]);
+
+    let mut remaining = &input[esc..];
+    while !remaining.is_empty() {
+        let pos = memchr(0x1B, remaining).unwrap_or(remaining.len());
+        output.extend_from_slice(&remaining[..pos]);
+        remaining = &remaining[pos..];
+        if remaining.is_empty() {
+            break;
+        }
+
+        // Feed through parser until back to ground.
+        let mut p = Parser::new();
+        let mut i = 0;
+        while i < remaining.len() {
+            let action = p.feed(remaining[i]);
+            if action == Action::Emit {
+                output.push(remaining[i]);
+            }
+            i += 1;
+            if p.is_ground() && action != Action::Emit {
+                break;
+            }
+            // If ground after emit, next byte might be new ESC — break to memchr.
+            if p.is_ground() {
+                break;
+            }
+        }
+        remaining = &remaining[i..];
+    }
+
+    Cow::Owned(output)
 }
 
-/// Check mode: scan for ANSI presence via raw buffer chunks.
+/// Strip ANSI escape sequences from a UTF-8 string.
 ///
-/// Skips line iteration entirely — only needs to find a single `0x1B` byte
-/// anywhere in the stream. Uses `fill_buf` + `memchr` on each chunk for
-/// minimal overhead.
-///
-/// Returns Ok(true) if ANSI found, Ok(false) if clean.
-pub fn run_check<R: BufRead>(mut reader: R) -> io::Result<bool> {
-    loop {
-        let buf = reader.fill_buf()?;
-        if buf.is_empty() {
-            return Ok(false);
+/// Equivalent to [`strip`] but operates on `&str` and returns `Cow<str>`.
+/// UTF-8 validity is preserved: borrowed paths use pointer arithmetic
+/// on the original `&str`, owned path uses safe `String::from_utf8`.
+#[must_use]
+pub fn strip_str(input: &str) -> Cow<'_, str> {
+    match strip(input.as_bytes()) {
+        Cow::Borrowed(b) => {
+            // b is a subslice of input.as_bytes(), so it's valid UTF-8.
+            // Recover the &str via pointer offset.
+            let start = b.as_ptr() as usize - input.as_ptr() as usize;
+            Cow::Borrowed(&input[start..start + b.len()])
         }
-        if memchr(0x1B, buf).is_some() {
-            return Ok(true);
+        Cow::Owned(v) => {
+            // Input was valid UTF-8, stripping only removes bytes,
+            // so output is valid UTF-8.
+            Cow::Owned(String::from_utf8(v).expect("strip preserves UTF-8"))
         }
-        let len = buf.len();
-        reader.consume(len);
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::io::Cursor;
+/// Strip ANSI escape sequences into a caller-provided buffer.
+///
+/// Appends stripped content to `out`. Does not clear `out` first.
+pub fn strip_into(input: &[u8], out: &mut Vec<u8>) {
+    if memchr(0x1B, input).is_none() {
+        out.extend_from_slice(input);
+        return;
+    }
+    match strip(input) {
+        Cow::Borrowed(b) => out.extend_from_slice(b),
+        Cow::Owned(v) => out.extend_from_slice(&v),
+    }
+}
 
-    #[test]
-    fn run_strip_clean_lines_passthrough() {
-        let input = b"hello world\nno ansi here\n";
-        let mut output = Vec::new();
-        run_strip(Cursor::new(input), &mut output).unwrap();
-        assert_eq!(output, input);
+/// Strip ANSI escape sequences in place using gap compaction.
+///
+/// Returns the new length. The buffer is truncated to the new length.
+/// Uses `copy_within` for safe bulk moves and `memchr` to skip
+/// ground bytes between escapes.
+#[must_use]
+pub fn strip_in_place(buf: &mut Vec<u8>) -> usize {
+    let Some(esc) = memchr(0x1B, buf) else {
+        return buf.len();
+    };
+
+    let mut dst = esc;
+    let len = buf.len();
+    let mut src = esc;
+
+    while src < len {
+        // Find next ESC from current position.
+        let next_esc = memchr(0x1B, &buf[src..])
+            .map(|p| src + p)
+            .unwrap_or(len);
+
+        // Copy ground bytes.
+        let ground_len = next_esc - src;
+        if ground_len > 0 {
+            buf.copy_within(src..next_esc, dst);
+            dst += ground_len;
+        }
+        src = next_esc;
+        if src >= len {
+            break;
+        }
+
+        // Feed escape bytes through parser.
+        let mut parser = Parser::new();
+        while src < len {
+            let action = parser.feed(buf[src]);
+            if action == Action::Emit {
+                buf[dst] = buf[src];
+                dst += 1;
+            }
+            src += 1;
+            if parser.is_ground() && action != Action::Emit {
+                break;
+            }
+            if parser.is_ground() {
+                break;
+            }
+        }
     }
 
-    #[test]
-    fn run_strip_dirty_lines_stripped() {
-        let input = b"\x1b[32mgreen\x1b[0m\n";
-        let mut output = Vec::new();
-        run_strip(Cursor::new(input), &mut output).unwrap();
-        assert_eq!(output, b"green\n");
-    }
+    buf.truncate(dst);
+    dst
+}
 
-    #[test]
-    fn run_strip_mixed_clean_and_dirty() {
-        let input = b"clean line\n\x1b[1mbold\x1b[0m\nanother clean\n";
-        let mut output = Vec::new();
-        run_strip(Cursor::new(input), &mut output).unwrap();
-        assert_eq!(output, b"clean line\nbold\nanother clean\n");
+/// Check whether a byte slice contains any ANSI escape sequences.
+///
+/// Uses `memchr` SIMD scan for ESC (0x1B) followed by introducer
+/// validation. Returns `true` on the first valid ESC + introducer pair.
+#[must_use]
+pub fn contains_ansi(input: &[u8]) -> bool {
+    let mut remaining = input;
+    while let Some(pos) = memchr(0x1B, remaining) {
+        // Check if there's a valid introducer after ESC.
+        if let Some(&next) = remaining.get(pos + 1) {
+            match next {
+                b'[' | b']' | b'P' | b'X' | b'^' | b'_' | b'N' | b'O' => return true,
+                0x20..=0x7E => return true,
+                _ => {}
+            }
+        }
+        remaining = &remaining[pos + 1..];
     }
-
-    #[test]
-    fn run_check_detects_ansi() {
-        let input = b"normal\n\x1b[31mred\x1b[0m\n";
-        assert!(run_check(Cursor::new(input)).unwrap());
-    }
-
-    #[test]
-    fn run_check_clean_returns_false() {
-        let input = b"no ansi at all\njust plain text\n";
-        assert!(!run_check(Cursor::new(input)).unwrap());
-    }
-
-    #[test]
-    fn run_check_empty_returns_false() {
-        assert!(!run_check(Cursor::new(b"")).unwrap());
-    }
-
-    #[test]
-    fn run_check_multi_chunk_finds_ansi_later() {
-        // First chunk is clean, second chunk has ESC — exercises the
-        // consume-and-continue loop body (line 34).
-        let mut data = vec![b'A'; 8192]; // clean chunk
-        data.extend_from_slice(b"\x1b[31mred\x1b[0m");
-        assert!(run_check(Cursor::new(&data)).unwrap());
-    }
-
-    #[test]
-    fn run_check_multi_chunk_all_clean() {
-        // Multiple clean chunks, no ESC anywhere.
-        let data = vec![b'X'; 16384];
-        assert!(!run_check(Cursor::new(&data)).unwrap());
-    }
-
+    false
 }

@@ -4,19 +4,33 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Strip ANSI escape sequences from byte streams"
+
+[lib]
+name = "strip_ansi"
 
 [[bin]]
 name = "strip-ansi"
-path = "src/main.rs"
+required-features = ["cli"]
+
+[features]
+default = ["std", "cli"]
+std = []
+cli = ["std", "dep:clap", "dep:sigpipe"]
 
 [dependencies]
-clap = { workspace = true }
-strip-ansi-escapes = "0.2"
-bstr = { workspace = true }
 memchr = { workspace = true }
-sigpipe = { workspace = true }
+clap = { workspace = true, optional = true }
+sigpipe = { workspace = true, optional = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
 assert_cmd = { workspace = true }
 insta = { workspace = true }
+criterion = { workspace = true }
+strip-ansi-escapes = "0.2"
+console = { workspace = true }
+
+[[bench]]
+name = "strip_benchmark"
+harness = false

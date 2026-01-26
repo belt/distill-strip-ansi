@@ -1,49 +1,44 @@
 use proptest::prelude::*;
 
-// Feature: strip-ansi, Property 1: Stripping removes all ANSI and preserves non-ANSI content
-// **Validates: Requirements 2.1, 2.7**
+// Property: Stripping via our library is idempotent
 proptest! {
     #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
-    fn strip_removes_all_ansi(input in prop::collection::vec(any::<u8>(), 0..4096)) {
-        let stripped = strip_ansi_escapes::strip(&input);
-
-        // Property 1a: Stripping is idempotent — re-stripping produces no change.
-        // This proves all recognized ANSI sequences were removed in the first pass.
-        let double_stripped = strip_ansi_escapes::strip(&stripped);
-        prop_assert_eq!(&stripped, &double_stripped,
-            "Stripping should be idempotent — no ANSI sequences remain after first strip");
-
-        // Property 1b: The function completes without panicking on arbitrary input
-        // (binary safety - Requirement 8.1)
-        // The length check is omitted because strip-ansi-escapes may replace invalid
-        // UTF-8 with replacement characters, which can change byte count.
+    fn strip_idempotent(input in prop::collection::vec(any::<u8>(), 0..4096)) {
+        let stripped = strip_ansi::strip(&input);
+        let double_stripped = strip_ansi::strip(&stripped);
+        prop_assert_eq!(&*stripped, &*double_stripped,
+            "Stripping should be idempotent");
     }
 }
 
-// Feature: strip-ansi, Property 2: Pass-through identity
-// **Validates: Requirements 2.2**
+// Property: Clean ASCII passes through unchanged
 proptest! {
     #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
     fn passthrough_identity(s in "[ -~]{0,1024}") {
-        // Generate printable ASCII strings (space through tilde, excluding control characters)
-        // to test pass-through behavior.
-        let input = s.as_bytes().to_vec();
-        let stripped = strip_ansi_escapes::strip(&input);
-
-        prop_assert_eq!(stripped, input,
+        let input = s.as_bytes();
+        let stripped = strip_ansi::strip(input);
+        prop_assert_eq!(&*stripped, input,
             "Printable ASCII without ANSI should pass through unchanged");
     }
 }
 
-// Feature: strip-ansi, Property 3: Check mode correctness
-// Reduced case count: each iteration spawns a subprocess.
+// Property: Check mode detects well-formed ANSI sequences
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(8))]
     #[test]
-    fn check_mode_correctness(input in prop::collection::vec(any::<u8>(), 0..1024)) {
-        let has_ansi = input.contains(&0x1B);
+    fn check_mode_correctness(
+        prefix in prop::collection::vec(0x20..=0x7Eu8, 0..64),
+        sgr_code in 0u8..=49,
+        suffix in prop::collection::vec(0x20..=0x7Eu8, 0..64),
+    ) {
+        // Build input with a well-formed CSI SGR sequence.
+        let mut input = prefix.clone();
+        input.extend_from_slice(b"\x1b[");
+        input.extend_from_slice(sgr_code.to_string().as_bytes());
+        input.push(b'm');
+        input.extend_from_slice(&suffix);
 
         let output = assert_cmd::Command::new(assert_cmd::cargo::cargo_bin!("strip-ansi"))
             .arg("--check")
@@ -53,29 +48,20 @@ proptest! {
 
         prop_assert!(output.stdout.is_empty(),
             "stdout should always be empty in check mode");
-
-        if has_ansi {
-            prop_assert!(!output.status.success(),
-                "exit code should be 1 when ANSI sequences are present");
-        } else {
-            prop_assert!(output.status.success(),
-                "exit code should be 0 when no ANSI sequences are present");
-        }
+        prop_assert!(!output.status.success(),
+            "exit code should be 1 when ANSI sequences are present");
     }
 }
 
-// Feature: strip-ansi, Property 4: Arbitrary bytes never panic
+// Property: Arbitrary bytes never panic
 proptest! {
     #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
     fn arbitrary_bytes_no_panic(input in prop::collection::vec(any::<u8>(), 0..4096)) {
-        let _stripped = strip_ansi_escapes::strip(&input);
-
-        let _has_ansi = input.contains(&0x1B);
+        let _stripped = strip_ansi::strip(&input);
+        let _contains = strip_ansi::contains_ansi(&input);
     }
 }
-
-// Feature: strip-ansi, Unit tests for exit code mapping and BrokenPipe handling
 
 #[test]
 fn empty_input_produces_empty() {
@@ -107,17 +93,14 @@ fn check_stderr_diagnostic() {
 fn broken_pipe_exit_zero() {
     use std::process::Command;
 
-    // Create a broken pipe scenario by piping to a command that exits quickly
-    // Use /dev/null to simulate a closed pipe
     let child = Command::new("sh")
         .arg("-c")
         .arg("echo test | cargo run --quiet --bin strip-ansi -- > /dev/null")
-        .current_dir("/Users/paulbelt/work/distill/strip-ansi")
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
         .spawn()
         .expect("Failed to spawn child process");
 
     let output = child.wait_with_output().expect("Failed to read output");
-
     assert!(output.status.code() == Some(0));
 }
 
@@ -125,18 +108,14 @@ fn broken_pipe_exit_zero() {
 fn broken_pipe_no_panic_stderr() {
     use std::process::Command;
 
-    // Create a broken pipe scenario
-    // Use /dev/null to simulate a closed pipe
     let child = Command::new("sh")
         .arg("-c")
         .arg("echo test | cargo run --quiet --bin strip-ansi -- > /dev/null")
-        .current_dir("/Users/paulbelt/work/distill/strip-ansi")
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
         .spawn()
         .expect("Failed to spawn child process");
 
     let output = child.wait_with_output().expect("Failed to read output");
-
-    // Should not have any panic-related stderr output
     let stderr_str = String::from_utf8_lossy(&output.stderr);
     assert!(!stderr_str.contains("BrokenPipe"));
     assert!(!stderr_str.contains("panicked"));

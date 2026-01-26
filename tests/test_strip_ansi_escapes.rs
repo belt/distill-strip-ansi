@@ -1,42 +1,52 @@
 use proptest::prelude::*;
 
-// Test if strip-ansi-escapes is idempotent
+// Compare our strip with strip-ansi-escapes on well-formed CSI sequences
 proptest! {
     #![proptest_config(ProptestConfig { cases: 100, ..Default::default() })]
     #[test]
-    fn strip_ansi_escapes_is_idempotent(input in prop::collection::vec(any::<u8>(), 0..4096)) {
-        let stripped = strip_ansi_escapes::strip(&input);
-        let double_stripped = strip_ansi_escapes::strip(&stripped);
+    fn strip_matches_ecosystem_on_csi(
+        prefix in "[ -~]{0,64}",
+        code in 0u8..=49,
+        suffix in "[ -~]{0,64}",
+    ) {
+        let mut input = prefix.as_bytes().to_vec();
+        input.extend_from_slice(b"\x1b[");
+        input.extend_from_slice(code.to_string().as_bytes());
+        input.push(b'm');
+        input.extend_from_slice(suffix.as_bytes());
 
-        prop_assert_eq!(stripped, double_stripped,
-            "strip-ansi-escapes should be idempotent");
+        let ours = strip_ansi::strip(&input);
+        let theirs = strip_ansi_escapes::strip(&input);
+
+        prop_assert_eq!(&*ours, &*theirs,
+            "Our strip should match strip-ansi-escapes on CSI sequences");
     }
 }
 
 #[test]
-fn strip_ansi_escapes_basic() {
+fn strip_basic() {
     let input = b"\x1b[32mfoo\x1b[m bar";
-    let stripped = strip_ansi_escapes::strip(input);
-    assert_eq!(stripped, b"foo bar");
+    let stripped = strip_ansi::strip(input);
+    assert_eq!(&*stripped, b"foo bar");
 
-    // Test idempotency
-    let double = strip_ansi_escapes::strip(&stripped);
-    assert_eq!(stripped, double);
+    // Idempotent
+    let double = strip_ansi::strip(&stripped);
+    assert_eq!(&*stripped, &*double);
 }
 
 #[test]
-fn strip_ansi_escapes_isolated_esc() {
+fn strip_isolated_esc() {
     let input = b"\x1b";
-    let stripped = strip_ansi_escapes::strip(input);
-    let double = strip_ansi_escapes::strip(&stripped);
-    assert_eq!(stripped, double, "Should be idempotent");
+    let stripped = strip_ansi::strip(input);
+    let double = strip_ansi::strip(&stripped);
+    assert_eq!(&*stripped, &*double, "Should be idempotent");
 }
 
 #[test]
-fn strip_ansi_escapes_c1_csi() {
-    // C1 CSI sequence (0x9B in UTF-8 is [194, 155])
+fn strip_c1_passthrough() {
+    // C1 bytes (0x80-0x9F) should pass through as content.
     let input = b"\xc2\x9b31m";
-    let stripped = strip_ansi_escapes::strip(input);
-    let double = strip_ansi_escapes::strip(&stripped);
-    assert_eq!(stripped, double, "Should be idempotent");
+    let stripped = strip_ansi::strip(input);
+    // C1 bytes are content, not escape introducers.
+    assert_eq!(&*stripped, input, "C1 bytes should pass through");
 }
