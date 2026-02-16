@@ -1,0 +1,16 @@
+---
+source: strip-ansi/tests/snapshot_tests.rs
+expression: strip_to_string(input)
+---
+   Compiling strip-ansi v0.2.0 (/home/user/project)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.34s
+     Running unittests src/lib.rs (target/debug/deps/strip_ansi-abc123)
+
+running 5 tests
+test parser::tests::ground_emit ... ok
+test parser::tests::csi_skip ... ok
+test parser::tests::osc_skip ... ok
+test strip::tests::clean ... ok
+test strip::tests::mixed ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

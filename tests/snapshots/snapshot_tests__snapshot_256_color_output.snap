@@ -1,0 +1,7 @@
+---
+source: strip-ansi/tests/snapshot_tests.rs
+expression: strip_to_string(input)
+---
+Red Green Blue
+Black on Yellow
+Orange (24-bit)

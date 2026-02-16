@@ -1,0 +1,6 @@
+---
+source: strip-ansi/tests/snapshot_tests.rs
+expression: stream_to_string(input)
+---
+   Compiling strip-ansi v0.2.0
+test result: ok. 5 passed; 0 failed
