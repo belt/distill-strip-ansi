@@ -1,0 +1,32 @@
+[package]
+name = "strip-ansi-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.strip-ansi]
+path = ".."
+default-features = false
+
+[[bin]]
+name = "fuzz_strip"
+path = "fuzz_targets/fuzz_strip.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_stream"
+path = "fuzz_targets/fuzz_stream.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_strip_in_place"
+path = "fuzz_targets/fuzz_strip_in_place.rs"
+doc = false
+
+[workspace]
