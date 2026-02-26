@@ -2,8 +2,7 @@
 name = "strip-ansi"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-publish.workspace = true
+license-file.workspace = true
 repository.workspace = true
 description = "Strip ANSI escape sequences from byte streams"
 
