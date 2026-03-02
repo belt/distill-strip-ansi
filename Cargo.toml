@@ -1,5 +1,5 @@
 [package]
-name = "strip-ansi"
+name = "distill-strip-ansi"
 version.workspace = true
 edition.workspace = true
 license-file.workspace = true
@@ -11,6 +11,7 @@ name = "strip_ansi"
 
 [[bin]]
 name = "strip-ansi"
+path = "src/main.rs"
 required-features = ["cli"]
 
 [features]
