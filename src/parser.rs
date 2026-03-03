@@ -10,7 +10,7 @@ pub enum Action {
 
 /// ECMA-48 parser states.
 ///
-/// 13 variants covering CSI, OSC, DCS, APC/PM/SOS (collapsed),
+/// 15 variants covering CSI, OSC, DCS, APC/PM/SOS (collapsed),
 /// SS2, SS3, Fe, and intermediate bytes. SOS/PM/APC share
 /// `StringPassthrough` since their behavior is identical.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -158,6 +158,11 @@ impl Parser {
                         self.state = State::OscStEsc;
                         return Action::Skip;
                     }
+                    // CAN/SUB abort the sequence (ECMA-48 §5.6).
+                    0x18 | 0x1A => {
+                        self.state = State::Ground;
+                        return Action::Skip;
+                    }
                     _ => return Action::Skip,
                 },
                 State::OscStEsc => {
@@ -182,6 +187,11 @@ impl Parser {
                         self.state = State::DcsStEsc;
                         return Action::Skip;
                     }
+                    // CAN/SUB abort the sequence (ECMA-48 §5.6).
+                    0x18 | 0x1A => {
+                        self.state = State::Ground;
+                        return Action::Skip;
+                    }
                     _ => {
                         self.state = State::DcsPassthrough;
                         return Action::Skip;
@@ -197,6 +207,11 @@ impl Parser {
                         self.state = State::DcsStEsc;
                         return Action::Skip;
                     }
+                    // CAN/SUB abort the sequence (ECMA-48 §5.6).
+                    0x18 | 0x1A => {
+                        self.state = State::Ground;
+                        return Action::Skip;
+                    }
                     _ => {
                         self.state = State::DcsPassthrough;
                         return Action::Skip;
@@ -205,6 +220,11 @@ impl Parser {
                 State::DcsPassthrough => match b {
                     0x1B => {
                         self.state = State::DcsStEsc;
+                        return Action::Skip;
+                    }
+                    // CAN/SUB abort the sequence (ECMA-48 §5.6).
+                    0x18 | 0x1A => {
+                        self.state = State::Ground;
                         return Action::Skip;
                     }
                     _ => return Action::Skip,
@@ -220,6 +240,11 @@ impl Parser {
                 State::StringPassthrough => match b {
                     0x1B => {
                         self.state = State::StringStEsc;
+                        return Action::Skip;
+                    }
+                    // CAN/SUB abort the sequence (ECMA-48 §5.6).
+                    0x18 | 0x1A => {
+                        self.state = State::Ground;
                         return Action::Skip;
                     }
                     _ => return Action::Skip,

@@ -445,3 +445,100 @@ fn dcs_param_to_passthrough() {
     p.feed(b'q'); // final → DcsPassthrough
     assert_eq!(p.state(), State::DcsPassthrough);
 }
+
+
+// --- CAN (0x18) and SUB (0x1A) abort tests ---
+
+#[test]
+fn can_aborts_osc_string() {
+    // ESC ] 8 ; ; url CAN visible
+    let input = b"\x1b]8;;http://ex.com\x18visible";
+    let actions = feed_all(input);
+    // Everything up to and including CAN should be Skip.
+    // "visible" (last 7 bytes) should be Emit.
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 7);
+    assert_eq!(feed_state(input), State::Ground);
+}
+
+#[test]
+fn sub_aborts_osc_string() {
+    let input = b"\x1b]8;;url\x1Atext";
+    let actions = feed_all(input);
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 4); // "text"
+    assert_eq!(feed_state(input), State::Ground);
+}
+
+#[test]
+fn can_aborts_dcs_passthrough() {
+    // ESC P q body CAN visible
+    let input = b"\x1bPqbody\x18visible";
+    let actions = feed_all(input);
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 7); // "visible"
+    assert_eq!(feed_state(input), State::Ground);
+}
+
+#[test]
+fn sub_aborts_dcs_passthrough() {
+    let input = b"\x1bPqdata\x1Atext";
+    let actions = feed_all(input);
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 4); // "text"
+}
+
+#[test]
+fn can_aborts_dcs_entry() {
+    // ESC P CAN visible — CAN before any param/final byte
+    let input = b"\x1bP\x18visible";
+    let actions = feed_all(input);
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 7); // "visible"
+    assert_eq!(feed_state(input), State::Ground);
+}
+
+#[test]
+fn can_aborts_dcs_param() {
+    // ESC P 1 CAN visible — CAN during param collection
+    let input = b"\x1bP1\x18visible";
+    let actions = feed_all(input);
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 7); // "visible"
+    assert_eq!(feed_state(input), State::Ground);
+}
+
+#[test]
+fn can_aborts_string_passthrough() {
+    // ESC _ (APC) body CAN visible
+    let input = b"\x1b_apc-body\x18visible";
+    let actions = feed_all(input);
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 7); // "visible"
+    assert_eq!(feed_state(input), State::Ground);
+}
+
+#[test]
+fn sub_aborts_string_passthrough() {
+    // ESC ^ (PM) body SUB visible
+    let input = b"\x1b^pm-body\x1Avisible";
+    let actions = feed_all(input);
+    let emit_count = actions.iter().filter(|a| **a == Action::Emit).count();
+    assert_eq!(emit_count, 7); // "visible"
+    assert_eq!(feed_state(input), State::Ground);
+}
+
+#[test]
+fn can_in_osc8_preserves_link_text() {
+    // Real-world: malformed OSC 8 with CAN before the link text
+    // ESC ] 8 ; ; url CAN Link Text ESC ] 8 ; ; BEL
+    let input = b"\x1b]8;;http://example.com\x18Link Text\x1b]8;;\x07";
+    let mut p = Parser::new();
+    let mut emitted = Vec::new();
+    for &b in input.iter() {
+        if p.feed(b) == Action::Emit {
+            emitted.push(b);
+        }
+    }
+    assert_eq!(&emitted, b"Link Text");
+}
