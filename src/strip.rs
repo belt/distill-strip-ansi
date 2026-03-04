@@ -187,3 +187,30 @@ pub fn contains_ansi(input: &[u8]) -> bool {
     }
     false
 }
+
+// --- Drop-in compatibility aliases ---
+
+/// Drop-in replacement for [`fast_strip_ansi::strip_ansi_bytes`].
+///
+/// Identical to [`strip`] — returns `Cow::Borrowed` when no
+/// allocation is needed, `Cow::Owned` otherwise.
+///
+/// [`fast_strip_ansi::strip_ansi_bytes`]: https://docs.rs/fast-strip-ansi/latest/fast_strip_ansi/fn.strip_ansi_bytes.html
+#[inline]
+#[must_use]
+pub fn strip_ansi_bytes(input: &[u8]) -> Cow<'_, [u8]> {
+    strip(input)
+}
+
+/// Drop-in replacement for [`strip_ansi_escapes::strip`].
+///
+/// Accepts any `AsRef<[u8]>` and always returns `Vec<u8>`,
+/// matching the `strip-ansi-escapes` API. Prefer [`strip`]
+/// directly when zero-alloc `Cow` semantics are acceptable.
+///
+/// [`strip_ansi_escapes::strip`]: https://docs.rs/strip-ansi-escapes/latest/strip_ansi_escapes/fn.strip.html
+#[inline]
+#[must_use]
+pub fn strip_ansi_escapes<T: AsRef<[u8]>>(data: T) -> Vec<u8> {
+    strip(data.as_ref()).into_owned()
+}

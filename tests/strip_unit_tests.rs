@@ -257,6 +257,22 @@ fn real_world_window_title() {
     assert_eq!(&*result, b"prompt$ ");
 }
 
+#[test]
+fn real_world_osc8_st_terminated_with_m_in_url() {
+    // 'm' in the URL path must not trigger CSI-style termination
+    let input = b"\x1b]8;;http://example.com/m/menu\x1b\\Link Text\x1b]8;;\x1b\\";
+    let result = strip_ansi::strip(input);
+    assert_eq!(&*result, b"Link Text");
+}
+
+#[test]
+fn real_world_dcs_with_internal_terminators() {
+    // DCS body can contain 'm' and ';' — must not end the sequence early
+    let input = b"Prefix\x1bP0;1|data-with-m-and-;-chars\x1b\\Suffix";
+    let result = strip_ansi::strip(input);
+    assert_eq!(&*result, b"PrefixSuffix");
+}
+
 // --- Edge cases ---
 
 #[test]
@@ -306,4 +322,86 @@ fn strip_idempotent_on_mixed() {
     let first = strip_ansi::strip(input);
     let second = strip_ansi::strip(&first);
     assert_eq!(&*first, &*second);
+}
+
+
+// --- CAN/SUB abort tests at strip level ---
+
+#[test]
+fn strip_osc8_aborted_by_can() {
+    // Malformed OSC 8 where CAN appears mid-sequence
+    let input = b"\x1b]8;;http://example.com\x18visible text";
+    let result = strip_ansi::strip(input);
+    assert_eq!(&*result, b"visible text");
+}
+
+#[test]
+fn strip_dcs_aborted_by_can() {
+    let input = b"before\x1bPqbody\x18after";
+    let result = strip_ansi::strip(input);
+    assert_eq!(&*result, b"beforeafter");
+}
+
+#[test]
+fn strip_apc_aborted_by_sub() {
+    let input = b"before\x1b_apc\x1Aafter";
+    let result = strip_ansi::strip(input);
+    assert_eq!(&*result, b"beforeafter");
+}
+
+#[test]
+fn strip_osc8_can_then_normal_close() {
+    // CAN aborts the first OSC 8, text is visible, second OSC 8 closes normally
+    let input = b"\x1b]8;;url\x18Link\x1b]8;;\x07";
+    let result = strip_ansi::strip(input);
+    assert_eq!(&*result, b"Link");
+}
+
+#[test]
+fn strip_can_in_ground_emitted() {
+    // CAN in ground state is just a byte — should pass through
+    let input = b"hello\x18world";
+    let result = strip_ansi::strip(input);
+    assert_eq!(&*result, b"hello\x18world");
+}
+
+
+// --- Drop-in alias tests ---
+
+#[test]
+fn strip_ansi_bytes_eq_strip() {
+    let input = b"a\x1b[31mb\x1b[0mc";
+    assert_eq!(
+        &*strip_ansi::strip_ansi_bytes(input),
+        &*strip_ansi::strip(input)
+    );
+}
+
+#[test]
+fn strip_ansi_bytes_clean_borrowed() {
+    let input = b"no escapes";
+    let result = strip_ansi::strip_ansi_bytes(input);
+    assert!(matches!(result, Cow::Borrowed(_)));
+    assert_eq!(&*result, input);
+}
+
+#[test]
+fn strip_ansi_escapes_returns_vec() {
+    let input = b"\x1b[31mred\x1b[0m";
+    let result: Vec<u8> = strip_ansi::strip_ansi_escapes(input);
+    assert_eq!(result, b"red");
+}
+
+#[test]
+fn strip_ansi_escapes_accepts_vec() {
+    let input = vec![0x1b, b'[', b'1', b'm', b'h', b'i', 0x1b, b'[', b'0', b'm'];
+    let result: Vec<u8> = strip_ansi::strip_ansi_escapes(input);
+    assert_eq!(result, b"hi");
+}
+
+#[test]
+fn strip_ansi_escapes_accepts_string() {
+    let input = String::from("\x1b[32mgreen\x1b[0m");
+    let result = strip_ansi::strip_ansi_escapes(input);
+    assert_eq!(result, b"green");
 }
