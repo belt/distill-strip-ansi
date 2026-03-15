@@ -159,3 +159,154 @@ fn sigpipe_handling() {
     let stderr_str = String::from_utf8_lossy(&output.stderr);
     assert!(stderr_str.is_empty() || !stderr_str.contains("BrokenPipe"));
 }
+
+// ── --head / -n ──
+
+#[test]
+fn head_limits_output_lines() {
+    let mut cmd = cmd();
+    cmd.arg("--head").arg("2").write_stdin(
+        "\x1b[31mline1\x1b[0m\n\x1b[32mline2\x1b[0m\n\x1b[33mline3\x1b[0m\n",
+    );
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "line1\nline2\n");
+}
+
+#[test]
+fn head_short_flag() {
+    let mut cmd = cmd();
+    cmd.arg("-n").arg("1").write_stdin("aaa\nbbb\nccc\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "aaa\n");
+}
+
+#[test]
+fn head_more_than_input() {
+    let mut cmd = cmd();
+    cmd.arg("--head").arg("100").write_stdin("only\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "only\n");
+}
+
+#[test]
+fn head_zero_produces_empty() {
+    let mut cmd = cmd();
+    cmd.arg("--head").arg("0").write_stdin("stuff\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert!(output.stdout.is_empty());
+}
+
+// ── --count / -c ──
+
+#[test]
+fn count_reports_stripped_bytes() {
+    let mut cmd = cmd();
+    // \x1b[31m = 5 bytes, \x1b[0m = 4 bytes → 9 stripped
+    cmd.arg("--count").write_stdin("\x1b[31mhello\x1b[0m\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "hello\n");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(stderr.trim(), "9");
+}
+
+#[test]
+fn count_zero_on_clean_input() {
+    let mut cmd = cmd();
+    cmd.arg("-c").write_stdin("clean\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(stderr.trim(), "0");
+}
+
+// ── --output / -o ──
+
+#[test]
+fn output_to_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let out_path = dir.path().join("out.txt");
+
+    let mut cmd = cmd();
+    cmd.arg("-o")
+        .arg(out_path.to_str().unwrap())
+        .write_stdin("\x1b[1mbold\x1b[0m\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert!(output.stdout.is_empty(), "stdout should be empty with -o");
+    assert_eq!(fs::read_to_string(&out_path).unwrap(), "bold\n");
+}
+
+// ── --max-size ──
+
+#[test]
+fn max_size_caps_input() {
+    let mut cmd = cmd();
+    // 10 bytes of input, cap at 5 → only first 5 bytes processed
+    cmd.arg("--max-size")
+        .arg("5")
+        .write_stdin("abcdefghij");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "abcde");
+}
+
+#[test]
+fn max_size_with_check() {
+    let mut cmd = cmd();
+    // ANSI at byte 6+, cap at 5 → check sees only clean bytes
+    cmd.arg("--check")
+        .arg("--max-size")
+        .arg("5")
+        .write_stdin("hello\x1b[31mred\x1b[0m");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+}
+
+// ── combined options ──
+
+#[test]
+fn head_and_count_combined() {
+    let mut cmd = cmd();
+    cmd.arg("--head")
+        .arg("1")
+        .arg("--count")
+        .write_stdin("\x1b[31mfirst\x1b[0m\n\x1b[32msecond\x1b[0m\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "first\n");
+    // Count is reported even with --head
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(!stderr.is_empty());
+}
+
+#[test]
+fn output_and_head_combined() {
+    let dir = tempfile::tempdir().unwrap();
+    let out_path = dir.path().join("head_out.txt");
+
+    let mut cmd = cmd();
+    cmd.arg("-o")
+        .arg(out_path.to_str().unwrap())
+        .arg("--head")
+        .arg("1")
+        .write_stdin("line1\nline2\nline3\n");
+
+    let output = cmd.output().unwrap();
+    assert!(output.status.success());
+    assert_eq!(fs::read_to_string(&out_path).unwrap(), "line1\n");
+}

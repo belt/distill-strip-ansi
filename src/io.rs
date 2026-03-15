@@ -1,32 +1,32 @@
-use std::io::{self, BufWriter, IsTerminal, LineWriter, StdoutLock, Write};
+use std::io::{self, BufWriter, IsTerminal, LineWriter, Stdout, Write};
 
 /// Adaptive output buffer that selects buffering strategy based on output target.
 ///
 /// - TTY → `LineWriter` for low-latency line-at-a-time display
 /// - Pipe/file → `BufWriter` (32 KB) for throughput
-pub enum OutputBuffer<'a> {
-    Line(LineWriter<StdoutLock<'a>>),
-    Buf(BufWriter<StdoutLock<'a>>),
+///
+/// Owns the `Stdout` handle so it can be boxed as `dyn Write`.
+pub enum OutputBuffer {
+    Line(LineWriter<Stdout>),
+    Buf(BufWriter<Stdout>),
 }
 
-impl<'a> OutputBuffer<'a> {
-    /// Create a new `OutputBuffer` from a locked stdout handle.
+impl OutputBuffer {
+    /// Create a new `OutputBuffer` from an owned stdout handle.
     ///
     /// Checks `stdout.is_terminal()` to select the buffering strategy:
-    /// - TTY → `LineWriter::new(lock)`
-    /// - Pipe/file → `BufWriter::with_capacity(32 * 1024, lock)`
-    pub fn new(stdout: &'a io::Stdout) -> Self {
-        let is_tty = stdout.is_terminal();
-        let lock = stdout.lock();
-        if is_tty {
-            OutputBuffer::Line(LineWriter::new(lock))
+    /// - TTY → `LineWriter`
+    /// - Pipe/file → `BufWriter` (32 KB)
+    pub fn new(stdout: Stdout) -> Self {
+        if stdout.is_terminal() {
+            OutputBuffer::Line(LineWriter::new(stdout))
         } else {
-            OutputBuffer::Buf(BufWriter::with_capacity(32 * 1024, lock))
+            OutputBuffer::Buf(BufWriter::with_capacity(32 * 1024, stdout))
         }
     }
 }
 
-impl Write for OutputBuffer<'_> {
+impl Write for OutputBuffer {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         match self {
             OutputBuffer::Line(w) => w.write(buf),
@@ -51,8 +51,7 @@ mod tests {
     fn output_buffer_new_selects_strategy() {
         let stdout = io::stdout();
         let is_tty = stdout.is_terminal();
-        let buf = OutputBuffer::new(&stdout);
-        // Variant must match the terminal detection result.
+        let buf = OutputBuffer::new(io::stdout());
         if is_tty {
             assert!(matches!(buf, OutputBuffer::Line(_)));
         } else {
@@ -62,8 +61,7 @@ mod tests {
 
     #[test]
     fn output_buffer_write_and_flush() {
-        let stdout = io::stdout();
-        let mut buf = OutputBuffer::new(&stdout);
+        let mut buf = OutputBuffer::new(io::stdout());
         let n = buf.write(b"test data\n").unwrap();
         assert_eq!(n, 10);
         buf.flush().unwrap();
