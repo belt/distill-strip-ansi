@@ -6,7 +6,7 @@ Stripping is a classification problem, not an interpretation problem.
 
 ## Competitive Landscape
 
-This workspace uses `distill-strip-ansi` (crate `strip-ansi/`).
+This workspace uses `distill-strip-ansi` (crate `distill-strip-ansi/`).
 This file documents why, and when alternatives are appropriate.
 
 `distill-strip-ansi` — Hand-coded match + memchr.
