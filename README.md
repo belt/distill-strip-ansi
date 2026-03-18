@@ -1,84 +1,108 @@
 # distill-strip-ansi
 
-## Why?
+Strip ANSI escape sequences from byte streams.
 
-Stripping is a classification problem, not an interpretation problem.
+Covers the full ECMA-48 specification: CSI, OSC, DCS, APC/PM/SOS, SS2/SS3,
+and Fe sequences. Zero `unsafe`, `no_std`-compatible, `memchr` SIMD scanning
+with a 1-byte state machine. Returns `Cow::Borrowed` on clean input (zero-alloc
+fast path).
 
-## Competitive Landscape
+## CLI
 
-This workspace uses `distill-strip-ansi` (crate `distill-strip-ansi/`).
-This file documents why, and when alternatives are appropriate.
+Install the binary:
 
-`distill-strip-ansi` — Hand-coded match + memchr.
-Full ECMA-48. Cow alloc, `no_std`, 1-byte parser, streaming.
+```sh
+cargo install distill-strip-ansi
+```
 
-`strip-ansi-escapes` — `vte` wrapper.
-Full ECMA-48. Always Vec, no `no_std`, ~1KB parser, no streaming.
+Pipe any command through `strip-ansi` to remove escape sequences:
 
-`console` — Regex.
-CSI + partial OSC. Cow (str), no `no_std`, regex obj, no streaming.
+```sh
+cargo build --color=always 2>&1 | strip-ansi
+docker build --progress=plain . 2>&1 | strip-ansi > build.log
+```
 
-`vte` — State machine (Perform trait).
-Full VT. OSC buf, optional `no_std`, ~1KB+ parser, streaming.
+Read from a file:
 
-`anstyle-parse` — 4KB lookup table.
-Full VT. OSC buf, optional `no_std`, ~4KB parser, streaming.
+```sh
+strip-ansi colored-output.log
+```
 
-`anstream` — anstyle-parse Write adapter.
-Full VT. Write sink, no `no_std`, ~4KB parser, streaming.
+Check whether input contains ANSI sequences (exit 1 if found):
 
-`cansi` — Linear CSI scan.
-CSI only. Vec (str), no `no_std`, no streaming.
+```sh
+strip-ansi --check < input.txt
+```
 
-## When to Use What
+Flags:
 
-`distill-strip-ansi` — high-throughput log stripping, binary
-`&[u8]` input, streaming chunks, `no_std`/WASM targets, when
-you need Cow zero-alloc on clean input + full ECMA-48 coverage.
+| Flag              | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `--check`         | Detect ANSI sequences without stripping         |
+| `-n N`, `--head`  | Output only the first N lines after stripping  |
+| `-o`, `--output`  | Write to file instead of stdout                |
+| `-c`, `--count`   | Print stripped byte count to stderr on exit    |
+| `--max-size`      | Stop reading after N bytes of input            |
+| `-f`, `--follow`  | Keep reading after EOF (like `tail -f`)        |
 
-`strip-ansi-escapes` — drop-in correctness when you don't
-control the parser and always-alloc is acceptable. Uses `vte`
-internally. Good default for apps that strip occasionally.
+## Library
 
-`console` — already in your dep tree for terminal width/style
-and you only handle UTF-8 strings with simple CSI sequences.
-Regex-based; misses DCS, incomplete OSC. Not idempotent on
-arbitrary bytes.
+Add the dependency (library only, no CLI):
 
-`vte` / `anstyle-parse` — building a terminal emulator or
-need to interpret sequence content (params, intermediates,
-OSC payloads). Overkill for stripping; the Perform trait
-machinery and param buffers add ~1KB+ per parser instance.
+```toml
+[dependencies]
+distill-strip-ansi = { version = "0.2", default-features = false, features = ["std"] }
+```
 
-`anstream` — Write adapter that auto-strips based on terminal
-capability. Use when wrapping `io::Write` for colored CLI
-output, not for processing external log streams.
+Strip bytes or strings:
 
-`cansi` — CSI-only. Misses OSC 8 hyperlinks, DCS, APC, SS2/SS3.
-Insufficient for real-world build output.
+```rust
+use strip_ansi::{strip, strip_str};
 
-## distill-strip-ansi Design
+// Byte slices — returns Cow<[u8]>
+let clean = strip(b"\x1b[31mhello\x1b[0m");
+assert_eq!(&*clean, b"hello");
 
-15-state ECMA-48 machine. 1-byte `Parser` struct.
+// UTF-8 strings — returns Cow<str>
+let clean = strip_str("\x1b[1mbold\x1b[0m");
+assert_eq!(&*clean, "bold");
+```
 
-Key properties:
+Streaming (chunked input):
 
-- `memchr` SIMD scan for ESC; state machine only on escape bytes
-- `Cow::Borrowed` when no ESC in input (zero-alloc fast path)
-- Full coverage: CSI, OSC (BEL + ST), DCS, APC/PM/SOS, SS2/SS3, Fe
-- C1 codes (0x80-0x9F) passed through (UTF-8 safe)
-- Idempotent: `strip(strip(x)) == strip(x)` for all `&[u8]`
-- `StripStream` for chunked input (1-byte state across chunks)
-- `strip_in_place` for zero-alloc gap compaction
-- `#![forbid(unsafe_code)]`, `no_std + alloc`
+```rust
+use strip_ansi::StripStream;
 
-## Sequence Coverage
+let mut stream = StripStream::new();
+for chunk in input_chunks {
+    for slice in stream.strip_slices(chunk) {
+        output.extend_from_slice(slice);
+    }
+}
+```
 
-| Crate                | CSI | OSC     | DCS | APC/PM/SOS | SS2/SS3 | Fe  |
-| -------------------- | --- | ------- | --- | ---------- | ------- | --- |
-| `distill-strip-ansi` | Yes | Yes     | Yes | Yes        | Yes     | Yes |
-| `strip-ansi-escapes` | Yes | Yes     | Yes | Yes        | No      | Yes |
-| `console`            | Yes | Partial | No  | No         | No      | No  |
-| `vte`                | Yes | Yes     | Yes | Yes        | No      | Yes |
-| `anstyle-parse`      | Yes | Yes     | Yes | Yes        | No      | Yes |
-| `cansi`              | Yes | No      | No  | No         | No      | No  |
+## Feature Flags
+
+| Feature  | Default | Description                          |
+| -------- | ------- | ------------------------------------ |
+| `std`    | yes     | Enables `StripWriter` and I/O traits |
+| `filter` | no      | Configurable per-group filtering     |
+| `cli`    | yes     | Builds the `strip-ansi` binary       |
+
+To use as a `no_std` library (requires `alloc`):
+
+```toml
+[dependencies]
+distill-strip-ansi = { version = "0.2", default-features = false }
+```
+
+## MSRV
+
+Rust 1.85+ (edition 2024).
+
+## License
+
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE)
+or [MIT License](LICENSE-MIT) at your option.
+
+SPDX-License-Identifier: `MIT OR Apache-2.0`
