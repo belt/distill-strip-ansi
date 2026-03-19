@@ -36,14 +36,15 @@ strip-ansi --check < input.txt
 
 Flags:
 
-| Flag              | Description                                    |
-| ----------------- | ---------------------------------------------- |
-| `--check`         | Detect ANSI sequences without stripping         |
-| `-n N`, `--head`  | Output only the first N lines after stripping  |
-| `-o`, `--output`  | Write to file instead of stdout                |
-| `-c`, `--count`   | Print stripped byte count to stderr on exit    |
-| `--max-size`      | Stop reading after N bytes of input            |
-| `-f`, `--follow`  | Keep reading after EOF (like `tail -f`)        |
+| Flag                | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `--check`           | Detect ANSI sequences without stripping        |
+| `--no-strip-*`      | Preserve specific ANSI groups or sub-kinds     |
+| `-n N`, `--head`    | Output only the first N lines after stripping  |
+| `-o`, `--output`    | Write to file instead of stdout                |
+| `-c`, `--count`     | Print stripped byte count to stderr on exit    |
+| `--max-size`        | Stop reading after N bytes of input            |
+| `-f`, `--follow`    | Keep reading after EOF (like `tail -f`)        |
 
 ## Library
 
@@ -86,8 +87,8 @@ for chunk in input_chunks {
 | Feature  | Default | Description                          |
 | -------- | ------- | ------------------------------------ |
 | `std`    | yes     | Enables `StripWriter` and I/O traits |
-| `filter` | no      | Configurable per-group filtering     |
 | `cli`    | yes     | Builds the `strip-ansi` binary       |
+| `filter` | yes     | Configurable per-group filtering     |
 
 To use as a `no_std` library (requires `alloc`):
 
