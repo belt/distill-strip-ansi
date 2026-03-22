@@ -1,0 +1,22 @@
+2024-01-15 10:00:01.123 UTC [1] LOG:  starting PostgreSQL 16.1 on x86_64-pc-linux-gnu
+2024-01-15 10:00:01.124 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2024-01-15 10:00:01.125 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2024-01-15 10:00:01.130 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2024-01-15 10:00:01.200 UTC [25] LOG:  database system was shut down at 2024-01-15 09:59:50 UTC
+2024-01-15 10:00:01.250 UTC [1] LOG:  database system is ready to accept connections
+2024-01-15 10:00:05.000 UTC [42] LOG:  connection received: host=192.168.1.10 port=54321
+2024-01-15 10:00:05.010 UTC [42] LOG:  connection authorized: user=appuser database=mydb
+2024-01-15 10:05:00.000 UTC [1] LOG:  checkpoint starting: time
+2024-01-15 10:05:02.500 UTC [1] LOG:  checkpoint complete: wrote 128 buffers (0.8%); 0 WAL file(s) added
+2024-01-15 10:10:00.000 UTC [30] LOG:  automatic vacuum of table "mydb.public.events": index scans: 1
+2024-01-15 10:10:00.500 UTC [30] LOG:  autovacuum: removed 1500 dead row versions in table "mydb.public.events"
+2024-01-15 10:15:00.000 UTC [31] LOG:  automatic analyze of table "mydb.public.events"
+2024-01-15 10:20:00.000 UTC [42] LOG:  duration: 1234.567 ms  statement: SELECT * FROM events WHERE id > 1000
+2024-01-15 10:20:00.100 UTC [42] STATEMENT:  SELECT * FROM events WHERE id > 1000
+2024-01-15 10:25:00.000 UTC [42] LOG:  disconnection: session time: 0:25:00.000 user=appuser database=mydb
+2024-01-15 10:30:00.000 UTC [50] ERROR:  relation "nonexistent" does not exist at character 15
+2024-01-15 10:30:00.001 UTC [50] STATEMENT:  SELECT * FROM nonexistent
+2024-01-15 11:00:00.000 UTC [1] LOG:  received fast shutdown request
+2024-01-15 11:00:00.100 UTC [1] LOG:  aborting any active transactions
+2024-01-15 11:00:00.200 UTC [1] LOG:  shutting down
+2024-01-15 11:00:01.000 UTC [1] LOG:  database system is shut down

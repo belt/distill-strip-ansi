@@ -1,0 +1,24 @@
+Resolved 14 packages in 38ms
+Prepared 14 packages in 412ms
+Installed 14 packages in 52ms
+ + blinker==1.8.2
+ + certifi==2024.2.2
+ + charset-normalizer==3.3.2
+ + click==8.1.7
+ + flask==3.0.3
+ + idna==3.7
+ + itsdangerous==2.2.0
+ + jinja2==3.1.4
+ + markupsafe==2.1.5
+ + requests==2.31.0
+ + urllib3==2.2.1
+ + werkzeug==3.0.3
+ ~ setuptools==69.5.1
+ - old-package==1.0.0
+warning: `flask` does not provide an extra named `async`
+Uninstalled 1 package in 8ms
+ - old-package==1.0.0
+Resolved 2 packages in 12ms
+Prepared 1 package in 89ms
+Installed 1 package in 5ms
+ + httpx==0.27.0

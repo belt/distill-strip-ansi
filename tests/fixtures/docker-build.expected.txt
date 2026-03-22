@@ -1,0 +1,20 @@
+docker: load Dockerfile + .dockerignore
+docker: resolve ruby:3.4.8-slim CACHED
+docker: [hardened-base 1/2] apt-get install curl CACHED
+docker: [ore-fetch 1/1] verify ore installer ✔ 0.8s
+docker: [yq-fetch 1/1] verify yq v4.47.2 amd64 ✔ 1.2s
+docker: [base 1/5] apt-get install 6 runtime deps ✔ 12.3s
+  apt: tini curl libcurl4 libffi8 libjemalloc2 libgit2-1.8 ✔
+docker: [base 2/5] ore install --system ✔ 0.4s
+docker: [base 3/5] gem update --system 3.6.2 ✔ 2.1s
+docker: [base 4/5] groupadd + useradd appuser ✔ 0.1s
+docker: [gems-base 1/3] apt-get install build toolchain ✔ 8.7s
+  apt: build-essential cmake pkg-config + 4 dev libs ✔
+docker: [gems-base 2/3] bundle lock ✔ 1.3s
+docker: [gems-production 1/1] ore install 23 gems ✔ 18.4s
+  bundler: faraday faraday-retry hashie ... ✔
+docker: [gems-production 1/1] strip .so + cleanup ✔ 0.6s
+docker: [production 1/5] COPY vendor/bundle ✔ 0.3s
+docker: [production 2/5] COPY lib/ config/ bin/ ✔ 0.1s
+docker: exporting layers ✔ 1.2s
+docker: api-client:ruby-3.4.8-yjit-production 247.3MB sha256:a1b2c3d4

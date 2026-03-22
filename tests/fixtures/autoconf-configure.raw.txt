@@ -1,0 +1,33 @@
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables...
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to enable C11 features... none needed
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a race-free mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking for pkg-config... /usr/bin/pkg-config
+checking pkg-config is at least version 0.9.0... yes
+checking for libcurl... yes
+checking for openssl... no
+configure: error: OpenSSL development headers not found
+configure: WARNING: unrecognized options: --with-foo
+checking for zlib... yes
+checking for libxml2... yes
+checking for pthread_create in -lpthread... yes
+checking for library containing dlopen... -ldl
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating config.h
+config.status: creating src/Makefile
+config.status: creating tests/Makefile
+config.status: executing depfiles commands
+config.status: executing libtool commands

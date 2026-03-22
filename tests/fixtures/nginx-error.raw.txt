@@ -1,0 +1,22 @@
+nginx version: nginx/1.25.4 (nginx)
+the configuration file /etc/nginx/nginx.conf syntax is ok
+configuration file /etc/nginx/nginx.conf test is successful
+starting nginx
+2024/01/15 10:00:01 [notice] 1#1: using the "epoll" event method
+2024/01/15 10:00:01 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14)
+2024/01/15 10:00:01 [notice] 1#1: OS: Linux 6.1.0-17-amd64
+2024/01/15 10:00:01 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/01/15 10:00:01 [notice] 1#1: start worker processes
+2024/01/15 10:00:01 [notice] 1#1: start worker process 29
+2024/01/15 10:00:01 [notice] 1#1: start worker process 30
+2024/01/15 10:05:00 [error] 29#29: *1 open() "/usr/share/nginx/html/missing.html" failed (2: No such file or directory), client: 192.168.1.10, server: localhost, request: "GET /missing.html HTTP/1.1"
+2024/01/15 10:05:01 [error] 29#29: *2 connect() failed (111: Connection refused) while connecting to upstream, client: 192.168.1.10, server: localhost, request: "GET /api/health HTTP/1.1", upstream: "http://127.0.0.1:8080/api/health"
+2024/01/15 10:10:00 [crit] 29#29: *3 SSL_do_handshake() failed (SSL: error:0A000086:SSL routines::certificate verify failed), client: 192.168.1.20, server: secure.localhost
+2024/01/15 10:15:00 [alert] 1#1: worker process 30 exited on signal 11
+2024/01/15 10:15:00 [emerg] 1#1: bind() to 0.0.0.0:80 failed (98: Address already in use)
+2024/01/15 10:20:00 [info] 29#29: *4 client closed connection while waiting for request, client: 192.168.1.10, server: 0.0.0.0:443
+2024/01/15 11:00:00 [notice] 1#1: signal 15 (SIGTERM) received from 100, shutting down
+2024/01/15 11:00:00 [notice] 29#29: gracefully shutting down
+2024/01/15 11:00:00 [notice] 29#29: exiting
+2024/01/15 11:00:00 [notice] 1#1: signal 17 (SIGCHLD) received from 29
+2024/01/15 11:00:00 [notice] 1#1: worker process 29 exited with code 0

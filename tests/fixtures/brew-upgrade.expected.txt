@@ -1,0 +1,14 @@
+brew: auto-update 2 taps
+brew: upgrading 9 formulae, 1 cask
+brew: fetch ✔ cgif 12.7KB ✔ openexr 1.1MB ... ✔ localai 28.8MB
+brew: mole 1.26.0→1.27.0 ✔ 0.220s
+brew: mise 2026.2.17→2026.2.18 ✔ 0.058s
+brew: yt-dlp 2026.2.4→2026.2.21 ✔ 0.398s
+brew: localai 3.12.0→3.12.1 ✔ 0.039s
+brew: fastmcp 3.0.0→3.0.1 ✔ 1.252s
+brew: nss 3.120.1→3.121 ✔ 5.933s
+brew: openexr 3.4.4_2→3.4.5 ✔ 1.423s
+brew: ollama 0.16.2→0.16.3 ✔ 0.022s
+brew: cgif 0.5.1→0.5.2 ✔ 0.120s
+brew: copilot-cli 0.0.412→0.0.414 ✔ 2.260s
+brew: done — 9 formulae + 1 cask upgraded

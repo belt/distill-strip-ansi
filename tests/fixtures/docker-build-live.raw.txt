@@ -1,0 +1,106 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 19.30kB 0.0s done
+#1 DONE 0.1s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 1.1s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6
+#3 resolve docker.io/docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6 0.1s done
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/library/ruby:3.4.8-slim
+#4 DONE 2.5s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 1.46kB 0.0s done
+#5 DONE 0.1s
+
+#6 [internal] setting cache mount permissions
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 5.12kB 0.1s done
+#7 DONE 0.2s
+
+#8 [hardened-base 1/2] FROM docker.io/library/ruby:3.4.8-slim@sha256:ff7780d9fc05a54690c722ee0621bae2aa818331be88ebbeb0f5e7bd7cdb7f37
+#8 resolve docker.io/library/ruby:3.4.8-slim@sha256:ff7780d9fc05a54690c722ee0621bae2aa818331be88ebbeb0f5e7bd7cdb7f37 0.2s done
+#8 DONE 0.3s
+
+#8 [hardened-base 1/2] FROM docker.io/library/ruby:3.4.8-slim@sha256:ff7780d9fc05a54690c722ee0621bae2aa818331be88ebbeb0f5e7bd7cdb7f37
+#8 DONE 0.3s
+
+#9 [gems-base 1/5] RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt/lists,sharing=locked apt-get install -y build-essential cmake pkg-config     libcurl4-openssl-dev libffi-dev libgit2-dev libyaml-dev git
+#9 CACHED
+
+#10 [gems-base 2/5] COPY --link Gemfile Gemfile.lock api-client.gemspec .tool-versions ./
+#10 CACHED
+
+#11 [gems-base 4/5] RUN echo "ruby 3.4.8" > .tool-versions     && install -d -o 10001 -g 10001 /app/vendor/bundle     && chown -R 10001:10001 /app
+#11 CACHED
+
+#12 [production 4/7] COPY --link --chown=10001:10001 bin/docker-healthcheck bin/docker-healthcheck
+#12 CACHED
+
+#13 [base 2/5] RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt/lists,sharing=locked     if [ -n "" ]; then rm -rf /var/cache/apt/* /var/lib/apt/lists/* || true; fi     && apt-get update -qq     && LIBGIT2_RT=$(apt-cache search --names-only '^libgit2-[0-9]'         | awk '{print $1}' | sort -V | tail -1)     && apt-get install -y         tini curl libcurl4 libffi8 libjemalloc2 ${LIBGIT2_RT}     && bash /tmp/ore-install.sh --system     && rm -rf /tmp/*
+#13 CACHED
+
+#14 [base 3/5] RUN target=""     && if [ -z "$target" ]; then          ruby_major="$(ruby -e 'print RUBY_VERSION.split(".").first')";          if [ "$ruby_major" -ge 4 ]; then target="4.0.6";          else target="3.6.2"; fi;        fi     && current="$(gem --version)"     && if [ "$current" != "$target" ]; then          gem update --system "$target" --no-document          && (gem uninstall rubygems-update -x 2>/dev/null || true)          && rm -rf /usr/local/bundle/cache/*.gem;        fi
+#14 CACHED
+
+#15 [gems-base 5/5] RUN bundle lock
+#15 CACHED
+
+#16 [ore-fetch 1/1] RUN ore_err() {       printf '{"level":"error","stage":"ore-fetch"' >&2;       printf ',"check":"%s","message":"%s"' "$1" "$2" >&2;       printf '%s}\n' "${3:+,$3}" >&2; exit 1;     }     && ore_log() {       printf '{"level":"info","stage":"ore-fetch"' >&2;       printf ',"check":"%s","message":"%s"}\n' "$1" "$2" >&2;     }     && if [ -z "7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab" ]        && ! echo "https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/install.sh"             | grep -qE '/[0-9a-f]{40}/'; then         ore_err "ore_sha256_guard"           "ORE_URI points to a branch"           ""ore_uri":"https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/install.sh"";        fi     && curl -fsSL -o /tmp/ore-install.sh "https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/install.sh"     && if [ -n "7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab" ]; then         echo "7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab  /tmp/ore-install.sh"           | sha256sum -c -         || ore_err "ore_sha256"              "checksum mismatch"              ""expected":"7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab"";        else         ore_log "ore_checksums_txt"           "ORE_SHA256 blank — fetching checksums.txt";         curl -fsSL -o /tmp/checksums.txt           "https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/checksums.txt"         || ore_err "ore_checksums_txt"              "failed to fetch checksums.txt"              ""uri":"https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/checksums.txt"";         cd /tmp         && sha256sum -c checksums.txt --ignore-missing         || ore_err "ore_checksums_txt"              "checksums.txt verification failed"              ""uri":"https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/checksums.txt"";        fi
+#16 CACHED
+
+#17 [base 1/5] COPY --from=ore-fetch /tmp/ore-install.sh /tmp/ore-install.sh
+#17 CACHED
+
+#18 [production 1/7] COPY --from=gems-production /app/vendor/bundle /app/vendor/bundle
+#18 CACHED
+
+#19 [production 5/7] COPY --link --chown=10001:10001 Gemfile api-client.gemspec Rakefile ./
+#19 CACHED
+
+#20 [hardened-base 2/2] RUN printf 'path-exclude=/usr/share/man/*\npath-exclude=/usr/share/doc/*\npath-exclude=/usr/share/info/*\npath-exclude=/usr/share/lintian/*\npath-exclude=/usr/share/linda/*\n'         > /etc/dpkg/dpkg.cfg.d/01-nodoc     && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02-unsafe-io     && echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/01-no-translations     && echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/02-no-recommends     && echo 'Acquire::GzipIndexes "true";' > /etc/apt/apt.conf.d/03-gzip-indexes     && echo "Acquire::Retries "2";" > /etc/apt/apt.conf.d/04-retries     && apt-get update -qq     && apt-get install -y curl     && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+#20 CACHED
+
+#21 [base 4/5] RUN groupadd -g 10001 appuser     && useradd -u 10001 -g appuser -m -s /bin/bash appuser
+#21 CACHED
+
+#22 [production 3/7] COPY --link --chown=10001:10001 config/ config/
+#22 CACHED
+
+#23 [gems-production 1/1] RUN --mount=type=cache,target=/app/vendor/bundle/cache,sharing=locked,uid=10001,gid=10001     if [ -n "" ]; then rm -rf /app/vendor/bundle/cache/* || true; fi     && ore install     && find /app/vendor/bundle -name ".git" -type d -prune -exec rm -rf {} +     && find /app/vendor/bundle         ( -name "*.o" -o -name "*.c" -o -name "*.h"         -o -name "*.cpp" -o -name "*.log"         -o -name "*.md" -o -name "README*" -o -name "CHANGELOG*" )         -delete     || true     && find /app/vendor/bundle/ruby/*/gems -maxdepth 2         ( -name spec -o -name test -o -name tests -o -name coverage )         -type d -exec rm -rf {} + || true     && find /app/vendor/bundle -name "*.so" -exec strip --strip-unneeded {} + 2> /dev/null || true     && rm -rf /app/vendor/bundle/cache/*.gem /app/vendor/bundle/doc/
+#23 CACHED
+
+#24 [gems-base 3/5] COPY --link lib/api_client/version.rb lib/api_client/version.rb
+#24 CACHED
+
+#25 [production 2/7] COPY --link --chown=10001:10001 lib/ lib/
+#25 CACHED
+
+#26 [base 5/5] WORKDIR /app
+#26 CACHED
+
+#27 [production 6/7] COPY --from=gems-production /app/Gemfile.lock Gemfile.lock
+#27 CACHED
+
+#28 [production 7/7] RUN echo "ruby 3.4.8" > .tool-versions
+#28 CACHED
+
+#29 exporting to image
+#29 exporting layers 0.1s done
+#29 exporting manifest sha256:0927021000aaf571024fccbec2d5c88ec316acdcb84e835d49c73b862a1b7ad0 0.1s done
+#29 exporting config sha256:9bf811074641988ddc31ab248925b3ea2f423cbf5e3753c40126715c3d396444 0.1s done
+#29 exporting attestation manifest sha256:99c021e3a28d1bbc56ac8df537cc9d5e4f5a1ed7adbf00a0bd06e6c075d0986b 0.1s done
+#29 exporting manifest list sha256:a37b241a50b22133c33b85e65ec8015a93b1a1ce0513bce8dbe5b71e86749ec2
+#29 exporting manifest list sha256:a37b241a50b22133c33b85e65ec8015a93b1a1ce0513bce8dbe5b71e86749ec2 0.1s done
+#29 naming to moby-dangling@sha256:a37b241a50b22133c33b85e65ec8015a93b1a1ce0513bce8dbe5b71e86749ec2 0.0s done
+#29 unpacking to moby-dangling@sha256:a37b241a50b22133c33b85e65ec8015a93b1a1ce0513bce8dbe5b71e86749ec2 0.1s done
+#29 DONE 0.7s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/rgpwyzrnxi6ht6xtvj8ghkv6u

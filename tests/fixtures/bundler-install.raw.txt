@@ -1,0 +1,35 @@
+Resolving dependencies...
+Resolving gem dependencies for Gemfile
+Using bundler 2.5.6
+Using rake 13.1.0
+Using concurrent-ruby 1.2.3
+Fetching minitest 5.22.3
+Fetching rack 3.0.9
+Fetching nio4r 2.7.0
+Fetching websocket-driver 0.7.6
+Fetching nokogiri 1.16.2 (x86_64-linux)
+Fetching puma 6.4.2
+Fetching rails 7.1.3
+Fetching faraday 2.9.0
+Fetching sidekiq 7.2.1
+Using activesupport 7.1.3
+Using actionpack 7.1.3
+Installing minitest 5.22.3
+Installing rack 3.0.9
+Installing nio4r 2.7.0 with native extensions
+Installing websocket-driver 0.7.6 with native extensions
+Installing nokogiri 1.16.2 (x86_64-linux)
+Installing puma 6.4.2 with native extensions
+Installing rails 7.1.3
+Installing faraday 2.9.0
+Installing sidekiq 7.2.1
+Using pg 1.5.4
+Using redis 5.1.0
+Post-install message from minitest:
+  minitest 5.22 requires Ruby 3.1+
+Post-install message from sidekiq:
+  See https://github.com/sidekiq/sidekiq/wiki/Getting-Started
+Bundle complete! 24 Gemfiles dependencies, 87 gems now installed.
+Bundled gems are installed into `./vendor/bundle`
+warning: the running version of Bundler (2.5.6) is older than the lockfile version (2.5.9)
+Could not find gem 'nonexistent-gem' in locally installed gems.

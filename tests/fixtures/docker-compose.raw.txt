@@ -1,0 +1,115 @@
+[+] Building 1/1
+[+] Building 1/1
+[+] Building 1/1
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.14kB done
+#1 DONE 0.0s
+
+#2 [internal] load .dockerignore
+#2 transferring context: 412B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/ruby:3.4.8-slim
+#3 DONE 0.3s
+
+#4 resolve image config for docker.io/library/ruby:3.4.8-slim
+#4 DONE 0.0s
+
+#5 [hardened-base 1/2] FROM docker.io/library/ruby:3.4.8-slim@sha256:abc123
+#5 CACHED
+
+#6 [hardened-base 2/2] RUN apt-get update && apt-get install -y --no-install-recommends curl
+#6 CACHED
+
+#7 [ore-fetch 1/1] RUN curl -fsSL https://ore.sh/install.sh | sha256sum -c -
+#7 0.102 Downloading ore installer...
+#7 0.614 ore-installer: OK
+#7 DONE 0.8s
+
+#8 [yq-fetch 1/1] RUN curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.47.2/yq_linux_amd64 -o /usr/local/bin/yq && sha256sum -c yq.sha256 && chmod +x /usr/local/bin/yq
+#8 0.210 Downloading yq v4.47.2 for linux/amd64...
+#8 1.104 yq_linux_amd64: OK
+#8 DONE 1.2s
+
+#9 [base 1/5] RUN apt-get update && apt-get install -y --no-install-recommends tini curl libcurl4 libffi8 libjemalloc2 libgit2-1.8
+#9 0.412 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#9 0.834 Reading package lists...
+#9 1.102 Building dependency tree...
+#9 1.234 The following NEW packages will be installed:
+#9 1.234   tini curl libcurl4 libffi8 libjemalloc2 libgit2-1.8
+#9 2.534 Selecting previously unselected package tini.
+#9 3.102 Setting up tini (0.19.0-1) ...
+#9 4.534 Setting up libjemalloc2:amd64 (5.3.0-1) ...
+#9 5.534 Processing triggers for libc-bin (2.36-9+deb12u9) ...
+#9 DONE 12.3s
+
+#10 [base 2/5] RUN ore install --system
+#10 0.102 Installing ore system gems...
+#10 DONE 0.4s
+
+#11 [base 3/5] RUN gem update --system 3.6.2
+#11 0.102 Updating rubygems-update
+#11 1.234 RubyGems system software updated to 3.6.2
+#11 DONE 2.1s
+
+#12 [base 4/5] RUN groupadd -r appuser && useradd -r -g appuser -d /app appuser
+#12 DONE 0.1s
+
+#13 [gems-base 1/3] RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake pkg-config libcurl4-openssl-dev libffi-dev libgit2-dev libyaml-dev git
+#13 0.834 Reading package lists...
+#13 1.234 The following NEW packages will be installed:
+#13 1.234   build-essential cmake pkg-config libcurl4-openssl-dev libffi-dev libgit2-dev libyaml-dev git
+#13 4.534 Setting up build-essential (12.9) ...
+#13 DONE 8.7s
+
+#14 [gems-base 2/3] COPY Gemfile Gemfile.lock api-client.gemspec ./
+#14 DONE 0.0s
+
+#15 [gems-base 3/3] RUN bundle lock --add-platform x86_64-linux
+#15 0.834 Resolving dependencies...
+#15 DONE 1.3s
+
+#16 [gems-production 1/1] RUN BUNDLE_WITHOUT=development:test ore install
+#16 0.534 Fetching faraday 2.12.2
+#16 0.812 Installing faraday 2.12.2
+#16 1.012 Installing hashie 5.0.0
+#16 5.612 Installing rugged 1.8.1 with native extensions
+#16 8.534 ore: 23 gems installed
+#16 DONE 18.4s
+
+#17 [production 1/5] COPY --from=gems-production /app/vendor/bundle /app/vendor/bundle
+#17 DONE 0.3s
+
+#18 [production 2/5] COPY lib/ config/ bin/ ./
+#18 DONE 0.1s
+
+#19 [production 3/5] COPY Gemfile api-client.gemspec ./
+#19 DONE 0.0s
+
+#20 [production 4/5] COPY .tool-versions ./
+#20 DONE 0.0s
+
+#21 exporting to image
+#21 exporting layers
+#21 sha256:def456 0.2s done
+#21 writing image sha256:a1b2c3d4e5f6
+#21 naming to docker.io/library/api-client:ruby-3.4.8-yjit-production
+#21 DONE 1.2s
+
+[+] Building 1/1 FINISHED
+ Network api-client_default  Creating
+ Network api-client_default  Created
+ Container api-client-production-1  Creating
+ Container api-client-production-1  Created
+ Container api-client-production-1  Starting
+ Container api-client-production-1  Started
+ Container api-client-production-1  Waiting
+ Container api-client-production-1  Healthy
+Attaching to production-1
+production-1  | ApiClient 2.1.0 starting...
+production-1  | => Booting Puma
+production-1  | => Rails 7.2.2 application starting in production
+production-1  | => Run `bin/rails server --help` for more startup options
+production-1  | Puma starting in single mode...
+production-1  | * Listening on http://0.0.0.0:3000
+production-1  | ApiClient 2.1.0 ready (Ruby 3.4.8)

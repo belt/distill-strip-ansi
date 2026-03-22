@@ -10,8 +10,9 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 
-[dependencies.strip-ansi]
+[dependencies.strip_ansi]
 path = ".."
+package = "distill-strip-ansi"
 default-features = false
 
 [[bin]]

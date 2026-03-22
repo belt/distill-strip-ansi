@@ -1,0 +1,168 @@
+ Image api-client:production-ruby3.4.8 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 994B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 19.30kB 0.0s done
+#2 DONE 0.1s
+
+#3 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#3 DONE 0.5s
+
+#4 docker-image://docker.io/docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6
+#4 resolve docker.io/docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6
+#4 resolve docker.io/docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6 0.2s done
+#4 DONE 0.2s
+
+#4 docker-image://docker.io/docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6
+#4 CACHED
+
+#5 [internal] load metadata for docker.io/library/ruby:3.4.8-slim
+#5 DONE 0.3s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 1.46kB 0.0s done
+#6 DONE 0.1s
+
+#7 importing cache manifest from api-client:buildcache-production
+#7 ...
+
+#8 [internal] setting cache mount permissions
+#8 DONE 0.0s
+
+#9 [internal] load build context
+#9 DONE 0.0s
+
+#10 [hardened-base 1/2] FROM docker.io/library/ruby:3.4.8-slim@sha256:ff7780d9fc05a54690c722ee0621bae2aa818331be88ebbeb0f5e7bd7cdb7f37
+#10 resolve docker.io/library/ruby:3.4.8-slim@sha256:ff7780d9fc05a54690c722ee0621bae2aa818331be88ebbeb0f5e7bd7cdb7f37 0.1s done
+#10 DONE 0.2s
+
+#7 importing cache manifest from api-client:buildcache-production
+#7 ERROR: failed to configure registry cache importer: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+
+#10 [hardened-base 1/2] FROM docker.io/library/ruby:3.4.8-slim@sha256:ff7780d9fc05a54690c722ee0621bae2aa818331be88ebbeb0f5e7bd7cdb7f37
+#10 DONE 0.2s
+
+#9 [internal] load build context
+#9 transferring context: 5.12kB 0.1s done
+#9 DONE 0.2s
+
+#11 [gems-production 1/1] RUN --mount=type=cache,target=/app/vendor/bundle/cache,sharing=locked,uid=10001,gid=10001     if [ -n "" ]; then rm -rf /app/vendor/bundle/cache/* || true; fi     && ore install     && find /app/vendor/bundle -name ".git" -type d -prune -exec rm -rf {} +     && find /app/vendor/bundle         ( -name "*.o" -o -name "*.c" -o -name "*.h"         -o -name "*.cpp" -o -name "*.log"         -o -name "*.md" -o -name "README*" -o -name "CHANGELOG*" )         -delete     || true     && find /app/vendor/bundle/ruby/*/gems -maxdepth 2         ( -name spec -o -name test -o -name tests -o -name coverage )         -type d -exec rm -rf {} + || true     && find /app/vendor/bundle -name "*.so" -exec strip --strip-unneeded {} + 2> /dev/null || true     && rm -rf /app/vendor/bundle/cache/*.gem /app/vendor/bundle/doc/
+#11 CACHED
+
+#12 [base 3/5] RUN target=""     && if [ -z "$target" ]; then          ruby_major="$(ruby -e 'print RUBY_VERSION.split(".").first')";          if [ "$ruby_major" -ge 4 ]; then target="4.0.6";          else target="3.6.2"; fi;        fi     && current="$(gem --version)"     && if [ "$current" != "$target" ]; then          gem update --system "$target" --no-document          && (gem uninstall rubygems-update -x 2>/dev/null || true)          && rm -rf /usr/local/bundle/cache/*.gem;        fi
+#12 CACHED
+
+#13 [gems-base 1/5] RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt/lists,sharing=locked apt-get install -y build-essential cmake pkg-config     libcurl4-openssl-dev libffi-dev libgit2-dev libyaml-dev git
+#13 CACHED
+
+#14 [gems-base 2/5] COPY --link Gemfile Gemfile.lock api-client.gemspec .tool-versions ./
+#14 CACHED
+
+#15 [hardened-base 2/2] RUN printf 'path-exclude=/usr/share/man/*\npath-exclude=/usr/share/doc/*\npath-exclude=/usr/share/info/*\npath-exclude=/usr/share/lintian/*\npath-exclude=/usr/share/linda/*\n'         > /etc/dpkg/dpkg.cfg.d/01-nodoc     && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02-unsafe-io     && echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/01-no-translations     && echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/02-no-recommends     && echo 'Acquire::GzipIndexes "true";' > /etc/apt/apt.conf.d/03-gzip-indexes     && echo "Acquire::Retries "2";" > /etc/apt/apt.conf.d/04-retries     && apt-get update -qq     && apt-get install -y curl     && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+#15 CACHED
+
+#16 [production 5/7] COPY --link --chown=10001:10001 Gemfile api-client.gemspec Rakefile ./
+#16 CACHED
+
+#17 [base 5/5] WORKDIR /app
+#17 CACHED
+
+#18 [production 4/7] COPY --link --chown=10001:10001 bin/docker-healthcheck bin/docker-healthcheck
+#18 CACHED
+
+#19 [production 2/7] COPY --link --chown=10001:10001 lib/ lib/
+#19 CACHED
+
+#20 [base 4/5] RUN groupadd -g 10001 appuser     && useradd -u 10001 -g appuser -m -s /bin/bash appuser
+#20 CACHED
+
+#21 [base 1/5] COPY --from=ore-fetch /tmp/ore-install.sh /tmp/ore-install.sh
+#21 CACHED
+
+#22 [ore-fetch 1/1] RUN ore_err() {       printf '{"level":"error","stage":"ore-fetch"' >&2;       printf ',"check":"%s","message":"%s"' "$1" "$2" >&2;       printf '%s}\n' "${3:+,$3}" >&2; exit 1;     }     && ore_log() {       printf '{"level":"info","stage":"ore-fetch"' >&2;       printf ',"check":"%s","message":"%s"}\n' "$1" "$2" >&2;     }     && if [ -z "7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab" ]        && ! echo "https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/install.sh"             | grep -qE '/[0-9a-f]{40}/'; then         ore_err "ore_sha256_guard"           "ORE_URI points to a branch"           ""ore_uri":"https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/install.sh"";        fi     && curl -fsSL -o /tmp/ore-install.sh "https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/install.sh"     && if [ -n "7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab" ]; then         echo "7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab  /tmp/ore-install.sh"           | sha256sum -c -         || ore_err "ore_sha256"              "checksum mismatch"              ""expected":"7a442ae9ccf36f8612993e6e2ed0cf5d8c974145d7de2d97aba9f985cee908ab"";        else         ore_log "ore_checksums_txt"           "ORE_SHA256 blank — fetching checksums.txt";         curl -fsSL -o /tmp/checksums.txt           "https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/checksums.txt"         || ore_err "ore_checksums_txt"              "failed to fetch checksums.txt"              ""uri":"https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/checksums.txt"";         cd /tmp         && sha256sum -c checksums.txt --ignore-missing         || ore_err "ore_checksums_txt"              "checksums.txt verification failed"              ""uri":"https://raw.githubusercontent.com/contriboss/ore-light/811cee6f49f4946cddf5e950149fe91bcae8acbb/scripts/checksums.txt"";        fi
+#22 CACHED
+
+#23 [base 2/5] RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt/lists,sharing=locked     if [ -n "" ]; then rm -rf /var/cache/apt/* /var/lib/apt/lists/* || true; fi     && apt-get update -qq     && LIBGIT2_RT=$(apt-cache search --names-only '^libgit2-[0-9]'         | awk '{print $1}' | sort -V | tail -1)     && apt-get install -y         tini curl libcurl4 libffi8 libjemalloc2 ${LIBGIT2_RT}     && bash /tmp/ore-install.sh --system     && rm -rf /tmp/*
+#23 CACHED
+
+#24 [production 6/7] COPY --from=gems-production /app/Gemfile.lock Gemfile.lock
+#24 CACHED
+
+#25 [gems-base 3/5] COPY --link lib/api_client/version.rb lib/api_client/version.rb
+#25 CACHED
+
+#26 [gems-base 4/5] RUN echo "ruby 3.4.8" > .tool-versions     && install -d -o 10001 -g 10001 /app/vendor/bundle     && chown -R 10001:10001 /app
+#26 CACHED
+
+#27 [production 1/7] COPY --from=gems-production /app/vendor/bundle /app/vendor/bundle
+#27 CACHED
+
+#28 [gems-base 5/5] RUN bundle lock
+#28 CACHED
+
+#29 [production 3/7] COPY --link --chown=10001:10001 config/ config/
+#29 CACHED
+
+#30 [production 7/7] RUN echo "ruby 3.4.8" > .tool-versions
+#30 CACHED
+
+#31 exporting to image
+#31 exporting layers 0.1s done
+#31 exporting manifest sha256:d0b97aedfb3b3a18f45300e9934cf7953b50e520280229774b1180f148ef3ca1 0.1s done
+#31 exporting config sha256:85cde9dd32423e00da00c0c3c8cfb276359127303991b5673f4d56a1ad5f329f 0.1s done
+#31 exporting attestation manifest sha256:ed8886cdfba6475d064c50920790c77ea7b4e61b188bc28e4c3c6ab0147adf54 0.1s done
+#31 exporting manifest list sha256:adeb00606dd29427bed014c2bec750b31d5f2c4feccda080fd1ad6cf9610d484
+#31 exporting manifest list sha256:adeb00606dd29427bed014c2bec750b31d5f2c4feccda080fd1ad6cf9610d484 0.1s done
+#31 naming to docker.io/library/api-client:production-ruby3.4.8 0.0s done
+#31 unpacking to docker.io/library/api-client:production-ruby3.4.8
+#31 unpacking to docker.io/library/api-client:production-ruby3.4.8 0.2s done
+#31 DONE 1.0s
+
+#32 exporting cache to registry
+#32 preparing build cache for export
+#32 writing layer sha256:4decfaff82fcccb0aadfb6cc9e2bba734ddbb4009036268dbc0497b351b5cd48
+#32 writing layer sha256:206356c42440674ecbdf1070cf70ce8ef7885ac2e5c56f1ecf800b758f6b0419
+#32 writing layer sha256:27b4fcc420cb2ac3811d9a714bbaf94c94a8f77d9b29ddf95ba1e81f2e924542
+#32 writing layer sha256:328ccd0af27a9c25e858318b6bde27f07074f4421f27b7ca1444b34d9b903a97
+#32 writing layer sha256:4decfaff82fcccb0aadfb6cc9e2bba734ddbb4009036268dbc0497b351b5cd48 1.0s done
+#32 preparing build cache for export 8.6s done
+#32 writing layer sha256:4decfaff82fcccb0aadfb6cc9e2bba734ddbb4009036268dbc0497b351b5cd48 done
+#32 writing layer sha256:206356c42440674ecbdf1070cf70ce8ef7885ac2e5c56f1ecf800b758f6b0419 1.0s done
+#32 writing layer sha256:27b4fcc420cb2ac3811d9a714bbaf94c94a8f77d9b29ddf95ba1e81f2e924542 1.0s done
+#32 writing layer sha256:328ccd0af27a9c25e858318b6bde27f07074f4421f27b7ca1444b34d9b903a97 1.0s done
+#32 writing layer sha256:5d3eb5ff55abe11059231e74fd966f9d64a013b3477ada8daad175909433bccd done
+#32 writing layer sha256:5d7f5fbc95c257016cbdb5dfe0a0139978a0a4a0d17362943647c993cd4bcb99 done
+#32 writing layer sha256:637bb9c0d929a2f1eb7d420581367cea43aeb8e44164dd3d2a637deb58005ecf done
+#32 writing layer sha256:6897120f4e0e14a66f78fedc57686efd4dcde8279102961c2db0cb02ac0136a2 done
+#32 writing layer sha256:6cfc76a60c2720051b11bfb5123542be2435cccca9e17fcecf27425c73597d19 done
+#32 writing layer sha256:7a05f4e549e9c58aeab34c05f03badc598c63a0b59ae9c2fe69be781ab5544df done
+#32 writing layer sha256:868de0671c90ff8eb3fbba7948e8fa3d2c03294cb6584e0f2d7feb22e420ba5d done
+#32 writing layer sha256:a63b7a1ab574de038e4e23826cee13509a82b245951f9e6eccb14c735e93d1f2 done
+#32 writing layer sha256:7d08f14b7ba7beb5cf5e8c80e0482eddf03be1b6f76098a674d94010ea695e4c done
+#32 writing layer sha256:a6b823ba927a5ba420463cafc0677852fab37e7719ea22938cf7429f24cc011a done
+#32 writing layer sha256:7f9500606b5492ad7580dd606ed68ba63f30abc27b7ae5d1a6caac5806f27346 done
+#32 writing layer sha256:a743da7cdafee1a94f63795b8f7d7482e30f807f2ec22d4cb20f105abeb1d8e8 done
+#32 writing layer sha256:ad6d8573560ece3bb662616dbcc69c0e08f01bd307d836948ef56fe27173a4e5 done
+#32 writing layer sha256:c386ce794e3a6429bcdfdac574f723de39262da2e5d9914beaaeaf6186025d5f done
+#32 writing layer sha256:d774196697b68f9391ae99188e4d28d4bb58bd8c957a52e0a147283f4dc74c11 done
+#32 writing layer sha256:d280554b697825a870ff90ad587e0fae8ee992ec5a3a6083bdb1343d01b604fd done
+#32 writing layer sha256:e95cd8c679e692fbca511750ce9ca8ef8c0ea2f8d09fbf8f4633020839208cf2 done
+#32 writing layer sha256:e95c885d11163cea6141f2874f7609fd353fae57178c697f1a7d40224f7b00cc done
+#32 writing layer sha256:ec7af655f24e58f991e9f1ecc791801eaeea7586254aa50dd2f4d37766e12fac done
+#32 writing layer sha256:ffce46bb75e106e62f4498c163d02fd7018cc5ceaa37cf6b822414c2107df184 done
+#32 ERROR: error writing layer blob: push access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+------
+ > importing cache manifest from api-client:buildcache-production:
+------
+------
+ > exporting cache to registry:
+------
+failed to solve: error writing layer blob: push access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/606lvwttj68wa76lbw6lk23c6
+
+# CAPTURE_ERROR: exit_code=1 command="docker compose up --progress=plain" timestamp=2026-03-05T03:00:45Z

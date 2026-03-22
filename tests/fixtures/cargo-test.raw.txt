@@ -1,0 +1,163 @@
+    Checking distill v0.1.0 (/Users/user/src/distill/distill)
+   Downloading crates ...
+   Downloaded memchr v2.7.4
+   Downloaded regex-syntax v0.8.5
+   Downloaded 2 crates in 0.42s
+   Compiling proc-macro2 v1.0.92
+   Compiling unicode-ident v1.0.14
+   Compiling syn v2.0.96
+   Compiling serde_derive v1.0.217
+   Compiling serde v1.0.217
+   Compiling memchr v2.7.4
+   Compiling regex-syntax v0.8.5
+   Compiling regex-automata v0.4.9
+   Compiling aho-corasick v1.1.3
+   Compiling regex v1.11.1
+   Compiling bstr v1.11.3
+   Compiling strip-ansi-escapes v0.2.1
+   Compiling vte_generate_state_changes v0.1.2
+   Compiling vte v0.14.1
+   Compiling clap_builder v4.5.27
+   Compiling clap_derive v4.5.18
+   Compiling clap v4.5.27
+   Compiling sigpipe v0.1.3
+   Compiling proptest v1.6.0
+   Compiling insta v1.42.1
+   Compiling assert_cmd v2.0.16
+   Compiling predicates v3.1.3
+   Compiling strip-ansi v0.1.0 (/Users/user/src/distill/strip-ansi)
+warning: unused import: `std::io::Read`
+ --> strip-ansi/src/io.rs:3:5
+  |
+3 | use std::io::Read;
+  |     ^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: `strip-ansi` (lib) generated 1 warning
+   Compiling distill v0.1.0 (/Users/user/src/distill/distill)
+warning: function `resolve_color` is never used
+  --> distill/src/color.rs:42:8
+   |
+42 | pub fn resolve_color(choice: ColorChoice, is_tty: bool) -> ColorMode {
+   |        ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: `distill` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.23s
+     Running unittests src/main.rs (target/debug/deps/strip_ansi-a1b2c3d4)
+
+running 12 tests
+test strip::tests::test_empty_input ... ok
+test strip::tests::test_plain_text ... ok
+test strip::tests::test_sgr_codes ... ok
+test strip::tests::test_mixed_escapes ... ok
+test strip::tests::test_256_color ... ok
+test strip::tests::test_truecolor ... ok
+test strip::tests::test_cursor_movement ... ok
+test strip::tests::test_osc_sequences ... ok
+test io::tests::test_adaptive_buffer_tty ... ok
+test io::tests::test_adaptive_buffer_pipe ... ok
+test cli::tests::test_default_args ... ok
+test cli::tests::test_color_flag ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/main.rs (target/debug/deps/distill-e5f6a7b8)
+
+running 18 tests
+test color::tests::test_resolve_always ... ok
+test color::tests::test_resolve_never ... ok
+test color::tests::test_resolve_auto_tty ... ok
+test color::tests::test_resolve_auto_pipe ... ok
+test color::tests::test_resolve_no_color ... ok
+test color::tests::test_resolve_term_dumb ... ok
+test color::tests::test_always_overrides_no_color ... ok
+test color::tests::test_no_color_overrides_term_dumb ... ok
+test io::tests::test_output_buffer_tty ... ok
+test io::tests::test_output_buffer_pipe ... ok
+test io::tests::test_file_tea_strip ... ok
+test io::tests::test_file_tea_preserve ... ok
+test io::tests::test_file_tea_create ... ok
+test io::tests::test_file_tea_truncate ... ok
+test pipeline::tests::test_empty_input ... ok
+test pipeline::tests::test_passthrough ... ok
+test pipeline::tests::test_strip_ansi ... ok
+test pipeline::tests::test_large_line ... FAILED
+
+failures:
+
+---- pipeline::tests::test_large_line stdout ----
+thread 'pipeline::tests::test_large_line' panicked at distill/src/pipeline.rs:142:9:
+assertion `left == right` failed
+  left: 8192
+ right: 8193
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    pipeline::tests::test_large_line
+
+test result: FAILED. 17 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--bin distill`
+     Running tests/integration_tests.rs (target/debug/deps/integration_tests-c9d0e1f2)
+
+running 8 tests
+test test_pipe_through ... ok
+test test_color_never_strips ... ok
+test test_file_tea_default_strips ... ok
+test test_file_tea_preserve ... ok
+test test_broken_pipe_exits_zero ... ok
+test test_invalid_file_exits_one ... ok
+test test_empty_input_exits_zero ... ok
+test test_version_flag ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+
+     Running tests/property_tests.rs (target/debug/deps/property_tests-d3e4f5a6)
+
+running 7 tests
+test prop_color_resolution_precedence ... ok
+test prop_passthrough_identity ... ok
+test prop_strip_idempotent ... ok
+test prop_file_tea_content ... ok
+test prop_binary_safety ... ok
+test prop_strip_once_equivalence ... ok
+test prop_successful_completion_exits_zero ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.87s
+
+     Running tests/test_strip_ansi_escapes.rs (target/debug/deps/test_strip_ansi_escapes-b7c8d9e0)
+
+running 6 tests
+test test_basic_stripping ... ok
+test test_idempotent_stripping ... ok
+test test_binary_safe ... ok
+test test_no_ansi_passthrough ... ok
+test test_complex_sequences ... ok
+test test_embedded_newlines ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests strip-ansi
+
+running 2 tests
+test strip-ansi/src/strip.rs - strip_ansi_bytes (line 15) ... ok
+test strip-ansi/src/strip.rs - strip_ansi_str (line 42) ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+   Doc-tests distill
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Cleaning target/debug/deps
+   Removed 42 files
+
+error: 1 target failed:
+    `--bin distill`

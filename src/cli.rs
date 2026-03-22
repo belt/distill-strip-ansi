@@ -32,4 +32,90 @@ pub struct Args {
 
     /// Input file (default: stdin)
     pub input: Option<String>,
+
+    // ── Filter group flags (--no-strip-{group}) ─────────────────
+
+    /// Preserve all CSI sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_csi: bool,
+
+    /// Preserve OSC sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_osc: bool,
+
+    /// Preserve DCS sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_dcs: bool,
+
+    /// Preserve APC sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_apc: bool,
+
+    /// Preserve PM sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_pm: bool,
+
+    /// Preserve SOS sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_sos: bool,
+
+    /// Preserve SS2 sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_ss2: bool,
+
+    /// Preserve SS3 sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_ss3: bool,
+
+    /// Preserve other Fe sequences
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_fe: bool,
+
+    // ── CSI sub-group flags (--no-strip-csi-{sub}) ──────────────
+
+    /// Preserve SGR (colors/styles) only
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_csi_sgr: bool,
+
+    /// Preserve cursor movement only
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_csi_cursor: bool,
+
+    /// Preserve erase sequences only
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_csi_erase: bool,
+
+    /// Preserve scroll sequences only
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_csi_scroll: bool,
+
+    /// Preserve mode set/reset only
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_csi_mode: bool,
+
+    /// Preserve window manipulation only
+    #[cfg(feature = "filter")]
+    #[arg(long)]
+    pub no_strip_csi_window: bool,
+
+    // ── Config file flag ────────────────────────────────────────
+
+    /// Load filter configuration from TOML file
+    #[cfg(feature = "toml-config")]
+    #[arg(long, value_name = "PATH")]
+    pub config: Option<String>,
 }

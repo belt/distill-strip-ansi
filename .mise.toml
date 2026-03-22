@@ -1,0 +1,53 @@
+# Project-scoped tool versions — managed by mise
+#
+# Install: mise install
+# Verify:  mise ls
+[tools]
+"cargo:cargo-tarpaulin" = "latest"
+"cargo:cargo-insta" = "latest"
+
+[env]
+CARGO_INCREMENTAL = "0"
+RUST_BACKTRACE = "1"
+
+[tasks.test]
+description = "Run cargo nextest"
+run = """
+env -u RUSTC_WORKSPACE_WRAPPER \
+  cargo nextest run "$@"
+"""
+
+[tasks.test-cargo]
+description = "Run cargo test"
+run = """
+env -u RUSTC_WORKSPACE_WRAPPER \
+  cargo test "$@"
+"""
+
+[tasks.coverage]
+description = "Run cargo tarpaulin coverage"
+run = """
+env -u RUSTC_WRAPPER -u RUSTC_WORKSPACE_WRAPPER \
+  cargo tarpaulin \
+    --skip-clean \
+    --target-dir target/tarpaulin \
+    --engine llvm \
+    --out html \
+    --post-test-delay 2 \
+    -j 4 \
+    -- --test-threads=1
+"""
+
+[tasks.deny]
+description = "Run cargo-deny supply chain checks"
+run = """
+cargo deny check "$@"
+"""
+
+[tasks.check]
+description = "Run clippy then tests"
+run = """
+env -u RUSTC_WORKSPACE_WRAPPER \
+  cargo clippy --all-targets -- -D warnings
+"""
+depends = ["test"]

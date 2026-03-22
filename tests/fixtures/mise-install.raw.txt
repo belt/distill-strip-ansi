@@ -1,0 +1,33 @@
+mise plugin install node
+mise plugin install node ... done
+mise plugin install python
+mise plugin install python ... done
+mise plugin install ruby
+mise plugin install ruby ... done
+mise install node@22.5.0
+mise downloading node 22.5.0
+mise extracting node 22.5.0
+mise installing node 22.5.0
+mise node@22.5.0 installed
+mise install python@3.13.1
+mise downloading python 3.13.1
+mise extracting python 3.13.1
+mise installing python 3.13.1
+mise python@3.13.1 installed
+mise install ruby@3.4.2
+mise downloading ruby 3.4.2
+mise extracting ruby 3.4.2
+mise installing ruby 3.4.2
+mise ruby@3.4.2 installed
+mise use node@22.5.0
+mise use python@3.13.1
+mise use ruby@3.4.2
+mise node@22.5.0 is now active
+mise python@3.13.1 is now active
+mise ruby@3.4.2 is now active
+mise activated for /home/user/project
+mise all tools installed and activated
+mise settings updated in /home/user/project/.mise.toml
+verbose: checking for updates
+verbose: no updates available
+error: mise install failed for erlang@27.0 -- build error

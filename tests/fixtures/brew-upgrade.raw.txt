@@ -1,0 +1,114 @@
+==> Auto-updating Homebrew...
+Adjust how often this is run with HOMEBREW_AUTO_UPDATE_SECS or disable with
+HOMEBREW_NO_AUTO_UPDATE. Hide these hints with HOMEBREW_NO_ENV_HINTS (see `man brew`).
+==> Updated 2 taps (homebrew/core and homebrew/cask).
+==> Upgrading 9 outdated packages:
+mole 1.26.0 -> 1.27.0
+mise 2026.2.17 -> 2026.2.18
+yt-dlp 2026.2.4 -> 2026.2.21
+localai 3.12.0 -> 3.12.1
+fastmcp 3.0.0 -> 3.0.1
+nss 3.120.1 -> 3.121
+openexr 3.4.4_2 -> 3.4.5
+ollama 0.16.2 -> 0.16.3
+cgif 0.5.1 -> 0.5.2
+==> Fetching downloads
+✔︎ Bottle cgif (0.5.2) Downloaded 12.7KB
+✔︎ Bottle openexr (3.4.5) Downloaded 1.1MB
+✔︎ Bottle nss (3.121) Downloaded 2.3MB
+✔︎ Bottle fastmcp (3.0.1) Downloaded 845KB
+✔︎ Bottle mole (1.27.0) Downloaded 3.2MB
+✔︎ Bottle mise (2026.2.18) Downloaded 5.7MB
+✔︎ Bottle yt-dlp (2026.2.21) Downloaded 4.1MB
+✔︎ Bottle ollama (0.16.3) Downloaded 18.2MB
+✔︎ Bottle localai (3.12.1) Downloaded 28.8MB
+==> Upgrading mole
+  1.26.0 -> 1.27.0
+==> Pouring mole--1.27.0.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/mole/1.27.0: 7 files, 9.8MB
+==> Running `brew cleanup mole`...
+Removing: /opt/homebrew/Cellar/mole/1.26.0... (7 files, 9.6MB)
+Removing: /Users/user/Library/Caches/Homebrew/mole--1.26.0... (3.1MB)
+==> Installation times:
+mole: 0.220 seconds
+==> Upgrading mise
+  2026.2.17 -> 2026.2.18
+==> Pouring mise--2026.2.18.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/mise/2026.2.18: 11 files, 18.4MB
+==> Running `brew cleanup mise`...
+Removing: /opt/homebrew/Cellar/mise/2026.2.17... (11 files, 18.2MB)
+==> Installation times:
+mise: 0.058 seconds
+==> Upgrading yt-dlp
+  2026.2.4 -> 2026.2.21
+==> Pouring yt-dlp--2026.2.21.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/yt-dlp/2026.2.21: 1,247 files, 22.3MB
+==> Running `brew cleanup yt-dlp`...
+Removing: /opt/homebrew/Cellar/yt-dlp/2026.2.4... (1,245 files, 22.1MB)
+==> Installation times:
+yt-dlp: 0.398 seconds
+==> Upgrading localai
+  3.12.0 -> 3.12.1
+==> Pouring localai--3.12.1.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/localai/3.12.1: 5 files, 89.2MB
+==> Running `brew cleanup localai`...
+Removing: /opt/homebrew/Cellar/localai/3.12.0... (5 files, 89.0MB)
+==> Installation times:
+localai: 0.039 seconds
+==> Upgrading fastmcp
+  3.0.0 -> 3.0.1
+==> Pouring fastmcp--3.0.1.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/fastmcp/3.0.1: 3 files, 2.4MB
+==> Running `brew cleanup fastmcp`...
+Removing: /opt/homebrew/Cellar/fastmcp/3.0.0... (3 files, 2.3MB)
+==> Installation times:
+fastmcp: 1.252 seconds
+==> Upgrading nss
+  3.120.1 -> 3.121
+==> Pouring nss--3.121.arm64_sonoma.bottle.tar.gz
+==> Caveats
+nss is keg-only, which means it was not symlinked into /opt/homebrew,
+because Firefox can pick up the wrong version.
+==> Summary
+🍺  /opt/homebrew/Cellar/nss/3.121: 244 files, 28.1MB
+==> Running `brew cleanup nss`...
+Removing: /opt/homebrew/Cellar/nss/3.120.1... (244 files, 27.9MB)
+==> Installation times:
+nss: 5.933 seconds
+==> Upgrading openexr
+  3.4.4_2 -> 3.4.5
+==> Pouring openexr--3.4.5.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openexr/3.4.5: 31 files, 4.2MB
+==> Running `brew cleanup openexr`...
+Removing: /opt/homebrew/Cellar/openexr/3.4.4_2... (31 files, 4.1MB)
+==> Installation times:
+openexr: 1.423 seconds
+==> Upgrading ollama
+  0.16.2 -> 0.16.3
+==> Pouring ollama--0.16.3.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/ollama/0.16.3: 5 files, 52.1MB
+==> Running `brew cleanup ollama`...
+Removing: /opt/homebrew/Cellar/ollama/0.16.2... (5 files, 51.8MB)
+==> Installation times:
+ollama: 0.022 seconds
+==> Upgrading cgif
+  0.5.1 -> 0.5.2
+==> Pouring cgif--0.5.2.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/cgif/0.5.2: 9 files, 72KB
+==> Running `brew cleanup cgif`...
+Removing: /opt/homebrew/Cellar/cgif/0.5.1... (9 files, 71KB)
+==> Installation times:
+cgif: 0.120 seconds
+==> Upgrading copilot-cli
+  0.0.412 -> 0.0.414
+Unlinking Binary 'copilot' from '/opt/homebrew/bin/copilot'
+==> New Formulae
+some-new-formula
+==> New Casks
+some-new-cask
+Linking Binary 'copilot' to '/opt/homebrew/bin/copilot'
+🍺  /opt/homebrew/Caskroom/copilot-cli/0.0.414: 3 files, 45.2MB
+==> Running `brew cleanup copilot-cli`...
+Removing: /opt/homebrew/Caskroom/copilot-cli/0.0.412... (3 files, 44.9MB)
+==> Installation times:
+copilot-cli: 2.260 seconds

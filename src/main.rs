@@ -10,6 +10,9 @@ use cli::Args;
 use io::OutputBuffer;
 use strip_ansi::StripStream;
 
+#[cfg(feature = "filter")]
+use strip_ansi::{FilterConfig, FilterStream, SeqGroup, SeqKind};
+
 fn main() -> ExitCode {
     sigpipe::reset();
 
@@ -52,6 +55,91 @@ fn open_writer(args: &Args) -> Result<Box<dyn Write>, std::io::Error> {
     }
 }
 
+// ── Filter config builder ───────────────────────────────────────────
+
+/// Build a [`FilterConfig`] from CLI flags and optional TOML config.
+///
+/// - `--config` provided: load TOML first, then overlay CLI flags
+/// - CLI flags only: build from flags directly
+/// - Neither: returns `FilterConfig::strip_all()` (zero overhead)
+#[cfg(feature = "filter")]
+fn build_filter_config(args: &Args) -> Result<FilterConfig, ExitCode> {
+    // Start from TOML if --config is provided.
+    #[cfg(feature = "toml-config")]
+    let mut config = if let Some(ref path) = args.config {
+        let toml = match strip_ansi::StripAnsiConfig::from_file(std::path::Path::new(path)) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("strip-ansi: --config {path}: {e}");
+                return Err(ExitCode::from(1));
+            }
+        };
+        match toml.to_filter_config() {
+            Ok(fc) => fc,
+            Err(e) => {
+                eprintln!("strip-ansi: --config {path}: {e}");
+                return Err(ExitCode::from(1));
+            }
+        }
+    } else {
+        FilterConfig::strip_all()
+    };
+
+    #[cfg(not(feature = "toml-config"))]
+    let mut config = FilterConfig::strip_all();
+
+    // Overlay CLI --no-strip-* flags (additive).
+    if args.no_strip_csi {
+        config = config.no_strip_group(SeqGroup::Csi);
+    }
+    if args.no_strip_osc {
+        config = config.no_strip_group(SeqGroup::Osc);
+    }
+    if args.no_strip_dcs {
+        config = config.no_strip_group(SeqGroup::Dcs);
+    }
+    if args.no_strip_apc {
+        config = config.no_strip_group(SeqGroup::Apc);
+    }
+    if args.no_strip_pm {
+        config = config.no_strip_group(SeqGroup::Pm);
+    }
+    if args.no_strip_sos {
+        config = config.no_strip_group(SeqGroup::Sos);
+    }
+    if args.no_strip_ss2 {
+        config = config.no_strip_group(SeqGroup::Ss2);
+    }
+    if args.no_strip_ss3 {
+        config = config.no_strip_group(SeqGroup::Ss3);
+    }
+    if args.no_strip_fe {
+        config = config.no_strip_group(SeqGroup::Fe);
+    }
+
+    // CSI sub-group flags.
+    if args.no_strip_csi_sgr {
+        config = config.no_strip_kind(SeqKind::CsiSgr);
+    }
+    if args.no_strip_csi_cursor {
+        config = config.no_strip_kind(SeqKind::CsiCursor);
+    }
+    if args.no_strip_csi_erase {
+        config = config.no_strip_kind(SeqKind::CsiErase);
+    }
+    if args.no_strip_csi_scroll {
+        config = config.no_strip_kind(SeqKind::CsiScroll);
+    }
+    if args.no_strip_csi_mode {
+        config = config.no_strip_kind(SeqKind::CsiMode);
+    }
+    if args.no_strip_csi_window {
+        config = config.no_strip_kind(SeqKind::CsiWindow);
+    }
+
+    Ok(config)
+}
+
 fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
     let mut writer = match open_writer(args) {
         Ok(w) => w,
@@ -61,7 +149,20 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
         }
     };
 
-    let mut stream = StripStream::new();
+    // Build filter config; use FilterStream when not strip-all.
+    #[cfg(feature = "filter")]
+    let filter_config = match build_filter_config(args) {
+        Ok(fc) => fc,
+        Err(code) => return code,
+    };
+
+    #[cfg(feature = "filter")]
+    let use_filter = !filter_config.is_strip_all();
+
+    let mut strip_stream = StripStream::new();
+    #[cfg(feature = "filter")]
+    let mut filter_stream = FilterStream::new();
+
     let mut buf = [0u8; 32 * 1024];
     let mut lines_remaining = args.head;
     let mut bytes_read: u64 = 0;
@@ -90,12 +191,22 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
         bytes_read += n as u64;
 
         let mut chunk_clean: u64 = 0;
-        for slice in stream.strip_slices(&buf[..n]) {
+
+        // Choose the appropriate streaming path.
+        #[cfg(feature = "filter")]
+        let slices: Box<dyn Iterator<Item = &[u8]>> = if use_filter {
+            Box::new(filter_stream.filter_slices(&buf[..n], &filter_config))
+        } else {
+            Box::new(strip_stream.strip_slices(&buf[..n]))
+        };
+        #[cfg(not(feature = "filter"))]
+        let slices = strip_stream.strip_slices(&buf[..n]);
+
+        for slice in slices {
             let slice: &[u8] = slice;
             chunk_clean += slice.len() as u64;
 
             if let Some(ref mut remaining) = lines_remaining {
-                // Write up to `remaining` newlines, then stop.
                 if *remaining == 0 {
                     break;
                 }
@@ -115,7 +226,15 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
         }
         bytes_stripped += n as u64 - chunk_clean;
     }
-    stream.finish();
+
+    #[cfg(feature = "filter")]
+    if use_filter {
+        filter_stream.finish();
+    } else {
+        strip_stream.finish();
+    }
+    #[cfg(not(feature = "filter"))]
+    strip_stream.finish();
 
     if let Err(e) = writer.flush() {
         return handle_io_error(e);
@@ -142,7 +261,6 @@ fn write_head_limited(
             *remaining -= 1;
             offset = end;
         } else {
-            // No newline in remainder — write it all, line continues in next chunk.
             writer.write_all(&slice[offset..])?;
             break;
         }

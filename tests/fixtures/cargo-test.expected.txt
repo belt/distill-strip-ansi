@@ -1,0 +1,12 @@
+cargo: compiling 22 crates (2 workspace, 20 deps)
+cargo: warning strip-ansi: unused import `std::io::Read` (io.rs:3)
+cargo: warning distill: unused fn `resolve_color` (color.rs:42)
+cargo: test strip-ansi unit 12/12 ✔ 0.01s
+cargo: test distill unit 17/18 ✘ 0.03s
+  FAIL pipeline::tests::test_large_line — assertion left==right (8192 != 8193)
+cargo: test integration_tests 8/8 ✔ 0.52s
+cargo: test property_tests 7/7 ✔ 2.87s
+cargo: test test_strip_ansi_escapes 6/6 ✔ 0.01s
+cargo: doc-tests strip-ansi 2/2 ✔ 0.18s
+cargo: doc-tests distill 0/0 ✔
+cargo: done — 52 passed, 1 failed; finished in 14.23s
