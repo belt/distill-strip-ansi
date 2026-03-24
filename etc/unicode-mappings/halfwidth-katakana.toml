@@ -1,0 +1,347 @@
+# Halfwidth Katakana and Halfwidth Symbols
+#
+# Halfwidth forms from JIS X 0201 legacy encoding mapped to their
+# standard-width Unicode equivalents. Essential for Japanese text
+# normalization when processing legacy terminal/mainframe output.
+#
+# Includes halfwidth symbols (U+FFE8-FFEE) — box drawing and arrows
+# from the same legacy encoding context.
+#
+# Source: Unicode block U+FF61-U+FF9F, U+FFE8-U+FFEE
+# Reference: https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
+#
+# Note: direction is "widening" — halfwidth (1 col) → standard (2 col).
+# These are canonical forms; the halfwidth variants exist only for
+# JIS X 0201 round-trip compatibility.
+
+[metadata]
+type = "halfwidth_katakana"
+description = "Halfwidth Katakana and symbols → standard-width equivalents"
+direction = "widening"
+tags = ["japanese", "legacy-encoding", "canonicalize"]
+
+# ── Halfwidth CJK punctuation ────────────────────────────────────────
+
+# U+FF61 ｡ → U+3002 。 (ideographic full stop)
+[[pairs]]
+from = "FF61"
+to = "3002"
+
+# U+FF62 ｢ → U+300C 「 (left corner bracket)
+[[pairs]]
+from = "FF62"
+to = "300C"
+
+# U+FF63 ｣ → U+300D 」 (right corner bracket)
+[[pairs]]
+from = "FF63"
+to = "300D"
+
+# U+FF64 ､ → U+3001 、 (ideographic comma)
+[[pairs]]
+from = "FF64"
+to = "3001"
+
+# U+FF65 ･ → U+30FB ・ (katakana middle dot)
+[[pairs]]
+from = "FF65"
+to = "30FB"
+
+# ── Halfwidth Katakana letters ───────────────────────────────────────
+
+# U+FF66 ｦ → U+30F2 ヲ
+[[pairs]]
+from = "FF66"
+to = "30F2"
+
+# U+FF67-FF6B ｧ-ｫ → U+30A1-30A5 ァ-ォ (small a-o)
+[[pairs]]
+from = "FF67"
+to = "30A1"
+
+[[pairs]]
+from = "FF68"
+to = "30A3"
+
+[[pairs]]
+from = "FF69"
+to = "30A5"
+
+[[pairs]]
+from = "FF6A"
+to = "30A7"
+
+[[pairs]]
+from = "FF6B"
+to = "30A9"
+
+# U+FF6C-FF6E ｬ-ｮ → U+30E3-30E5 ャ-ョ (small ya-yo)
+[[pairs]]
+from = "FF6C"
+to = "30E3"
+
+[[pairs]]
+from = "FF6D"
+to = "30E5"
+
+[[pairs]]
+from = "FF6E"
+to = "30E7"
+
+# U+FF6F ｯ → U+30C3 ッ (small tsu)
+[[pairs]]
+from = "FF6F"
+to = "30C3"
+
+# U+FF70 ｰ → U+30FC ー (prolonged sound mark)
+[[pairs]]
+from = "FF70"
+to = "30FC"
+
+# U+FF71-FF9D ｱ-ﾝ → standard katakana
+# The mapping is NOT a simple offset — JIS X 0201 ordering
+# differs from Unicode Katakana block ordering.
+
+# ｱ-ｵ → ア-オ (a-row)
+[[pairs]]
+from = "FF71"
+to = "30A2"
+
+[[pairs]]
+from = "FF72"
+to = "30A4"
+
+[[pairs]]
+from = "FF73"
+to = "30A6"
+
+[[pairs]]
+from = "FF74"
+to = "30A8"
+
+[[pairs]]
+from = "FF75"
+to = "30AA"
+
+# ｶ-ｺ → カ-コ (ka-row)
+[[pairs]]
+from = "FF76"
+to = "30AB"
+
+[[pairs]]
+from = "FF77"
+to = "30AD"
+
+[[pairs]]
+from = "FF78"
+to = "30AF"
+
+[[pairs]]
+from = "FF79"
+to = "30B1"
+
+[[pairs]]
+from = "FF7A"
+to = "30B3"
+
+# ｻ-ｿ → サ-ソ (sa-row)
+[[pairs]]
+from = "FF7B"
+to = "30B5"
+
+[[pairs]]
+from = "FF7C"
+to = "30B7"
+
+[[pairs]]
+from = "FF7D"
+to = "30B9"
+
+[[pairs]]
+from = "FF7E"
+to = "30BB"
+
+[[pairs]]
+from = "FF7F"
+to = "30BD"
+
+# ﾀ-ﾄ → タ-ト (ta-row)
+[[pairs]]
+from = "FF80"
+to = "30BF"
+
+[[pairs]]
+from = "FF81"
+to = "30C1"
+
+[[pairs]]
+from = "FF82"
+to = "30C4"
+
+[[pairs]]
+from = "FF83"
+to = "30C6"
+
+[[pairs]]
+from = "FF84"
+to = "30C8"
+
+# ﾅ-ﾉ → ナ-ノ (na-row)
+[[pairs]]
+from = "FF85"
+to = "30CA"
+
+[[pairs]]
+from = "FF86"
+to = "30CB"
+
+[[pairs]]
+from = "FF87"
+to = "30CC"
+
+[[pairs]]
+from = "FF88"
+to = "30CD"
+
+[[pairs]]
+from = "FF89"
+to = "30CE"
+
+# ﾊ-ﾎ → ハ-ホ (ha-row)
+[[pairs]]
+from = "FF8A"
+to = "30CF"
+
+[[pairs]]
+from = "FF8B"
+to = "30D2"
+
+[[pairs]]
+from = "FF8C"
+to = "30D5"
+
+[[pairs]]
+from = "FF8D"
+to = "30D8"
+
+[[pairs]]
+from = "FF8E"
+to = "30DB"
+
+# ﾏ-ﾓ → マ-モ (ma-row)
+[[pairs]]
+from = "FF8F"
+to = "30DE"
+
+[[pairs]]
+from = "FF90"
+to = "30DF"
+
+[[pairs]]
+from = "FF91"
+to = "30E0"
+
+[[pairs]]
+from = "FF92"
+to = "30E1"
+
+[[pairs]]
+from = "FF93"
+to = "30E2"
+
+# ﾔ-ﾖ → ヤ-ヨ (ya-row)
+[[pairs]]
+from = "FF94"
+to = "30E4"
+
+[[pairs]]
+from = "FF95"
+to = "30E6"
+
+[[pairs]]
+from = "FF96"
+to = "30E8"
+
+# ﾗ-ﾛ → ラ-ロ (ra-row)
+[[pairs]]
+from = "FF97"
+to = "30E9"
+
+[[pairs]]
+from = "FF98"
+to = "30EA"
+
+[[pairs]]
+from = "FF99"
+to = "30EB"
+
+[[pairs]]
+from = "FF9A"
+to = "30EC"
+
+[[pairs]]
+from = "FF9B"
+to = "30ED"
+
+# ﾜ → ワ (wa)
+[[pairs]]
+from = "FF9C"
+to = "30EF"
+
+# ﾝ → ン (n)
+[[pairs]]
+from = "FF9D"
+to = "30F3"
+
+# ── Halfwidth dakuten / handakuten ───────────────────────────────────
+# These map to combining marks. A preceding kana + dakuten sequence
+# should ideally compose (e.g. ｶﾞ → ガ), but single-char mapping
+# to the combining mark is the correct NFKC decomposition.
+
+# U+FF9E ﾞ → U+3099 (combining dakuten)
+[[pairs]]
+from = "FF9E"
+to = "3099"
+
+# U+FF9F ﾟ → U+309A (combining handakuten)
+[[pairs]]
+from = "FF9F"
+to = "309A"
+
+# ── Halfwidth symbols ────────────────────────────────────────────────
+# U+FFE8-FFEE — halfwidth box drawing and arrows
+
+# U+FFE8 ￨ → U+2502 │ (box drawings light vertical)
+[[pairs]]
+from = "FFE8"
+to = "2502"
+
+# U+FFE9 ￩ → U+2190 ← (leftwards arrow)
+[[pairs]]
+from = "FFE9"
+to = "2190"
+
+# U+FFEA ￪ → U+2191 ↑ (upwards arrow)
+[[pairs]]
+from = "FFEA"
+to = "2191"
+
+# U+FFEB ￫ → U+2192 → (rightwards arrow)
+[[pairs]]
+from = "FFEB"
+to = "2192"
+
+# U+FFEC ￬ → U+2193 ↓ (downwards arrow)
+[[pairs]]
+from = "FFEC"
+to = "2193"
+
+# U+FFED ￭ → U+25A0 ■ (black square)
+[[pairs]]
+from = "FFED"
+to = "25A0"
+
+# U+FFEE ￮ → U+25CB ○ (white circle)
+[[pairs]]
+from = "FFEE"
+to = "25CB"

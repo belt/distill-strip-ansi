@@ -1,0 +1,328 @@
+# Enclosed Alphanumerics — circled/parenthesized numbers and letters
+#
+# Decorative enclosed forms of numbers and letters used in lists,
+# annotations, and formatted output. Maps to plain equivalents.
+#
+# Excludes circled A-Z (U+24B6-24CF) and a-z (U+24D0-24E9)
+# which are compiled-in builtins.
+#
+# Source: Unicode block U+2460-U+24FF
+# Reference: https://en.wikipedia.org/wiki/Enclosed_Alphanumerics
+#
+# Numbers >9 decompose to multi-character sequences (to_seq).
+
+[metadata]
+type = "enclosed_alphanumerics"
+description = "Circled and parenthesized numbers → plain digits"
+direction = "narrowing"
+tags = ["ascii-normalize", "canonicalize"]
+
+# ── Circled digits 1-9 ───────────────────────────────────────────────
+# U+2460-2468 → 1-9
+[[pairs]]
+from = "2460"
+to = "0031"
+
+[[pairs]]
+from = "2461"
+to = "0032"
+
+[[pairs]]
+from = "2462"
+to = "0033"
+
+[[pairs]]
+from = "2463"
+to = "0034"
+
+[[pairs]]
+from = "2464"
+to = "0035"
+
+[[pairs]]
+from = "2465"
+to = "0036"
+
+[[pairs]]
+from = "2466"
+to = "0037"
+
+[[pairs]]
+from = "2467"
+to = "0038"
+
+[[pairs]]
+from = "2468"
+to = "0039"
+
+# ── Circled numbers 10-20 ────────────────────────────────────────────
+[[pairs]]
+from = "2469"
+to_seq = "0031 0030"
+
+[[pairs]]
+from = "246A"
+to_seq = "0031 0031"
+
+[[pairs]]
+from = "246B"
+to_seq = "0031 0032"
+
+[[pairs]]
+from = "246C"
+to_seq = "0031 0033"
+
+[[pairs]]
+from = "246D"
+to_seq = "0031 0034"
+
+[[pairs]]
+from = "246E"
+to_seq = "0031 0035"
+
+[[pairs]]
+from = "246F"
+to_seq = "0031 0036"
+
+[[pairs]]
+from = "2470"
+to_seq = "0031 0037"
+
+[[pairs]]
+from = "2471"
+to_seq = "0031 0038"
+
+[[pairs]]
+from = "2472"
+to_seq = "0031 0039"
+
+[[pairs]]
+from = "2473"
+to_seq = "0032 0030"
+
+# ── Parenthesized digits 1-9 ─────────────────────────────────────────
+# U+2474-247C → 1-9
+[[pairs]]
+from = "2474"
+to = "0031"
+
+[[pairs]]
+from = "2475"
+to = "0032"
+
+[[pairs]]
+from = "2476"
+to = "0033"
+
+[[pairs]]
+from = "2477"
+to = "0034"
+
+[[pairs]]
+from = "2478"
+to = "0035"
+
+[[pairs]]
+from = "2479"
+to = "0036"
+
+[[pairs]]
+from = "247A"
+to = "0037"
+
+[[pairs]]
+from = "247B"
+to = "0038"
+
+[[pairs]]
+from = "247C"
+to = "0039"
+
+# ── Parenthesized numbers 10-20 ──────────────────────────────────────
+[[pairs]]
+from = "247D"
+to_seq = "0031 0030"
+
+[[pairs]]
+from = "247E"
+to_seq = "0031 0031"
+
+[[pairs]]
+from = "247F"
+to_seq = "0031 0032"
+
+[[pairs]]
+from = "2480"
+to_seq = "0031 0033"
+
+[[pairs]]
+from = "2481"
+to_seq = "0031 0034"
+
+[[pairs]]
+from = "2482"
+to_seq = "0031 0035"
+
+[[pairs]]
+from = "2483"
+to_seq = "0031 0036"
+
+[[pairs]]
+from = "2484"
+to_seq = "0031 0037"
+
+[[pairs]]
+from = "2485"
+to_seq = "0031 0038"
+
+[[pairs]]
+from = "2486"
+to_seq = "0031 0039"
+
+[[pairs]]
+from = "2487"
+to_seq = "0032 0030"
+
+# ── Full stop digits 1-9 ─────────────────────────────────────────────
+# U+2488-2490 → 1-9 (digit followed by full stop, we map to digit)
+[[pairs]]
+from = "2488"
+to = "0031"
+
+[[pairs]]
+from = "2489"
+to = "0032"
+
+[[pairs]]
+from = "248A"
+to = "0033"
+
+[[pairs]]
+from = "248B"
+to = "0034"
+
+[[pairs]]
+from = "248C"
+to = "0035"
+
+[[pairs]]
+from = "248D"
+to = "0036"
+
+[[pairs]]
+from = "248E"
+to = "0037"
+
+[[pairs]]
+from = "248F"
+to = "0038"
+
+[[pairs]]
+from = "2490"
+to = "0039"
+
+# ── Full stop numbers 10-20 ──────────────────────────────────────────
+[[pairs]]
+from = "2491"
+to_seq = "0031 0030"
+
+[[pairs]]
+from = "2492"
+to_seq = "0031 0031"
+
+[[pairs]]
+from = "2493"
+to_seq = "0031 0032"
+
+[[pairs]]
+from = "2494"
+to_seq = "0031 0033"
+
+[[pairs]]
+from = "2495"
+to_seq = "0031 0034"
+
+[[pairs]]
+from = "2496"
+to_seq = "0031 0035"
+
+[[pairs]]
+from = "2497"
+to_seq = "0031 0036"
+
+[[pairs]]
+from = "2498"
+to_seq = "0031 0037"
+
+[[pairs]]
+from = "2499"
+to_seq = "0031 0038"
+
+[[pairs]]
+from = "249A"
+to_seq = "0031 0039"
+
+[[pairs]]
+from = "249B"
+to_seq = "0032 0030"
+
+# ── Parenthesized Latin small letters ─────────────────────────────────
+# U+249C-24B5 → a-z
+[[ranges]]
+from_start = "249C"
+from_end = "24B5"
+to_start = "0061"
+
+# ── Circled number zero ──────────────────────────────────────────────
+# U+24EA → 0
+[[pairs]]
+from = "24EA"
+to = "0030"
+
+# ── Double circled digits 1-10 ───────────────────────────────────────
+# U+24F5-24FE
+[[pairs]]
+from = "24F5"
+to = "0031"
+
+[[pairs]]
+from = "24F6"
+to = "0032"
+
+[[pairs]]
+from = "24F7"
+to = "0033"
+
+[[pairs]]
+from = "24F8"
+to = "0034"
+
+[[pairs]]
+from = "24F9"
+to = "0035"
+
+[[pairs]]
+from = "24FA"
+to = "0036"
+
+[[pairs]]
+from = "24FB"
+to = "0037"
+
+[[pairs]]
+from = "24FC"
+to = "0038"
+
+[[pairs]]
+from = "24FD"
+to = "0039"
+
+[[pairs]]
+from = "24FE"
+to_seq = "0031 0030"
+
+# ── Negative circled number zero ─────────────────────────────────────
+# U+24FF → 0
+[[pairs]]
+from = "24FF"
+to = "0030"

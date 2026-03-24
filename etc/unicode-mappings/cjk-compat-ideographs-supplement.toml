@@ -1,0 +1,2377 @@
+# CJK Compatibility Ideographs Supplement
+#
+# Compatibility ideographs in the Supplementary Ideographic Plane,
+# primarily for CNS 11643 round-trip compatibility. Each has a
+# canonical decomposition to a CJK Unified Ideograph.
+#
+# Source: Unicode block U+2F800-U+2FA1F (542 entries)
+# Reference: https://unicode.org/charts/nameslist/n_2F800.html
+# Generated from: UnicodeData.txt field 5 (canonical decomposition)
+# Generator: bin/generate-toml.sh
+
+[metadata]
+type = "cjk_compat_ideographs_supplement"
+description = "CJK Compatibility Ideographs Supplement → CJK Unified"
+direction = "neutral"
+tags = ["cjk", "canonicalize"]
+
+[[pairs]]
+from = "2F80"
+to = "807F"
+
+[[pairs]]
+from = "2F81"
+to = "8089"
+
+[[pairs]]
+from = "2F82"
+to = "81E3"
+
+[[pairs]]
+from = "2F83"
+to = "81EA"
+
+[[pairs]]
+from = "2F84"
+to = "81F3"
+
+[[pairs]]
+from = "2F85"
+to = "81FC"
+
+[[pairs]]
+from = "2F86"
+to = "820C"
+
+[[pairs]]
+from = "2F87"
+to = "821B"
+
+[[pairs]]
+from = "2F88"
+to = "821F"
+
+[[pairs]]
+from = "2F89"
+to = "826E"
+
+[[pairs]]
+from = "2F8A"
+to = "8272"
+
+[[pairs]]
+from = "2F8B"
+to = "8278"
+
+[[pairs]]
+from = "2F8C"
+to = "864D"
+
+[[pairs]]
+from = "2F8D"
+to = "866B"
+
+[[pairs]]
+from = "2F8E"
+to = "8840"
+
+[[pairs]]
+from = "2F8F"
+to = "884C"
+
+[[pairs]]
+from = "2F90"
+to = "8863"
+
+[[pairs]]
+from = "2F91"
+to = "897E"
+
+[[pairs]]
+from = "2F92"
+to = "898B"
+
+[[pairs]]
+from = "2F93"
+to = "89D2"
+
+[[pairs]]
+from = "2F94"
+to = "8A00"
+
+[[pairs]]
+from = "2F95"
+to = "8C37"
+
+[[pairs]]
+from = "2F96"
+to = "8C46"
+
+[[pairs]]
+from = "2F97"
+to = "8C55"
+
+[[pairs]]
+from = "2F98"
+to = "8C78"
+
+[[pairs]]
+from = "2F99"
+to = "8C9D"
+
+[[pairs]]
+from = "2F9A"
+to = "8D64"
+
+[[pairs]]
+from = "2F9B"
+to = "8D70"
+
+[[pairs]]
+from = "2F9C"
+to = "8DB3"
+
+[[pairs]]
+from = "2F9D"
+to = "8EAB"
+
+[[pairs]]
+from = "2F9E"
+to = "8ECA"
+
+[[pairs]]
+from = "2F9F"
+to = "8F9B"
+
+[[pairs]]
+from = "2FA0"
+to = "8FB0"
+
+[[pairs]]
+from = "2FA1"
+to = "8FB5"
+
+[[pairs]]
+from = "2FA2"
+to = "9091"
+
+[[pairs]]
+from = "2FA3"
+to = "9149"
+
+[[pairs]]
+from = "2FA4"
+to = "91C6"
+
+[[pairs]]
+from = "2FA5"
+to = "91CC"
+
+[[pairs]]
+from = "2FA6"
+to = "91D1"
+
+[[pairs]]
+from = "2FA7"
+to = "9577"
+
+[[pairs]]
+from = "2FA8"
+to = "9580"
+
+[[pairs]]
+from = "2FA9"
+to = "961C"
+
+[[pairs]]
+from = "2FAA"
+to = "96B6"
+
+[[pairs]]
+from = "2FAB"
+to = "96B9"
+
+[[pairs]]
+from = "2FAC"
+to = "96E8"
+
+[[pairs]]
+from = "2FAD"
+to = "9751"
+
+[[pairs]]
+from = "2FAE"
+to = "975E"
+
+[[pairs]]
+from = "2FAF"
+to = "9762"
+
+[[pairs]]
+from = "2F800"
+to = "4E3D"
+
+[[pairs]]
+from = "2F801"
+to = "4E38"
+
+[[pairs]]
+from = "2F802"
+to = "4E41"
+
+[[pairs]]
+from = "2F803"
+to = "20122"
+
+[[pairs]]
+from = "2F804"
+to = "4F60"
+
+[[pairs]]
+from = "2F805"
+to = "4FAE"
+
+[[pairs]]
+from = "2F806"
+to = "4FBB"
+
+[[pairs]]
+from = "2F807"
+to = "5002"
+
+[[pairs]]
+from = "2F808"
+to = "507A"
+
+[[pairs]]
+from = "2F809"
+to = "5099"
+
+[[pairs]]
+from = "2F80A"
+to = "50E7"
+
+[[pairs]]
+from = "2F80B"
+to = "50CF"
+
+[[pairs]]
+from = "2F80C"
+to = "349E"
+
+[[pairs]]
+from = "2F80D"
+to = "2063A"
+
+[[pairs]]
+from = "2F80E"
+to = "514D"
+
+[[pairs]]
+from = "2F80F"
+to = "5154"
+
+[[pairs]]
+from = "2F810"
+to = "5164"
+
+[[pairs]]
+from = "2F811"
+to = "5177"
+
+[[pairs]]
+from = "2F812"
+to = "2051C"
+
+[[pairs]]
+from = "2F813"
+to = "34B9"
+
+[[pairs]]
+from = "2F814"
+to = "5167"
+
+[[pairs]]
+from = "2F815"
+to = "518D"
+
+[[pairs]]
+from = "2F816"
+to = "2054B"
+
+[[pairs]]
+from = "2F817"
+to = "5197"
+
+[[pairs]]
+from = "2F818"
+to = "51A4"
+
+[[pairs]]
+from = "2F819"
+to = "4ECC"
+
+[[pairs]]
+from = "2F81A"
+to = "51AC"
+
+[[pairs]]
+from = "2F81B"
+to = "51B5"
+
+[[pairs]]
+from = "2F81C"
+to = "291DF"
+
+[[pairs]]
+from = "2F81D"
+to = "51F5"
+
+[[pairs]]
+from = "2F81E"
+to = "5203"
+
+[[pairs]]
+from = "2F81F"
+to = "34DF"
+
+[[pairs]]
+from = "2F820"
+to = "523B"
+
+[[pairs]]
+from = "2F821"
+to = "5246"
+
+[[pairs]]
+from = "2F822"
+to = "5272"
+
+[[pairs]]
+from = "2F823"
+to = "5277"
+
+[[pairs]]
+from = "2F824"
+to = "3515"
+
+[[pairs]]
+from = "2F825"
+to = "52C7"
+
+[[pairs]]
+from = "2F826"
+to = "52C9"
+
+[[pairs]]
+from = "2F827"
+to = "52E4"
+
+[[pairs]]
+from = "2F828"
+to = "52FA"
+
+[[pairs]]
+from = "2F829"
+to = "5305"
+
+[[pairs]]
+from = "2F82A"
+to = "5306"
+
+[[pairs]]
+from = "2F82B"
+to = "5317"
+
+[[pairs]]
+from = "2F82C"
+to = "5349"
+
+[[pairs]]
+from = "2F82D"
+to = "5351"
+
+[[pairs]]
+from = "2F82E"
+to = "535A"
+
+[[pairs]]
+from = "2F82F"
+to = "5373"
+
+[[pairs]]
+from = "2F830"
+to = "537D"
+
+[[pairs]]
+from = "2F831"
+to = "537F"
+
+[[pairs]]
+from = "2F832"
+to = "537F"
+
+[[pairs]]
+from = "2F833"
+to = "537F"
+
+[[pairs]]
+from = "2F834"
+to = "20A2C"
+
+[[pairs]]
+from = "2F835"
+to = "7070"
+
+[[pairs]]
+from = "2F836"
+to = "53CA"
+
+[[pairs]]
+from = "2F837"
+to = "53DF"
+
+[[pairs]]
+from = "2F838"
+to = "20B63"
+
+[[pairs]]
+from = "2F839"
+to = "53EB"
+
+[[pairs]]
+from = "2F83A"
+to = "53F1"
+
+[[pairs]]
+from = "2F83B"
+to = "5406"
+
+[[pairs]]
+from = "2F83C"
+to = "549E"
+
+[[pairs]]
+from = "2F83D"
+to = "5438"
+
+[[pairs]]
+from = "2F83E"
+to = "5448"
+
+[[pairs]]
+from = "2F83F"
+to = "5468"
+
+[[pairs]]
+from = "2F840"
+to = "54A2"
+
+[[pairs]]
+from = "2F841"
+to = "54F6"
+
+[[pairs]]
+from = "2F842"
+to = "5510"
+
+[[pairs]]
+from = "2F843"
+to = "5553"
+
+[[pairs]]
+from = "2F844"
+to = "5563"
+
+[[pairs]]
+from = "2F845"
+to = "5584"
+
+[[pairs]]
+from = "2F846"
+to = "5584"
+
+[[pairs]]
+from = "2F847"
+to = "5599"
+
+[[pairs]]
+from = "2F848"
+to = "55AB"
+
+[[pairs]]
+from = "2F849"
+to = "55B3"
+
+[[pairs]]
+from = "2F84A"
+to = "55C2"
+
+[[pairs]]
+from = "2F84B"
+to = "5716"
+
+[[pairs]]
+from = "2F84C"
+to = "5606"
+
+[[pairs]]
+from = "2F84D"
+to = "5717"
+
+[[pairs]]
+from = "2F84E"
+to = "5651"
+
+[[pairs]]
+from = "2F84F"
+to = "5674"
+
+[[pairs]]
+from = "2F850"
+to = "5207"
+
+[[pairs]]
+from = "2F851"
+to = "58EE"
+
+[[pairs]]
+from = "2F852"
+to = "57CE"
+
+[[pairs]]
+from = "2F853"
+to = "57F4"
+
+[[pairs]]
+from = "2F854"
+to = "580D"
+
+[[pairs]]
+from = "2F855"
+to = "578B"
+
+[[pairs]]
+from = "2F856"
+to = "5832"
+
+[[pairs]]
+from = "2F857"
+to = "5831"
+
+[[pairs]]
+from = "2F858"
+to = "58AC"
+
+[[pairs]]
+from = "2F859"
+to = "214E4"
+
+[[pairs]]
+from = "2F85A"
+to = "58F2"
+
+[[pairs]]
+from = "2F85B"
+to = "58F7"
+
+[[pairs]]
+from = "2F85C"
+to = "5906"
+
+[[pairs]]
+from = "2F85D"
+to = "591A"
+
+[[pairs]]
+from = "2F85E"
+to = "5922"
+
+[[pairs]]
+from = "2F85F"
+to = "5962"
+
+[[pairs]]
+from = "2F860"
+to = "216A8"
+
+[[pairs]]
+from = "2F861"
+to = "216EA"
+
+[[pairs]]
+from = "2F862"
+to = "59EC"
+
+[[pairs]]
+from = "2F863"
+to = "5A1B"
+
+[[pairs]]
+from = "2F864"
+to = "5A27"
+
+[[pairs]]
+from = "2F865"
+to = "59D8"
+
+[[pairs]]
+from = "2F866"
+to = "5A66"
+
+[[pairs]]
+from = "2F867"
+to = "36EE"
+
+[[pairs]]
+from = "2F868"
+to = "36FC"
+
+[[pairs]]
+from = "2F869"
+to = "5B08"
+
+[[pairs]]
+from = "2F86A"
+to = "5B3E"
+
+[[pairs]]
+from = "2F86B"
+to = "5B3E"
+
+[[pairs]]
+from = "2F86C"
+to = "219C8"
+
+[[pairs]]
+from = "2F86D"
+to = "5BC3"
+
+[[pairs]]
+from = "2F86E"
+to = "5BD8"
+
+[[pairs]]
+from = "2F86F"
+to = "5BE7"
+
+[[pairs]]
+from = "2F870"
+to = "5BF3"
+
+[[pairs]]
+from = "2F871"
+to = "21B18"
+
+[[pairs]]
+from = "2F872"
+to = "5BFF"
+
+[[pairs]]
+from = "2F873"
+to = "5C06"
+
+[[pairs]]
+from = "2F874"
+to = "5F53"
+
+[[pairs]]
+from = "2F875"
+to = "5C22"
+
+[[pairs]]
+from = "2F876"
+to = "3781"
+
+[[pairs]]
+from = "2F877"
+to = "5C60"
+
+[[pairs]]
+from = "2F878"
+to = "5C6E"
+
+[[pairs]]
+from = "2F879"
+to = "5CC0"
+
+[[pairs]]
+from = "2F87A"
+to = "5C8D"
+
+[[pairs]]
+from = "2F87B"
+to = "21DE4"
+
+[[pairs]]
+from = "2F87C"
+to = "5D43"
+
+[[pairs]]
+from = "2F87D"
+to = "21DE6"
+
+[[pairs]]
+from = "2F87E"
+to = "5D6E"
+
+[[pairs]]
+from = "2F87F"
+to = "5D6B"
+
+[[pairs]]
+from = "2F880"
+to = "5D7C"
+
+[[pairs]]
+from = "2F881"
+to = "5DE1"
+
+[[pairs]]
+from = "2F882"
+to = "5DE2"
+
+[[pairs]]
+from = "2F883"
+to = "382F"
+
+[[pairs]]
+from = "2F884"
+to = "5DFD"
+
+[[pairs]]
+from = "2F885"
+to = "5E28"
+
+[[pairs]]
+from = "2F886"
+to = "5E3D"
+
+[[pairs]]
+from = "2F887"
+to = "5E69"
+
+[[pairs]]
+from = "2F888"
+to = "3862"
+
+[[pairs]]
+from = "2F889"
+to = "22183"
+
+[[pairs]]
+from = "2F88A"
+to = "387C"
+
+[[pairs]]
+from = "2F88B"
+to = "5EB0"
+
+[[pairs]]
+from = "2F88C"
+to = "5EB3"
+
+[[pairs]]
+from = "2F88D"
+to = "5EB6"
+
+[[pairs]]
+from = "2F88E"
+to = "5ECA"
+
+[[pairs]]
+from = "2F88F"
+to = "2A392"
+
+[[pairs]]
+from = "2F890"
+to = "5EFE"
+
+[[pairs]]
+from = "2F891"
+to = "22331"
+
+[[pairs]]
+from = "2F892"
+to = "22331"
+
+[[pairs]]
+from = "2F893"
+to = "8201"
+
+[[pairs]]
+from = "2F894"
+to = "5F22"
+
+[[pairs]]
+from = "2F895"
+to = "5F22"
+
+[[pairs]]
+from = "2F896"
+to = "38C7"
+
+[[pairs]]
+from = "2F897"
+to = "232B8"
+
+[[pairs]]
+from = "2F898"
+to = "261DA"
+
+[[pairs]]
+from = "2F899"
+to = "5F62"
+
+[[pairs]]
+from = "2F89A"
+to = "5F6B"
+
+[[pairs]]
+from = "2F89B"
+to = "38E3"
+
+[[pairs]]
+from = "2F89C"
+to = "5F9A"
+
+[[pairs]]
+from = "2F89D"
+to = "5FCD"
+
+[[pairs]]
+from = "2F89E"
+to = "5FD7"
+
+[[pairs]]
+from = "2F89F"
+to = "5FF9"
+
+[[pairs]]
+from = "2F8A0"
+to = "6081"
+
+[[pairs]]
+from = "2F8A1"
+to = "393A"
+
+[[pairs]]
+from = "2F8A2"
+to = "391C"
+
+[[pairs]]
+from = "2F8A3"
+to = "6094"
+
+[[pairs]]
+from = "2F8A4"
+to = "226D4"
+
+[[pairs]]
+from = "2F8A5"
+to = "60C7"
+
+[[pairs]]
+from = "2F8A6"
+to = "6148"
+
+[[pairs]]
+from = "2F8A7"
+to = "614C"
+
+[[pairs]]
+from = "2F8A8"
+to = "614E"
+
+[[pairs]]
+from = "2F8A9"
+to = "614C"
+
+[[pairs]]
+from = "2F8AA"
+to = "617A"
+
+[[pairs]]
+from = "2F8AB"
+to = "618E"
+
+[[pairs]]
+from = "2F8AC"
+to = "61B2"
+
+[[pairs]]
+from = "2F8AD"
+to = "61A4"
+
+[[pairs]]
+from = "2F8AE"
+to = "61AF"
+
+[[pairs]]
+from = "2F8AF"
+to = "61DE"
+
+[[pairs]]
+from = "2F8B0"
+to = "61F2"
+
+[[pairs]]
+from = "2F8B1"
+to = "61F6"
+
+[[pairs]]
+from = "2F8B2"
+to = "6210"
+
+[[pairs]]
+from = "2F8B3"
+to = "621B"
+
+[[pairs]]
+from = "2F8B4"
+to = "625D"
+
+[[pairs]]
+from = "2F8B5"
+to = "62B1"
+
+[[pairs]]
+from = "2F8B6"
+to = "62D4"
+
+[[pairs]]
+from = "2F8B7"
+to = "6350"
+
+[[pairs]]
+from = "2F8B8"
+to = "22B0C"
+
+[[pairs]]
+from = "2F8B9"
+to = "633D"
+
+[[pairs]]
+from = "2F8BA"
+to = "62FC"
+
+[[pairs]]
+from = "2F8BB"
+to = "6368"
+
+[[pairs]]
+from = "2F8BC"
+to = "6383"
+
+[[pairs]]
+from = "2F8BD"
+to = "63E4"
+
+[[pairs]]
+from = "2F8BE"
+to = "22BF1"
+
+[[pairs]]
+from = "2F8BF"
+to = "6422"
+
+[[pairs]]
+from = "2F8C0"
+to = "63C5"
+
+[[pairs]]
+from = "2F8C1"
+to = "63A9"
+
+[[pairs]]
+from = "2F8C2"
+to = "3A2E"
+
+[[pairs]]
+from = "2F8C3"
+to = "6469"
+
+[[pairs]]
+from = "2F8C4"
+to = "647E"
+
+[[pairs]]
+from = "2F8C5"
+to = "649D"
+
+[[pairs]]
+from = "2F8C6"
+to = "6477"
+
+[[pairs]]
+from = "2F8C7"
+to = "3A6C"
+
+[[pairs]]
+from = "2F8C8"
+to = "654F"
+
+[[pairs]]
+from = "2F8C9"
+to = "656C"
+
+[[pairs]]
+from = "2F8CA"
+to = "2300A"
+
+[[pairs]]
+from = "2F8CB"
+to = "65E3"
+
+[[pairs]]
+from = "2F8CC"
+to = "66F8"
+
+[[pairs]]
+from = "2F8CD"
+to = "6649"
+
+[[pairs]]
+from = "2F8CE"
+to = "3B19"
+
+[[pairs]]
+from = "2F8CF"
+to = "6691"
+
+[[pairs]]
+from = "2F8D0"
+to = "3B08"
+
+[[pairs]]
+from = "2F8D1"
+to = "3AE4"
+
+[[pairs]]
+from = "2F8D2"
+to = "5192"
+
+[[pairs]]
+from = "2F8D3"
+to = "5195"
+
+[[pairs]]
+from = "2F8D4"
+to = "6700"
+
+[[pairs]]
+from = "2F8D5"
+to = "669C"
+
+[[pairs]]
+from = "2F8D6"
+to = "80AD"
+
+[[pairs]]
+from = "2F8D7"
+to = "43D9"
+
+[[pairs]]
+from = "2F8D8"
+to = "6717"
+
+[[pairs]]
+from = "2F8D9"
+to = "671B"
+
+[[pairs]]
+from = "2F8DA"
+to = "6721"
+
+[[pairs]]
+from = "2F8DB"
+to = "675E"
+
+[[pairs]]
+from = "2F8DC"
+to = "6753"
+
+[[pairs]]
+from = "2F8DD"
+to = "233C3"
+
+[[pairs]]
+from = "2F8DE"
+to = "3B49"
+
+[[pairs]]
+from = "2F8DF"
+to = "67FA"
+
+[[pairs]]
+from = "2F8E0"
+to = "6785"
+
+[[pairs]]
+from = "2F8E1"
+to = "6852"
+
+[[pairs]]
+from = "2F8E2"
+to = "6885"
+
+[[pairs]]
+from = "2F8E3"
+to = "2346D"
+
+[[pairs]]
+from = "2F8E4"
+to = "688E"
+
+[[pairs]]
+from = "2F8E5"
+to = "681F"
+
+[[pairs]]
+from = "2F8E6"
+to = "6914"
+
+[[pairs]]
+from = "2F8E7"
+to = "3B9D"
+
+[[pairs]]
+from = "2F8E8"
+to = "6942"
+
+[[pairs]]
+from = "2F8E9"
+to = "69A3"
+
+[[pairs]]
+from = "2F8EA"
+to = "69EA"
+
+[[pairs]]
+from = "2F8EB"
+to = "6AA8"
+
+[[pairs]]
+from = "2F8EC"
+to = "236A3"
+
+[[pairs]]
+from = "2F8ED"
+to = "6ADB"
+
+[[pairs]]
+from = "2F8EE"
+to = "3C18"
+
+[[pairs]]
+from = "2F8EF"
+to = "6B21"
+
+[[pairs]]
+from = "2F8F0"
+to = "238A7"
+
+[[pairs]]
+from = "2F8F1"
+to = "6B54"
+
+[[pairs]]
+from = "2F8F2"
+to = "3C4E"
+
+[[pairs]]
+from = "2F8F3"
+to = "6B72"
+
+[[pairs]]
+from = "2F8F4"
+to = "6B9F"
+
+[[pairs]]
+from = "2F8F5"
+to = "6BBA"
+
+[[pairs]]
+from = "2F8F6"
+to = "6BBB"
+
+[[pairs]]
+from = "2F8F7"
+to = "23A8D"
+
+[[pairs]]
+from = "2F8F8"
+to = "21D0B"
+
+[[pairs]]
+from = "2F8F9"
+to = "23AFA"
+
+[[pairs]]
+from = "2F8FA"
+to = "6C4E"
+
+[[pairs]]
+from = "2F8FB"
+to = "23CBC"
+
+[[pairs]]
+from = "2F8FC"
+to = "6CBF"
+
+[[pairs]]
+from = "2F8FD"
+to = "6CCD"
+
+[[pairs]]
+from = "2F8FE"
+to = "6C67"
+
+[[pairs]]
+from = "2F8FF"
+to = "6D16"
+
+[[pairs]]
+from = "2F900"
+to = "6D3E"
+
+[[pairs]]
+from = "2F901"
+to = "6D77"
+
+[[pairs]]
+from = "2F902"
+to = "6D41"
+
+[[pairs]]
+from = "2F903"
+to = "6D69"
+
+[[pairs]]
+from = "2F904"
+to = "6D78"
+
+[[pairs]]
+from = "2F905"
+to = "6D85"
+
+[[pairs]]
+from = "2F906"
+to = "23D1E"
+
+[[pairs]]
+from = "2F907"
+to = "6D34"
+
+[[pairs]]
+from = "2F908"
+to = "6E2F"
+
+[[pairs]]
+from = "2F909"
+to = "6E6E"
+
+[[pairs]]
+from = "2F90A"
+to = "3D33"
+
+[[pairs]]
+from = "2F90B"
+to = "6ECB"
+
+[[pairs]]
+from = "2F90C"
+to = "6EC7"
+
+[[pairs]]
+from = "2F90D"
+to = "23ED1"
+
+[[pairs]]
+from = "2F90E"
+to = "6DF9"
+
+[[pairs]]
+from = "2F90F"
+to = "6F6E"
+
+[[pairs]]
+from = "2F910"
+to = "23F5E"
+
+[[pairs]]
+from = "2F911"
+to = "23F8E"
+
+[[pairs]]
+from = "2F912"
+to = "6FC6"
+
+[[pairs]]
+from = "2F913"
+to = "7039"
+
+[[pairs]]
+from = "2F914"
+to = "701E"
+
+[[pairs]]
+from = "2F915"
+to = "701B"
+
+[[pairs]]
+from = "2F916"
+to = "3D96"
+
+[[pairs]]
+from = "2F917"
+to = "704A"
+
+[[pairs]]
+from = "2F918"
+to = "707D"
+
+[[pairs]]
+from = "2F919"
+to = "7077"
+
+[[pairs]]
+from = "2F91A"
+to = "70AD"
+
+[[pairs]]
+from = "2F91B"
+to = "20525"
+
+[[pairs]]
+from = "2F91C"
+to = "7145"
+
+[[pairs]]
+from = "2F91D"
+to = "24263"
+
+[[pairs]]
+from = "2F91E"
+to = "719C"
+
+[[pairs]]
+from = "2F91F"
+to = "243AB"
+
+[[pairs]]
+from = "2F920"
+to = "7228"
+
+[[pairs]]
+from = "2F921"
+to = "7235"
+
+[[pairs]]
+from = "2F922"
+to = "7250"
+
+[[pairs]]
+from = "2F923"
+to = "24608"
+
+[[pairs]]
+from = "2F924"
+to = "7280"
+
+[[pairs]]
+from = "2F925"
+to = "7295"
+
+[[pairs]]
+from = "2F926"
+to = "24735"
+
+[[pairs]]
+from = "2F927"
+to = "24814"
+
+[[pairs]]
+from = "2F928"
+to = "737A"
+
+[[pairs]]
+from = "2F929"
+to = "738B"
+
+[[pairs]]
+from = "2F92A"
+to = "3EAC"
+
+[[pairs]]
+from = "2F92B"
+to = "73A5"
+
+[[pairs]]
+from = "2F92C"
+to = "3EB8"
+
+[[pairs]]
+from = "2F92D"
+to = "3EB8"
+
+[[pairs]]
+from = "2F92E"
+to = "7447"
+
+[[pairs]]
+from = "2F92F"
+to = "745C"
+
+[[pairs]]
+from = "2F930"
+to = "7471"
+
+[[pairs]]
+from = "2F931"
+to = "7485"
+
+[[pairs]]
+from = "2F932"
+to = "74CA"
+
+[[pairs]]
+from = "2F933"
+to = "3F1B"
+
+[[pairs]]
+from = "2F934"
+to = "7524"
+
+[[pairs]]
+from = "2F935"
+to = "24C36"
+
+[[pairs]]
+from = "2F936"
+to = "753E"
+
+[[pairs]]
+from = "2F937"
+to = "24C92"
+
+[[pairs]]
+from = "2F938"
+to = "7570"
+
+[[pairs]]
+from = "2F939"
+to = "2219F"
+
+[[pairs]]
+from = "2F93A"
+to = "7610"
+
+[[pairs]]
+from = "2F93B"
+to = "24FA1"
+
+[[pairs]]
+from = "2F93C"
+to = "24FB8"
+
+[[pairs]]
+from = "2F93D"
+to = "25044"
+
+[[pairs]]
+from = "2F93E"
+to = "3FFC"
+
+[[pairs]]
+from = "2F93F"
+to = "4008"
+
+[[pairs]]
+from = "2F940"
+to = "76F4"
+
+[[pairs]]
+from = "2F941"
+to = "250F3"
+
+[[pairs]]
+from = "2F942"
+to = "250F2"
+
+[[pairs]]
+from = "2F943"
+to = "25119"
+
+[[pairs]]
+from = "2F944"
+to = "25133"
+
+[[pairs]]
+from = "2F945"
+to = "771E"
+
+[[pairs]]
+from = "2F946"
+to = "771F"
+
+[[pairs]]
+from = "2F947"
+to = "771F"
+
+[[pairs]]
+from = "2F948"
+to = "774A"
+
+[[pairs]]
+from = "2F949"
+to = "4039"
+
+[[pairs]]
+from = "2F94A"
+to = "778B"
+
+[[pairs]]
+from = "2F94B"
+to = "4046"
+
+[[pairs]]
+from = "2F94C"
+to = "4096"
+
+[[pairs]]
+from = "2F94D"
+to = "2541D"
+
+[[pairs]]
+from = "2F94E"
+to = "784E"
+
+[[pairs]]
+from = "2F94F"
+to = "788C"
+
+[[pairs]]
+from = "2F950"
+to = "78CC"
+
+[[pairs]]
+from = "2F951"
+to = "40E3"
+
+[[pairs]]
+from = "2F952"
+to = "25626"
+
+[[pairs]]
+from = "2F953"
+to = "7956"
+
+[[pairs]]
+from = "2F954"
+to = "2569A"
+
+[[pairs]]
+from = "2F955"
+to = "256C5"
+
+[[pairs]]
+from = "2F956"
+to = "798F"
+
+[[pairs]]
+from = "2F957"
+to = "79EB"
+
+[[pairs]]
+from = "2F958"
+to = "412F"
+
+[[pairs]]
+from = "2F959"
+to = "7A40"
+
+[[pairs]]
+from = "2F95A"
+to = "7A4A"
+
+[[pairs]]
+from = "2F95B"
+to = "7A4F"
+
+[[pairs]]
+from = "2F95C"
+to = "2597C"
+
+[[pairs]]
+from = "2F95D"
+to = "25AA7"
+
+[[pairs]]
+from = "2F95E"
+to = "25AA7"
+
+[[pairs]]
+from = "2F95F"
+to = "7AEE"
+
+[[pairs]]
+from = "2F960"
+to = "4202"
+
+[[pairs]]
+from = "2F961"
+to = "25BAB"
+
+[[pairs]]
+from = "2F962"
+to = "7BC6"
+
+[[pairs]]
+from = "2F963"
+to = "7BC9"
+
+[[pairs]]
+from = "2F964"
+to = "4227"
+
+[[pairs]]
+from = "2F965"
+to = "25C80"
+
+[[pairs]]
+from = "2F966"
+to = "7CD2"
+
+[[pairs]]
+from = "2F967"
+to = "42A0"
+
+[[pairs]]
+from = "2F968"
+to = "7CE8"
+
+[[pairs]]
+from = "2F969"
+to = "7CE3"
+
+[[pairs]]
+from = "2F96A"
+to = "7D00"
+
+[[pairs]]
+from = "2F96B"
+to = "25F86"
+
+[[pairs]]
+from = "2F96C"
+to = "7D63"
+
+[[pairs]]
+from = "2F96D"
+to = "4301"
+
+[[pairs]]
+from = "2F96E"
+to = "7DC7"
+
+[[pairs]]
+from = "2F96F"
+to = "7E02"
+
+[[pairs]]
+from = "2F970"
+to = "7E45"
+
+[[pairs]]
+from = "2F971"
+to = "4334"
+
+[[pairs]]
+from = "2F972"
+to = "26228"
+
+[[pairs]]
+from = "2F973"
+to = "26247"
+
+[[pairs]]
+from = "2F974"
+to = "4359"
+
+[[pairs]]
+from = "2F975"
+to = "262D9"
+
+[[pairs]]
+from = "2F976"
+to = "7F7A"
+
+[[pairs]]
+from = "2F977"
+to = "2633E"
+
+[[pairs]]
+from = "2F978"
+to = "7F95"
+
+[[pairs]]
+from = "2F979"
+to = "7FFA"
+
+[[pairs]]
+from = "2F97A"
+to = "8005"
+
+[[pairs]]
+from = "2F97B"
+to = "264DA"
+
+[[pairs]]
+from = "2F97C"
+to = "26523"
+
+[[pairs]]
+from = "2F97D"
+to = "8060"
+
+[[pairs]]
+from = "2F97E"
+to = "265A8"
+
+[[pairs]]
+from = "2F97F"
+to = "8070"
+
+[[pairs]]
+from = "2F980"
+to = "2335F"
+
+[[pairs]]
+from = "2F981"
+to = "43D5"
+
+[[pairs]]
+from = "2F982"
+to = "80B2"
+
+[[pairs]]
+from = "2F983"
+to = "8103"
+
+[[pairs]]
+from = "2F984"
+to = "440B"
+
+[[pairs]]
+from = "2F985"
+to = "813E"
+
+[[pairs]]
+from = "2F986"
+to = "5AB5"
+
+[[pairs]]
+from = "2F987"
+to = "267A7"
+
+[[pairs]]
+from = "2F988"
+to = "267B5"
+
+[[pairs]]
+from = "2F989"
+to = "23393"
+
+[[pairs]]
+from = "2F98A"
+to = "2339C"
+
+[[pairs]]
+from = "2F98B"
+to = "8201"
+
+[[pairs]]
+from = "2F98C"
+to = "8204"
+
+[[pairs]]
+from = "2F98D"
+to = "8F9E"
+
+[[pairs]]
+from = "2F98E"
+to = "446B"
+
+[[pairs]]
+from = "2F98F"
+to = "8291"
+
+[[pairs]]
+from = "2F990"
+to = "828B"
+
+[[pairs]]
+from = "2F991"
+to = "829D"
+
+[[pairs]]
+from = "2F992"
+to = "52B3"
+
+[[pairs]]
+from = "2F993"
+to = "82B1"
+
+[[pairs]]
+from = "2F994"
+to = "82B3"
+
+[[pairs]]
+from = "2F995"
+to = "82BD"
+
+[[pairs]]
+from = "2F996"
+to = "82E6"
+
+[[pairs]]
+from = "2F997"
+to = "26B3C"
+
+[[pairs]]
+from = "2F998"
+to = "82E5"
+
+[[pairs]]
+from = "2F999"
+to = "831D"
+
+[[pairs]]
+from = "2F99A"
+to = "8363"
+
+[[pairs]]
+from = "2F99B"
+to = "83AD"
+
+[[pairs]]
+from = "2F99C"
+to = "8323"
+
+[[pairs]]
+from = "2F99D"
+to = "83BD"
+
+[[pairs]]
+from = "2F99E"
+to = "83E7"
+
+[[pairs]]
+from = "2F99F"
+to = "8457"
+
+[[pairs]]
+from = "2F9A0"
+to = "8353"
+
+[[pairs]]
+from = "2F9A1"
+to = "83CA"
+
+[[pairs]]
+from = "2F9A2"
+to = "83CC"
+
+[[pairs]]
+from = "2F9A3"
+to = "83DC"
+
+[[pairs]]
+from = "2F9A4"
+to = "26C36"
+
+[[pairs]]
+from = "2F9A5"
+to = "26D6B"
+
+[[pairs]]
+from = "2F9A6"
+to = "26CD5"
+
+[[pairs]]
+from = "2F9A7"
+to = "452B"
+
+[[pairs]]
+from = "2F9A8"
+to = "84F1"
+
+[[pairs]]
+from = "2F9A9"
+to = "84F3"
+
+[[pairs]]
+from = "2F9AA"
+to = "8516"
+
+[[pairs]]
+from = "2F9AB"
+to = "273CA"
+
+[[pairs]]
+from = "2F9AC"
+to = "8564"
+
+[[pairs]]
+from = "2F9AD"
+to = "26F2C"
+
+[[pairs]]
+from = "2F9AE"
+to = "455D"
+
+[[pairs]]
+from = "2F9AF"
+to = "4561"
+
+[[pairs]]
+from = "2F9B0"
+to = "26FB1"
+
+[[pairs]]
+from = "2F9B1"
+to = "270D2"
+
+[[pairs]]
+from = "2F9B2"
+to = "456B"
+
+[[pairs]]
+from = "2F9B3"
+to = "8650"
+
+[[pairs]]
+from = "2F9B4"
+to = "865C"
+
+[[pairs]]
+from = "2F9B5"
+to = "8667"
+
+[[pairs]]
+from = "2F9B6"
+to = "8669"
+
+[[pairs]]
+from = "2F9B7"
+to = "86A9"
+
+[[pairs]]
+from = "2F9B8"
+to = "8688"
+
+[[pairs]]
+from = "2F9B9"
+to = "870E"
+
+[[pairs]]
+from = "2F9BA"
+to = "86E2"
+
+[[pairs]]
+from = "2F9BB"
+to = "8779"
+
+[[pairs]]
+from = "2F9BC"
+to = "8728"
+
+[[pairs]]
+from = "2F9BD"
+to = "876B"
+
+[[pairs]]
+from = "2F9BE"
+to = "8786"
+
+[[pairs]]
+from = "2F9BF"
+to = "45D7"
+
+[[pairs]]
+from = "2F9C0"
+to = "87E1"
+
+[[pairs]]
+from = "2F9C1"
+to = "8801"
+
+[[pairs]]
+from = "2F9C2"
+to = "45F9"
+
+[[pairs]]
+from = "2F9C3"
+to = "8860"
+
+[[pairs]]
+from = "2F9C4"
+to = "8863"
+
+[[pairs]]
+from = "2F9C5"
+to = "27667"
+
+[[pairs]]
+from = "2F9C6"
+to = "88D7"
+
+[[pairs]]
+from = "2F9C7"
+to = "88DE"
+
+[[pairs]]
+from = "2F9C8"
+to = "4635"
+
+[[pairs]]
+from = "2F9C9"
+to = "88FA"
+
+[[pairs]]
+from = "2F9CA"
+to = "34BB"
+
+[[pairs]]
+from = "2F9CB"
+to = "278AE"
+
+[[pairs]]
+from = "2F9CC"
+to = "27966"
+
+[[pairs]]
+from = "2F9CD"
+to = "46BE"
+
+[[pairs]]
+from = "2F9CE"
+to = "46C7"
+
+[[pairs]]
+from = "2F9CF"
+to = "8AA0"
+
+[[pairs]]
+from = "2F9D0"
+to = "8AED"
+
+[[pairs]]
+from = "2F9D1"
+to = "8B8A"
+
+[[pairs]]
+from = "2F9D2"
+to = "8C55"
+
+[[pairs]]
+from = "2F9D3"
+to = "27CA8"
+
+[[pairs]]
+from = "2F9D4"
+to = "8CAB"
+
+[[pairs]]
+from = "2F9D5"
+to = "8CC1"
+
+[[pairs]]
+from = "2F9D6"
+to = "8D1B"
+
+[[pairs]]
+from = "2F9D7"
+to = "8D77"
+
+[[pairs]]
+from = "2F9D8"
+to = "27F2F"
+
+[[pairs]]
+from = "2F9D9"
+to = "20804"
+
+[[pairs]]
+from = "2F9DA"
+to = "8DCB"
+
+[[pairs]]
+from = "2F9DB"
+to = "8DBC"
+
+[[pairs]]
+from = "2F9DC"
+to = "8DF0"
+
+[[pairs]]
+from = "2F9DD"
+to = "208DE"
+
+[[pairs]]
+from = "2F9DE"
+to = "8ED4"
+
+[[pairs]]
+from = "2F9DF"
+to = "8F38"
+
+[[pairs]]
+from = "2F9E0"
+to = "285D2"
+
+[[pairs]]
+from = "2F9E1"
+to = "285ED"
+
+[[pairs]]
+from = "2F9E2"
+to = "9094"
+
+[[pairs]]
+from = "2F9E3"
+to = "90F1"
+
+[[pairs]]
+from = "2F9E4"
+to = "9111"
+
+[[pairs]]
+from = "2F9E5"
+to = "2872E"
+
+[[pairs]]
+from = "2F9E6"
+to = "911B"
+
+[[pairs]]
+from = "2F9E7"
+to = "9238"
+
+[[pairs]]
+from = "2F9E8"
+to = "92D7"
+
+[[pairs]]
+from = "2F9E9"
+to = "92D8"
+
+[[pairs]]
+from = "2F9EA"
+to = "927C"
+
+[[pairs]]
+from = "2F9EB"
+to = "93F9"
+
+[[pairs]]
+from = "2F9EC"
+to = "9415"
+
+[[pairs]]
+from = "2F9ED"
+to = "28BFA"
+
+[[pairs]]
+from = "2F9EE"
+to = "958B"
+
+[[pairs]]
+from = "2F9EF"
+to = "4995"
+
+[[pairs]]
+from = "2F9F0"
+to = "95B7"
+
+[[pairs]]
+from = "2F9F1"
+to = "28D77"
+
+[[pairs]]
+from = "2F9F2"
+to = "49E6"
+
+[[pairs]]
+from = "2F9F3"
+to = "96C3"
+
+[[pairs]]
+from = "2F9F4"
+to = "5DB2"
+
+[[pairs]]
+from = "2F9F5"
+to = "9723"
+
+[[pairs]]
+from = "2F9F6"
+to = "29145"
+
+[[pairs]]
+from = "2F9F7"
+to = "2921A"
+
+[[pairs]]
+from = "2F9F8"
+to = "4A6E"
+
+[[pairs]]
+from = "2F9F9"
+to = "4A76"
+
+[[pairs]]
+from = "2F9FA"
+to = "97E0"
+
+[[pairs]]
+from = "2F9FB"
+to = "2940A"
+
+[[pairs]]
+from = "2F9FC"
+to = "4AB2"
+
+[[pairs]]
+from = "2F9FD"
+to = "29496"
+
+[[pairs]]
+from = "2F9FE"
+to = "980B"
+
+[[pairs]]
+from = "2F9FF"
+to = "980B"
+
+[[pairs]]
+from = "2FA00"
+to = "9829"
+
+[[pairs]]
+from = "2FA01"
+to = "295B6"
+
+[[pairs]]
+from = "2FA02"
+to = "98E2"
+
+[[pairs]]
+from = "2FA03"
+to = "4B33"
+
+[[pairs]]
+from = "2FA04"
+to = "9929"
+
+[[pairs]]
+from = "2FA05"
+to = "99A7"
+
+[[pairs]]
+from = "2FA06"
+to = "99C2"
+
+[[pairs]]
+from = "2FA07"
+to = "99FE"
+
+[[pairs]]
+from = "2FA08"
+to = "4BCE"
+
+[[pairs]]
+from = "2FA09"
+to = "29B30"
+
+[[pairs]]
+from = "2FA0A"
+to = "9B12"
+
+[[pairs]]
+from = "2FA0B"
+to = "9C40"
+
+[[pairs]]
+from = "2FA0C"
+to = "9CFD"
+
+[[pairs]]
+from = "2FA0D"
+to = "4CCE"
+
+[[pairs]]
+from = "2FA0E"
+to = "4CED"
+
+[[pairs]]
+from = "2FA0F"
+to = "9D67"
+
+[[pairs]]
+from = "2FA10"
+to = "2A0CE"
+
+[[pairs]]
+from = "2FA11"
+to = "4CF8"
+
+[[pairs]]
+from = "2FA12"
+to = "2A105"
+
+[[pairs]]
+from = "2FA13"
+to = "2A20E"
+
+[[pairs]]
+from = "2FA14"
+to = "2A291"
+
+[[pairs]]
+from = "2FA15"
+to = "9EBB"
+
+[[pairs]]
+from = "2FA16"
+to = "4D56"
+
+[[pairs]]
+from = "2FA17"
+to = "9EF9"
+
+[[pairs]]
+from = "2FA18"
+to = "9EFE"
+
+[[pairs]]
+from = "2FA19"
+to = "9F05"
+
+[[pairs]]
+from = "2FA1A"
+to = "9F0F"
+
+[[pairs]]
+from = "2FA1B"
+to = "9F16"
+
+[[pairs]]
+from = "2FA1C"
+to = "9F3B"
+
+[[pairs]]
+from = "2FA1D"
+to = "2A600"
+

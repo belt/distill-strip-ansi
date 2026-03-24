@@ -1,0 +1,83 @@
+# Halfwidth Hangul Compatibility Jamo
+#
+# Halfwidth forms from IBM code page 933 legacy encoding mapped to
+# their standard Hangul Compatibility Jamo equivalents (U+3131-3163).
+# Essential for Korean text normalization when processing legacy
+# mainframe/terminal output.
+#
+# Source: Unicode block U+FFA1-U+FFDC
+# Reference: https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
+#
+# Note: U+FFA0 (halfwidth hangul filler) is excluded — it maps to
+# U+3164 (hangul filler) which is a no-width character.
+# Gaps exist at U+FFBF-FFC1, FFC8-FFC9, FFD0-FFD1, FFD8-FFD9
+# (unassigned codepoints).
+
+[metadata]
+type = "halfwidth_hangul"
+description = "Halfwidth Hangul Jamo → Hangul Compatibility Jamo"
+direction = "widening"
+tags = ["korean", "legacy-encoding", "canonicalize"]
+
+# ── Consonants: U+FFA1-FFBE → U+3131-314E ────────────────────────────
+# 30 consonant jamo, contiguous on both sides
+[[ranges]]
+from_start = "FFA1"
+from_end = "FFBE"
+to_start = "3131"
+
+# ── Vowels block 1: U+FFC2-FFC7 → U+3161-3163, 3165-3167 ───────────
+# Gap at FFBF-FFC1 (unassigned)
+# Note: the mapping is NOT contiguous — there are gaps in the
+# compatibility jamo target range too. Use individual pairs.
+
+# U+FFC2 → U+3161 ㅡ (eu)
+[[pairs]]
+from = "FFC2"
+to = "3161"
+
+# U+FFC3 → U+3162 ㅢ (yi)
+[[pairs]]
+from = "FFC3"
+to = "3162"
+
+# U+FFC4 → U+3163 ㅣ (i)
+[[pairs]]
+from = "FFC4"
+to = "3163"
+
+# U+FFC5 → U+3165 ㅥ
+[[pairs]]
+from = "FFC5"
+to = "3165"
+
+# U+FFC6 → U+3166 ㅦ
+[[pairs]]
+from = "FFC6"
+to = "3166"
+
+# U+FFC7 → U+3167 ㅧ
+[[pairs]]
+from = "FFC7"
+to = "3167"
+
+# ── Vowels block 2: U+FFCA-FFCF → U+3168-316D ──────────────────────
+# Gap at FFC8-FFC9 (unassigned)
+[[ranges]]
+from_start = "FFCA"
+from_end = "FFCF"
+to_start = "3168"
+
+# ── Vowels block 3: U+FFD2-FFD7 → U+316E-3173 ──────────────────────
+# Gap at FFD0-FFD1 (unassigned)
+[[ranges]]
+from_start = "FFD2"
+from_end = "FFD7"
+to_start = "316E"
+
+# ── Vowels block 4: U+FFDA-FFDC → U+3174-3176 ──────────────────────
+# Gap at FFD8-FFD9 (unassigned)
+[[ranges]]
+from_start = "FFDA"
+from_end = "FFDC"
+to_start = "3174"

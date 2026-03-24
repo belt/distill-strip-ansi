@@ -1,0 +1,424 @@
+# Mathematical Alphanumeric Symbols — Latin letters and digits
+#
+# Styled Latin letter/digit variants used in mathematical notation.
+# Commonly abused for social media "fancy text" and spam filter evasion.
+# Maps all styled forms back to plain ASCII A-Z, a-z, 0-9.
+#
+# Excludes Bold A-Z/a-z (U+1D400-1D433) which are compiled-in builtins.
+#
+# Source: Unicode block U+1D400-U+1D7FF
+# Reference: https://en.wikipedia.org/wiki/Mathematical_Alphanumeric_Symbols
+#
+# ~24 codepoints in Script/Fraktur/Double-struck are holes (reserved)
+# because those characters live in the Letterlike Symbols block
+# (U+2100-214F). Those are listed as individual pairs at the end.
+
+[metadata]
+type = "math_latin"
+description = "Styled Latin letters and digits → plain ASCII"
+direction = "narrowing"
+tags = ["math", "canonicalize", "ascii-normalize"]
+
+# ── Italic ───────────────────────────────────────────────────────────
+# U+1D434-1D44D → A-Z (uppercase italic)
+# Note: U+1D455 (italic small h) is a hole → ℎ U+210E is in Letterlike Symbols
+
+[[ranges]]
+from_start = "1D434"
+from_end = "1D44D"
+to_start = "0041"
+
+# U+1D44E-1D454 → a-g (lowercase italic, before hole)
+[[ranges]]
+from_start = "1D44E"
+from_end = "1D454"
+to_start = "0061"
+
+# U+1D456-1D467 → i-z (lowercase italic, after hole at 1D455)
+[[ranges]]
+from_start = "1D456"
+from_end = "1D467"
+to_start = "0069"
+
+
+# ── Bold Italic ──────────────────────────────────────────────────────
+# U+1D468-1D481 → A-Z
+[[ranges]]
+from_start = "1D468"
+from_end = "1D481"
+to_start = "0041"
+
+# U+1D482-1D49B → a-z
+[[ranges]]
+from_start = "1D482"
+from_end = "1D49B"
+to_start = "0061"
+
+# ── Script (calligraphy) ─────────────────────────────────────────────
+# Uppercase: U+1D49C-1D4B5 → A-Z
+# Holes: 1D49D(B), 1D4A0(E), 1D4A1(F), 1D4A3(H), 1D4A4(I),
+#         1D4A7(L), 1D4A8(M), 1D4AD(R)
+# These map via Letterlike Symbols (pairs at end of file)
+
+[[ranges]]
+from_start = "1D49C"
+from_end = "1D49C"
+to_start = "0041"
+
+# 1D49E-1D49F → C-D
+[[ranges]]
+from_start = "1D49E"
+from_end = "1D49F"
+to_start = "0043"
+
+# 1D4A2 → G
+[[ranges]]
+from_start = "1D4A2"
+from_end = "1D4A2"
+to_start = "0047"
+
+# 1D4A5-1D4A6 → J-K
+[[ranges]]
+from_start = "1D4A5"
+from_end = "1D4A6"
+to_start = "004A"
+
+# 1D4A9-1D4AC → N-Q
+[[ranges]]
+from_start = "1D4A9"
+from_end = "1D4AC"
+to_start = "004E"
+
+# 1D4AE-1D4B5 → S-Z
+[[ranges]]
+from_start = "1D4AE"
+from_end = "1D4B5"
+to_start = "0053"
+
+# Lowercase: U+1D4B6-1D4CF → a-z
+# Holes: 1D4BA(e), 1D4BC(g), 1D4C4(o)
+[[ranges]]
+from_start = "1D4B6"
+from_end = "1D4B9"
+to_start = "0061"
+
+# 1D4BB → f
+[[ranges]]
+from_start = "1D4BB"
+from_end = "1D4BB"
+to_start = "0066"
+
+# 1D4BD-1D4C3 → h-n
+[[ranges]]
+from_start = "1D4BD"
+from_end = "1D4C3"
+to_start = "0068"
+
+# 1D4C5-1D4CF → p-z
+[[ranges]]
+from_start = "1D4C5"
+from_end = "1D4CF"
+to_start = "0070"
+
+# ── Bold Script ──────────────────────────────────────────────────────
+# U+1D4D0-1D4E9 → A-Z
+[[ranges]]
+from_start = "1D4D0"
+from_end = "1D4E9"
+to_start = "0041"
+
+# U+1D4EA-1D503 → a-z
+[[ranges]]
+from_start = "1D4EA"
+from_end = "1D503"
+to_start = "0061"
+
+# ── Fraktur ──────────────────────────────────────────────────────────
+# Uppercase: U+1D504-1D51D → A-Z
+# Holes: 1D506(C), 1D50B(H), 1D50C(I), 1D515(R), 1D51D(Z)
+[[ranges]]
+from_start = "1D504"
+from_end = "1D505"
+to_start = "0041"
+
+# 1D507-1D50A → D-G
+[[ranges]]
+from_start = "1D507"
+from_end = "1D50A"
+to_start = "0044"
+
+# 1D50D-1D514 → J-Q
+[[ranges]]
+from_start = "1D50D"
+from_end = "1D514"
+to_start = "004A"
+
+# 1D516-1D51B → S-X
+[[ranges]]
+from_start = "1D516"
+from_end = "1D51B"
+to_start = "0053"
+
+# Note: 1D51C → Y (no hole), but 1D51D (Z) is a hole
+[[ranges]]
+from_start = "1D51C"
+from_end = "1D51C"
+to_start = "0059"
+
+# Lowercase: U+1D51E-1D537 → a-z (no holes)
+[[ranges]]
+from_start = "1D51E"
+from_end = "1D537"
+to_start = "0061"
+
+# ── Bold Fraktur ─────────────────────────────────────────────────────
+# U+1D56C-1D585 → A-Z
+[[ranges]]
+from_start = "1D56C"
+from_end = "1D585"
+to_start = "0041"
+
+# U+1D586-1D59F → a-z
+[[ranges]]
+from_start = "1D586"
+from_end = "1D59F"
+to_start = "0061"
+
+# ── Sans-serif ───────────────────────────────────────────────────────
+# U+1D5A0-1D5B9 → A-Z
+[[ranges]]
+from_start = "1D5A0"
+from_end = "1D5B9"
+to_start = "0041"
+
+# U+1D5BA-1D5D3 → a-z
+[[ranges]]
+from_start = "1D5BA"
+from_end = "1D5D3"
+to_start = "0061"
+
+# ── Sans-serif Bold ──────────────────────────────────────────────────
+# U+1D5D4-1D5ED → A-Z
+[[ranges]]
+from_start = "1D5D4"
+from_end = "1D5ED"
+to_start = "0041"
+
+# U+1D5EE-1D607 → a-z
+[[ranges]]
+from_start = "1D5EE"
+from_end = "1D607"
+to_start = "0061"
+
+# ── Sans-serif Italic ────────────────────────────────────────────────
+# U+1D608-1D621 → A-Z
+[[ranges]]
+from_start = "1D608"
+from_end = "1D621"
+to_start = "0041"
+
+# U+1D622-1D63B → a-z
+[[ranges]]
+from_start = "1D622"
+from_end = "1D63B"
+to_start = "0061"
+
+# ── Sans-serif Bold Italic ───────────────────────────────────────────
+# U+1D63C-1D655 → A-Z
+[[ranges]]
+from_start = "1D63C"
+from_end = "1D655"
+to_start = "0041"
+
+# U+1D656-1D66F → a-z
+[[ranges]]
+from_start = "1D656"
+from_end = "1D66F"
+to_start = "0061"
+
+# ── Monospace ────────────────────────────────────────────────────────
+# U+1D670-1D689 → A-Z
+[[ranges]]
+from_start = "1D670"
+from_end = "1D689"
+to_start = "0041"
+
+# U+1D68A-1D6A3 → a-z
+[[ranges]]
+from_start = "1D68A"
+from_end = "1D6A3"
+to_start = "0061"
+
+# ── Double-struck ────────────────────────────────────────────────────
+# Uppercase: U+1D538-1D551 → A-Z
+# Holes: 1D53A(C), 1D53F(H), 1D545(N), 1D547(P), 1D548(Q), 1D551(Z)
+[[ranges]]
+from_start = "1D538"
+from_end = "1D539"
+to_start = "0041"
+
+# 1D53B-1D53E → D-G
+[[ranges]]
+from_start = "1D53B"
+from_end = "1D53E"
+to_start = "0044"
+
+# 1D540-1D544 → I-M
+[[ranges]]
+from_start = "1D540"
+from_end = "1D544"
+to_start = "0049"
+
+# 1D546 → O
+[[ranges]]
+from_start = "1D546"
+from_end = "1D546"
+to_start = "004F"
+
+# 1D54A-1D550 → S-Y
+[[ranges]]
+from_start = "1D54A"
+from_end = "1D550"
+to_start = "0053"
+
+# Lowercase: U+1D552-1D56B → a-z (no holes)
+[[ranges]]
+from_start = "1D552"
+from_end = "1D56B"
+to_start = "0061"
+
+# ── Styled Digits ────────────────────────────────────────────────────
+# Bold digits: U+1D7CE-1D7D7 → 0-9
+[[ranges]]
+from_start = "1D7CE"
+from_end = "1D7D7"
+to_start = "0030"
+
+# Double-struck digits: U+1D7D8-1D7E1 → 0-9
+[[ranges]]
+from_start = "1D7D8"
+from_end = "1D7E1"
+to_start = "0030"
+
+# Sans-serif digits: U+1D7E2-1D7EB → 0-9
+[[ranges]]
+from_start = "1D7E2"
+from_end = "1D7EB"
+to_start = "0030"
+
+# Sans-serif bold digits: U+1D7EC-1D7F5 → 0-9
+[[ranges]]
+from_start = "1D7EC"
+from_end = "1D7F5"
+to_start = "0030"
+
+# Monospace digits: U+1D7F6-1D7FF → 0-9
+[[ranges]]
+from_start = "1D7F6"
+from_end = "1D7FF"
+to_start = "0030"
+
+# ── Letterlike Symbols holes ─────────────────────────────────────────
+# Characters that live in U+2100-214F instead of the Math block.
+# All map to their plain ASCII equivalent.
+
+# Italic small h
+[[pairs]]
+from = "210E"
+to = "0068"
+
+# Script capitals (holes in 1D49C-1D4B5 range)
+[[pairs]]
+from = "212C"
+to = "0042"
+
+[[pairs]]
+from = "2130"
+to = "0045"
+
+[[pairs]]
+from = "2131"
+to = "0046"
+
+[[pairs]]
+from = "210B"
+to = "0048"
+
+[[pairs]]
+from = "2110"
+to = "0049"
+
+[[pairs]]
+from = "2112"
+to = "004C"
+
+[[pairs]]
+from = "2133"
+to = "004D"
+
+[[pairs]]
+from = "211B"
+to = "0052"
+
+# Script lowercase (holes in 1D4B6-1D4CF range)
+[[pairs]]
+from = "212F"
+to = "0065"
+
+[[pairs]]
+from = "210A"
+to = "0067"
+
+[[pairs]]
+from = "2134"
+to = "006F"
+
+# Fraktur capitals (holes in 1D504-1D51D range)
+[[pairs]]
+from = "212D"
+to = "0043"
+
+[[pairs]]
+from = "210C"
+to = "0048"
+
+[[pairs]]
+from = "2111"
+to = "0049"
+
+[[pairs]]
+from = "211C"
+to = "0052"
+
+[[pairs]]
+from = "2128"
+to = "005A"
+
+# Double-struck capitals (holes in 1D538-1D551 range)
+[[pairs]]
+from = "2102"
+to = "0043"
+
+[[pairs]]
+from = "210D"
+to = "0048"
+
+[[pairs]]
+from = "2115"
+to = "004E"
+
+[[pairs]]
+from = "2119"
+to = "0050"
+
+[[pairs]]
+from = "211A"
+to = "0051"
+
+[[pairs]]
+from = "211D"
+to = "0052"
+
+[[pairs]]
+from = "2124"
+to = "005A"

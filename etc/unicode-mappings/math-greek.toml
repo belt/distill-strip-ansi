@@ -1,0 +1,248 @@
+# Mathematical Alphanumeric Symbols — Greek letters
+#
+# Styled Greek letter variants used in mathematical/scientific notation.
+# Maps all styled forms back to base Greek U+0391-03C9.
+# Includes variant forms: ϵ(03F5), ϑ(03D1), ϰ(03F0), ϕ(03D5), ϱ(03F1), ϖ(03D6).
+# Also includes ∇(2207) nabla and ∂(2202) partial differential.
+#
+# Source: Unicode block U+1D6A8-U+1D7CB
+# Reference: https://en.wikipedia.org/wiki/Mathematical_Alphanumeric_Symbols
+
+[metadata]
+type = "math_greek"
+description = "Styled Greek letters → base Greek alphabet"
+direction = "neutral"
+tags = ["math", "canonicalize"]
+
+# ── Bold Greek ───────────────────────────────────────────────────────
+# Uppercase: U+1D6A8-1D6C0 → Α-Ω (U+0391-03A9)
+[[ranges]]
+from_start = "1D6A8"
+from_end = "1D6C0"
+to_start = "0391"
+
+# Bold nabla: U+1D6C1 → ∇ U+2207
+[[pairs]]
+from = "1D6C1"
+to = "2207"
+
+# Lowercase: U+1D6C2-1D6DA → α-ω (U+03B1-03C9)
+[[ranges]]
+from_start = "1D6C2"
+from_end = "1D6DA"
+to_start = "03B1"
+
+# Bold partial: U+1D6DB → ∂ U+2202
+[[pairs]]
+from = "1D6DB"
+to = "2202"
+
+# Bold variant forms: U+1D6DC-1D6E1
+[[pairs]]
+from = "1D6DC"
+to = "03F5"
+
+[[pairs]]
+from = "1D6DD"
+to = "03D1"
+
+[[pairs]]
+from = "1D6DE"
+to = "03F0"
+
+[[pairs]]
+from = "1D6DF"
+to = "03D5"
+
+[[pairs]]
+from = "1D6E0"
+to = "03F1"
+
+[[pairs]]
+from = "1D6E1"
+to = "03D6"
+
+# ── Italic Greek ─────────────────────────────────────────────────────
+# Uppercase: U+1D6E2-1D6FA → Α-Ω
+[[ranges]]
+from_start = "1D6E2"
+from_end = "1D6FA"
+to_start = "0391"
+
+[[pairs]]
+from = "1D6FB"
+to = "2207"
+
+# Lowercase: U+1D6FC-1D714 → α-ω
+[[ranges]]
+from_start = "1D6FC"
+from_end = "1D714"
+to_start = "03B1"
+
+[[pairs]]
+from = "1D715"
+to = "2202"
+
+[[pairs]]
+from = "1D716"
+to = "03F5"
+
+[[pairs]]
+from = "1D717"
+to = "03D1"
+
+[[pairs]]
+from = "1D718"
+to = "03F0"
+
+[[pairs]]
+from = "1D719"
+to = "03D5"
+
+[[pairs]]
+from = "1D71A"
+to = "03F1"
+
+[[pairs]]
+from = "1D71B"
+to = "03D6"
+
+# ── Bold Italic Greek ────────────────────────────────────────────────
+[[ranges]]
+from_start = "1D71C"
+from_end = "1D734"
+to_start = "0391"
+
+[[pairs]]
+from = "1D735"
+to = "2207"
+
+[[ranges]]
+from_start = "1D736"
+from_end = "1D74E"
+to_start = "03B1"
+
+[[pairs]]
+from = "1D74F"
+to = "2202"
+
+[[pairs]]
+from = "1D750"
+to = "03F5"
+
+[[pairs]]
+from = "1D751"
+to = "03D1"
+
+[[pairs]]
+from = "1D752"
+to = "03F0"
+
+[[pairs]]
+from = "1D753"
+to = "03D5"
+
+[[pairs]]
+from = "1D754"
+to = "03F1"
+
+[[pairs]]
+from = "1D755"
+to = "03D6"
+
+# ── Sans-serif Bold Greek ────────────────────────────────────────────
+[[ranges]]
+from_start = "1D756"
+from_end = "1D76E"
+to_start = "0391"
+
+[[pairs]]
+from = "1D76F"
+to = "2207"
+
+[[ranges]]
+from_start = "1D770"
+from_end = "1D788"
+to_start = "03B1"
+
+[[pairs]]
+from = "1D789"
+to = "2202"
+
+[[pairs]]
+from = "1D78A"
+to = "03F5"
+
+[[pairs]]
+from = "1D78B"
+to = "03D1"
+
+[[pairs]]
+from = "1D78C"
+to = "03F0"
+
+[[pairs]]
+from = "1D78D"
+to = "03D5"
+
+[[pairs]]
+from = "1D78E"
+to = "03F1"
+
+[[pairs]]
+from = "1D78F"
+to = "03D6"
+
+# ── Sans-serif Bold Italic Greek ─────────────────────────────────────
+[[ranges]]
+from_start = "1D790"
+from_end = "1D7A8"
+to_start = "0391"
+
+[[pairs]]
+from = "1D7A9"
+to = "2207"
+
+[[ranges]]
+from_start = "1D7AA"
+from_end = "1D7C2"
+to_start = "03B1"
+
+[[pairs]]
+from = "1D7C3"
+to = "2202"
+
+[[pairs]]
+from = "1D7C4"
+to = "03F5"
+
+[[pairs]]
+from = "1D7C5"
+to = "03D1"
+
+[[pairs]]
+from = "1D7C6"
+to = "03F0"
+
+[[pairs]]
+from = "1D7C7"
+to = "03D5"
+
+[[pairs]]
+from = "1D7C8"
+to = "03F1"
+
+[[pairs]]
+from = "1D7C9"
+to = "03D6"
+
+# ── Bold Digamma ─────────────────────────────────────────────────────
+# U+1D7CA → Ϝ U+03DC (bold uppercase digamma)
+[[pairs]]
+from = "1D7CA"
+to = "03DC"
+
+# U+1D7CB → ϝ U+03DD (bold lowercase digamma)
+[[pairs]]
+from = "1D7CB"
+to = "03DD"
