@@ -140,14 +140,13 @@ fn sigpipe_handling() {
     use std::process::Command as StdCommand;
 
     let raw = read_fixture("ansi-sgr.raw.txt");
-    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-    let workspace_dir = manifest_dir.parent().unwrap();
+    let bin = cargo::cargo_bin!("strip-ansi");
+    let bin_str = bin.display();
 
     let child = StdCommand::new("sh")
         .arg("-c")
-        .arg("echo '$1' | cargo run --quiet --bin strip-ansi -- | head -n 1")
-        .env("CARGO_TARGET_DIR", workspace_dir.join("target"))
-        .current_dir(manifest_dir)
+        .arg(format!("echo '$1' | '{bin_str}' | head -n 1"))
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
         .arg("dummy")
         .arg(&raw)
         .spawn()

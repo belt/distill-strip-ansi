@@ -241,9 +241,11 @@ fn check_stderr_diagnostic() {
 fn broken_pipe_exit_zero() {
     use std::process::Command;
 
+    let bin = assert_cmd::cargo::cargo_bin!("strip-ansi");
+    let bin_str = bin.display();
     let child = Command::new("sh")
         .arg("-c")
-        .arg("echo test | cargo run --quiet --bin strip-ansi -- > /dev/null")
+        .arg(format!("echo test | '{bin_str}' > /dev/null"))
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .spawn()
         .expect("Failed to spawn child process");
@@ -256,9 +258,11 @@ fn broken_pipe_exit_zero() {
 fn broken_pipe_no_panic_stderr() {
     use std::process::Command;
 
+    let bin = assert_cmd::cargo::cargo_bin!("strip-ansi");
+    let bin_str = bin.display();
     let child = Command::new("sh")
         .arg("-c")
-        .arg("echo test | cargo run --quiet --bin strip-ansi -- > /dev/null")
+        .arg(format!("echo test | '{bin_str}' > /dev/null"))
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .spawn()
         .expect("Failed to spawn child process");
