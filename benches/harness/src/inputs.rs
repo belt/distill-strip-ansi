@@ -42,9 +42,9 @@ impl fmt::Display for InputMeta {
             src,
             s.bytes_in,
             s.lines,
-            s.by_kind[0].bytes as f32 / total * 100.0,  // CsiSgr = 0
-            s.by_kind[8].bytes as f32 / total * 100.0,  // Osc = 8
-            s.by_kind[9].bytes as f32 / total * 100.0,  // Dcs = 9
+            s.by_kind[0].bytes as f32 / total * 100.0, // CsiSgr = 0
+            s.by_kind[8].bytes as f32 / total * 100.0, // Osc = 8
+            s.by_kind[9].bytes as f32 / total * 100.0, // Dcs = 9
             s.plain_bytes as f32 / total * 100.0,
         )
     }
@@ -64,10 +64,18 @@ impl InputMeta {
         let osc_pct = s.by_kind[8].bytes as f32 / total * 100.0;
         let dcs_pct = s.by_kind[9].bytes as f32 / total * 100.0;
         let plain_pct = s.plain_bytes as f32 / total * 100.0;
-        if sgr_pct > 0.5 { parts.push(format!("{sgr_pct:.0}% colors/styles")); }
-        if osc_pct > 0.5 { parts.push(format!("{osc_pct:.0}% hyperlinks/titles")); }
-        if dcs_pct > 0.5 { parts.push(format!("{dcs_pct:.0}% device control")); }
-        if plain_pct > 0.5 { parts.push(format!("{plain_pct:.0}% plain text")); }
+        if sgr_pct > 0.5 {
+            parts.push(format!("{sgr_pct:.0}% colors/styles"));
+        }
+        if osc_pct > 0.5 {
+            parts.push(format!("{osc_pct:.0}% hyperlinks/titles"));
+        }
+        if dcs_pct > 0.5 {
+            parts.push(format!("{dcs_pct:.0}% device control"));
+        }
+        if plain_pct > 0.5 {
+            parts.push(format!("{plain_pct:.0}% plain text"));
+        }
         format!(
             "{src} — {size} bytes, {lines} lines — {parts}",
             size = s.bytes_in,

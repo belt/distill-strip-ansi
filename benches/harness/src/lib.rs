@@ -4,6 +4,8 @@
 //! sizes, resource capture (RSS/CPU), and JSON flush — so every
 //! bench binary in the workspace measures apples-to-apples.
 
+// MSRV 1.85 — let-chains require 1.88+, so nested if-let is intentional.
+#![allow(clippy::collapsible_if)]
 
 mod cache;
 mod config;
@@ -14,8 +16,7 @@ mod runner;
 pub use cache::CacheInfo;
 pub use config::BenchConfig;
 pub use inputs::{
-    InputMeta, InputSource, clean_input, dirty_input, fmt_bytes, load_fixture,
-    select_input,
+    InputMeta, InputSource, clean_input, dirty_input, fmt_bytes, load_fixture, select_input,
 };
 pub use resources::{CapturePoint, FlushParams, ResourceTracker, flush_resources};
 pub use runner::{StripBench, run_strip_bench};

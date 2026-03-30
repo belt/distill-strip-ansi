@@ -243,7 +243,8 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
     let mut in_word = false;
 
     // cat-style formatting state.
-    let show_nonprinting = args.show_nonprinting || args.show_tabs || args.show_ends || args.show_all;
+    let show_nonprinting =
+        args.show_nonprinting || args.show_tabs || args.show_ends || args.show_all;
     let show_tabs = args.show_tabs || args.show_all;
     let show_ends = args.show_ends || args.show_all;
     let number_lines = args.number_lines;
@@ -252,9 +253,14 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
     #[cfg(feature = "filter")]
     let needs_wc = needs_wc || args.stats;
 
-    // Line numbering state.
-    let mut line_number: u64 = 1;
-    let mut at_line_start = true;
+    let mut cat_state = CatState {
+        show_nonprinting,
+        show_tabs,
+        show_ends,
+        number_lines,
+        line_number: 1,
+        at_line_start: true,
+    };
 
     // Full stats collector (when --stats requested).
     #[cfg(feature = "filter")]
@@ -322,8 +328,12 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
                     if b == b'\n' {
                         line_count += 1;
                     }
-                    let is_ws = b == b' ' || b == b'\t' || b == b'\n'
-                        || b == b'\r' || b == 0x0B || b == 0x0C;
+                    let is_ws = b == b' '
+                        || b == b'\t'
+                        || b == b'\n'
+                        || b == b'\r'
+                        || b == 0x0B
+                        || b == 0x0C;
                     if !is_ws {
                         if !in_word {
                             wc_words += 1;
@@ -340,11 +350,7 @@ fn run_strip_mode(mut reader: Box<dyn BufRead>, args: &Args) -> ExitCode {
 
             // cat-style output transform.
             let write_result = if needs_cat_transform {
-                write_cat_transformed(
-                    &mut writer, slice,
-                    show_nonprinting, show_tabs, show_ends,
-                    number_lines, &mut line_number, &mut at_line_start,
-                )
+                write_cat_transformed(&mut writer, slice, &mut cat_state)
             } else if let Some(ref mut remaining) = lines_remaining {
                 if *remaining == 0 {
                     break;
@@ -443,31 +449,35 @@ fn write_head_limited(
 /// - `show_tabs`: render `\t` as `^I` (subset of show_nonprinting)
 /// - `show_ends`: append `$` before each `\n`
 /// - `number_lines`: prefix each line with right-justified line number
-fn write_cat_transformed(
-    writer: &mut dyn Write,
-    slice: &[u8],
+struct CatState {
     show_nonprinting: bool,
     show_tabs: bool,
     show_ends: bool,
     number_lines: bool,
-    line_number: &mut u64,
-    at_line_start: &mut bool,
+    line_number: u64,
+    at_line_start: bool,
+}
+
+fn write_cat_transformed(
+    writer: &mut dyn Write,
+    slice: &[u8],
+    state: &mut CatState,
 ) -> std::io::Result<()> {
     for &b in slice {
-        if number_lines && *at_line_start {
-            write!(writer, "{:>6}\t", line_number)?;
-            *line_number += 1;
-            *at_line_start = false;
+        if state.number_lines && state.at_line_start {
+            write!(writer, "{:>6}\t", state.line_number)?;
+            state.line_number += 1;
+            state.at_line_start = false;
         }
-        if show_ends && b == b'\n' {
+        if state.show_ends && b == b'\n' {
             writer.write_all(b"$\n")?;
-            *at_line_start = true;
+            state.at_line_start = true;
         } else if b == b'\n' {
             writer.write_all(b"\n")?;
-            *at_line_start = true;
-        } else if show_tabs && b == b'\t' {
+            state.at_line_start = true;
+        } else if state.show_tabs && b == b'\t' {
             writer.write_all(b"^I")?;
-        } else if show_nonprinting && b != b'\t' {
+        } else if state.show_nonprinting && b != b'\t' {
             if b < 0x20 {
                 writer.write_all(&[b'^', b + 0x40])?;
             } else if b == 0x7F {

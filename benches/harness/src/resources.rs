@@ -156,14 +156,9 @@ pub fn flush_resources(params: FlushParams<'_>) {
 /// Merge new resource data into existing JSON, preserving data from
 /// previous bench binary runs. Each binary only knows about its own
 /// crate — merging accumulates all crates into one file.
-fn merge_resources(
-    mut existing: serde_json::Value,
-    new: serde_json::Value,
-) -> serde_json::Value {
+fn merge_resources(mut existing: serde_json::Value, new: serde_json::Value) -> serde_json::Value {
     if let (Some(existing_crates), Some(new_crates)) = (
-        existing
-            .get_mut("crates")
-            .and_then(|v| v.as_object_mut()),
+        existing.get_mut("crates").and_then(|v| v.as_object_mut()),
         new.get("crates").and_then(|v| v.as_object()),
     ) {
         for (k, v) in new_crates {
