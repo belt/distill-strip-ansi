@@ -1,4 +1,5 @@
 use crate::parser::{Action, Parser};
+use crate::strip::passthrough_skip;
 
 use memchr::memchr;
 
@@ -112,16 +113,17 @@ impl<'a> Iterator for StripSlices<'a, '_> {
                 let action = self.parser.feed(self.remaining[i]);
                 i += 1;
                 if action == Action::Emit {
-                    // Found content byte — remaining starts here.
-                    // But we need to return this byte as part of a slice.
-                    // Back up one: the emit byte is at i-1.
                     self.remaining = &self.remaining[i - 1..];
-                    // Fall through to ground loop below.
                     return self.next_ground();
                 }
                 if self.parser.is_ground() {
                     self.remaining = &self.remaining[i..];
                     return self.next_ground();
+                }
+                // Skip passthrough body bytes (OSC/DCS/String) only.
+                // Short sequences (CSI, Fe, SS2/SS3) skip this entirely.
+                if self.parser.is_passthrough() {
+                    i += passthrough_skip(self.parser.state(), &self.remaining[i..]);
                 }
             }
             // Entire chunk consumed by escape.
@@ -165,9 +167,12 @@ impl<'a> StripSlices<'a, '_> {
                             found_emit = true;
                             break;
                         }
+                        // Skip passthrough body bytes (OSC/DCS/String) only.
+                        if self.parser.is_passthrough() {
+                            i += passthrough_skip(self.parser.state(), &self.remaining[i..]);
+                        }
                     }
                     if found_emit {
-                        // Re-enter outer loop with updated remaining.
                         continue;
                     }
                     // Chunk ended mid-escape.
@@ -191,6 +196,10 @@ impl<'a> StripSlices<'a, '_> {
                         if self.parser.is_ground() {
                             self.remaining = &self.remaining[i..];
                             return Some(slice);
+                        }
+                        // Skip passthrough body bytes (OSC/DCS/String) only.
+                        if self.parser.is_passthrough() {
+                            i += passthrough_skip(self.parser.state(), &self.remaining[i..]);
                         }
                     }
                     // Chunk ended mid-escape.

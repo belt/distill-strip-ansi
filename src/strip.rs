@@ -6,6 +6,38 @@ use memchr::{memchr, memchr3};
 
 use crate::parser::{Action, Parser, State};
 
+/// Skip passthrough body bytes using `memchr` to jump directly to the
+/// terminator instead of feeding each body byte through the state table.
+///
+/// Returns the number of body bytes to skip (not including the terminator).
+/// The caller must NOT consume the terminator — let the parser handle it.
+///
+/// Only three states benefit: `OscString`, `DcsPassthrough`, and
+/// `StringPassthrough`. All other states return 0 immediately — the
+/// match is ordered so the common case (CSI, Fe, etc.) hits the
+/// wildcard arm with no memchr work.
+#[inline]
+pub(crate) fn passthrough_skip(state: State, remaining: &[u8]) -> usize {
+    match state {
+        // OSC: terminates on BEL(07), ESC(1B), CAN(18), SUB(1A).
+        // memchr3 only takes 3 needles; find min of two searches.
+        State::OscString => {
+            let a = memchr3(0x07, 0x1B, 0x18, remaining);
+            let b = memchr(0x1A, remaining);
+            match (a, b) {
+                (Some(x), Some(y)) => x.min(y),
+                (Some(x), None) | (None, Some(x)) => x,
+                (None, None) => 0,
+            }
+        }
+        // DCS/String: terminates on ESC(1B), CAN(18), SUB(1A).
+        State::DcsPassthrough | State::StringPassthrough => {
+            memchr3(0x1B, 0x18, 0x1A, remaining).unwrap_or(0)
+        }
+        _ => 0,
+    }
+}
+
 /// Strip ANSI escape sequences from a byte slice.
 ///
 /// Returns `Cow::Borrowed` when no allocation is needed:
@@ -68,31 +100,8 @@ pub fn strip(input: &[u8]) -> Cow<'_, [u8]> {
             // After entering a passthrough state (OSC, DCS, SOS/PM/APC),
             // use memchr to skip directly to the terminator instead of
             // feeding each body byte through the state table.
-            if !p.is_ground() {
-                let skip = match p.state() {
-                    // OSC: terminates on BEL(07), ESC(1B), CAN(18), SUB(1A).
-                    State::OscString => {
-                        // memchr3 only takes 3 needles; find min of two searches.
-                        let a = memchr3(0x07, 0x1B, 0x18, &remaining[i..]);
-                        let b = memchr(0x1A, &remaining[i..]);
-                        match (a, b) {
-                            (Some(x), Some(y)) => Some(x.min(y)),
-                            (Some(x), None) => Some(x),
-                            (None, Some(y)) => Some(y),
-                            (None, None) => None,
-                        }
-                    }
-                    // DCS/String: terminates on ESC(1B), CAN(18), SUB(1A).
-                    State::DcsPassthrough | State::StringPassthrough => {
-                        memchr3(0x1B, 0x18, 0x1A, &remaining[i..])
-                    }
-                    _ => None,
-                };
-                if let Some(skip_len) = skip {
-                    // Skip body bytes — they're all Skip action, no emit.
-                    i += skip_len;
-                    // Don't consume the terminator — let the parser handle it.
-                }
+            if p.is_passthrough() {
+                i += passthrough_skip(p.state(), &remaining[i..]);
             }
             if p.is_ground() {
                 break;
@@ -197,6 +206,13 @@ pub fn strip_in_place(buf: &mut Vec<u8>) -> usize {
                 dst += 1;
             }
             src += 1;
+            // Passthrough skip: jump over OSC/DCS/String body bytes.
+            // Only for passthrough states — short sequences (CSI, Fe)
+            // skip this check entirely via is_passthrough().
+            if parser.is_passthrough() {
+                let skip = passthrough_skip(parser.state(), &buf[src..len]);
+                src += skip;
+            }
             if parser.is_ground() && action != Action::Emit {
                 break;
             }
@@ -218,12 +234,11 @@ pub fn strip_in_place(buf: &mut Vec<u8>) -> usize {
 pub fn contains_ansi(input: &[u8]) -> bool {
     let mut remaining = input;
     while let Some(pos) = memchr(0x1B, remaining) {
-        // Check if there's a valid introducer after ESC.
+        // Valid ANSI introducer: any byte in 0x20..=0x7E after ESC.
+        // Single unsigned comparison (branchless range check).
         if let Some(&next) = remaining.get(pos + 1) {
-            match next {
-                b'[' | b']' | b'P' | b'X' | b'^' | b'_' | b'N' | b'O' => return true,
-                0x20..=0x7E => return true,
-                _ => {}
+            if next.wrapping_sub(0x20) <= 0x5E {
+                return true;
             }
         }
         remaining = &remaining[pos + 1..];
@@ -250,10 +265,11 @@ pub fn contains_ansi_c1(input: &[u8]) -> bool {
     if contains_ansi(input) {
         return true;
     }
-    // Check 8-bit C1 control codes.
+    // Check 8-bit C1 control codes using SIMD-accelerated memchr.
     // CSI=0x9B, OSC=0x9D, DCS=0x90, SOS=0x98, PM=0x9E, APC=0x9F
-    const C1_CODES: [u8; 6] = [0x9B, 0x9D, 0x90, 0x98, 0x9E, 0x9F];
-    input.iter().any(|b| C1_CODES.contains(b))
+    // Split into two memchr3 calls (6 needles, 3 per call).
+    memchr3(0x9B, 0x9D, 0x90, input).is_some()
+        || memchr3(0x98, 0x9E, 0x9F, input).is_some()
 }
 
 // --- Drop-in compatibility aliases ---

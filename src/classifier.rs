@@ -223,34 +223,45 @@ pub enum SeqKind {
     Unknown = 16,
 }
 
+/// Lookup table: `SeqKind as u8` → `SeqGroup`.
+///
+/// 18 entries (max discriminant = 17). Replaces a 20-arm match
+/// with a single indexed load.
+#[rustfmt::skip]
+static KIND_TO_GROUP: [SeqGroup; 18] = {
+    use SeqGroup::*;
+    let mut t = [Fe; 18]; // Unknown(16) defaults to Fe
+    // CSI sub-kinds: 0–7 + 17
+    t[0]  = Csi; // CsiSgr
+    t[1]  = Csi; // CsiCursor
+    t[2]  = Csi; // CsiErase
+    t[3]  = Csi; // CsiScroll
+    t[4]  = Csi; // CsiMode
+    t[5]  = Csi; // CsiDeviceStatus
+    t[6]  = Csi; // CsiWindow
+    t[7]  = Csi; // CsiOther
+    t[17] = Csi; // CsiQuery
+    // Non-CSI: 8–15
+    t[8]  = Osc;
+    t[9]  = Dcs;
+    t[10] = Apc;
+    t[11] = Pm;
+    t[12] = Sos;
+    t[13] = Ss2;
+    t[14] = Ss3;
+    t[15] = Fe;
+    // t[16] = Fe (Unknown) — already set by default
+    t
+};
+
 impl SeqKind {
     /// Returns the parent [`SeqGroup`] for this kind.
+    ///
+    /// Single indexed load from a static table — no branches.
     #[inline]
     #[must_use]
     pub const fn group(self) -> SeqGroup {
-        match self {
-            Self::CsiSgr
-            | Self::CsiCursor
-            | Self::CsiErase
-            | Self::CsiScroll
-            | Self::CsiMode
-            | Self::CsiDeviceStatus
-            | Self::CsiWindow
-            | Self::CsiQuery
-            | Self::CsiOther => SeqGroup::Csi,
-
-            Self::Osc => SeqGroup::Osc,
-            Self::Dcs => SeqGroup::Dcs,
-            Self::Apc => SeqGroup::Apc,
-            Self::Pm => SeqGroup::Pm,
-            Self::Sos => SeqGroup::Sos,
-            Self::Ss2 => SeqGroup::Ss2,
-            Self::Ss3 => SeqGroup::Ss3,
-            Self::Fe => SeqGroup::Fe,
-
-            // Unknown defaults to Fe (most conservative group)
-            Self::Unknown => SeqGroup::Fe,
-        }
+        KIND_TO_GROUP[self as u8 as usize]
     }
 }
 

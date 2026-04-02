@@ -74,6 +74,25 @@ impl Parser {
         self.state_byte == 0
     }
 
+    /// Returns `true` if the parser is in a passthrough body state
+    /// (OSC string, DCS passthrough, or SOS/PM/APC string).
+    ///
+    /// These states consume arbitrary-length body bytes until a
+    /// terminator. Callers can use `memchr` to skip directly to
+    /// the terminator instead of feeding each byte individually.
+    ///
+    /// Branchless: single shift + AND + compare. No conditional
+    /// branches — avoids branch predictor pollution in tight loops.
+    #[inline]
+    #[must_use]
+    pub const fn is_passthrough(&self) -> bool {
+        // OscString=4, DcsPassthrough=8, StringPassthrough=10
+        // Mask has exactly bits 4, 8, 10 set.
+        const MASK: u16 = (1 << 4) | (1 << 8) | (1 << 10); // 0x0510
+        // state_byte is always 0..=14, so the shift is safe for u16.
+        MASK & (1u16 << (self.state_byte as u16)) != 0
+    }
+
     /// Returns the current parser state.
     #[inline]
     #[must_use]
