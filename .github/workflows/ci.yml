@@ -48,6 +48,8 @@ env:
   RUSTFLAGS: -Dwarnings  # treat warnings as errors in CI
 
 jobs:
+  # Formatting — runs on latest stable (not MSRV) because rustfmt
+  # on older toolchains may not support edition 2024 formatting.
   fmt:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -58,6 +60,8 @@ jobs:
           components: rustfmt
       - run: cargo fmt --check
 
+  # Linting — runs on latest stable with clippy.toml msrv = "1.85.0"
+  # so clippy won't suggest features unavailable on MSRV.
   clippy:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -80,7 +84,8 @@ jobs:
         # --all-features: exercise feature-gated code (e.g. toml-config, filter)
       - run: cargo test --locked --all-features
 
-  # Minimum Supported Rust Version — keep in sync with Cargo.toml rust-version
+  # Minimum Supported Rust Version — cargo check only (no clippy/fmt).
+  # Keep toolchain version in sync with Cargo.toml rust-version and clippy.toml msrv.
   msrv:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -92,9 +97,20 @@ jobs:
 
   # License, advisory, ban, and source checks via deny.toml.
   # Config reference: https://embarkstudios.github.io/cargo-deny/
+  #
+  # Advisories run separately with continue-on-error so a malformed
+  # upstream advisory DB entry doesn't block the entire pipeline.
   deny:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      matrix:
+        checks:
+          - advisories
+          - bans licenses sources
+    continue-on-error: ${{ matrix.checks == 'advisories' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: EmbarkStudios/cargo-deny-action@9b7d65878c2d28c8e3c16e30bf555c29abe505bd # v2.0.11
+        with:
+          command: check ${{ matrix.checks }}
