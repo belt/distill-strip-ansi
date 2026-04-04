@@ -1,7 +1,7 @@
 #![cfg(feature = "filter")]
 
 use proptest::prelude::*;
-use strip_ansi::{ClassifyingParser, SeqAction, SeqKind};
+use strip_ansi::{ClassifyingParser, OscType, SeqAction, SeqKind, SgrContent, map_osc_number};
 
 // ── Generators ──────────────────────────────────────────────────────
 
@@ -138,6 +138,243 @@ proptest! {
             SeqKind::Unknown,
             "expected current_kind() != Unknown at EndSeq for sequence {:?}",
             seq
+        );
+    }
+}
+
+// ── Generators for SGR sequences ────────────────────────────────────
+
+/// A single SGR parameter value (0–107, covering all meaningful ranges).
+#[allow(dead_code)]
+fn arb_sgr_param() -> impl Strategy<Value = u16> {
+    prop_oneof![
+        // Basic range: 0-29
+        (0u16..=29u16),
+        // 38 (extended fg trigger)
+        Just(38u16),
+        // 39 (basic: default fg)
+        Just(39u16),
+        // 48 (extended bg trigger)
+        Just(48u16),
+        // 49 (basic: default bg)
+        Just(49u16),
+        // Bright fg: 90-97
+        (90u16..=97u16),
+        // Bright bg: 100-107
+        (100u16..=107u16),
+        // Unknown/other params (50-89, 108-200)
+        (50u16..=89u16),
+        (108u16..=200u16),
+    ]
+}
+
+/// Classify a single SGR param value independently (reference implementation).
+///
+/// Returns the SgrContent bits that this param contributes on its own
+/// (ignoring sub-parameter context like 38;5;N).
+#[allow(dead_code)]
+fn classify_single_param(v: u16) -> SgrContent {
+    match v {
+        0..=29 | 39 | 49 | 90..=97 | 100..=107 => SgrContent::BASIC,
+        _ => SgrContent::empty(),
+    }
+}
+
+/// Build a well-formed SGR byte sequence from a list of param values.
+///
+/// Handles 38;5;N and 48;5;N (extended) and 38;2;R;G;B (truecolor)
+/// by encoding them as proper sub-parameter sequences.
+fn build_sgr_sequence(params: &[SgrParam]) -> Vec<u8> {
+    let mut seq = vec![0x1B, b'['];
+    let mut first = true;
+    for p in params {
+        if !first {
+            seq.push(b';');
+        }
+        first = false;
+        match p {
+            SgrParam::Basic(v) => {
+                seq.extend_from_slice(v.to_string().as_bytes());
+            }
+            SgrParam::Extended(idx) => {
+                seq.extend_from_slice(b"38;5;");
+                seq.extend_from_slice(idx.to_string().as_bytes());
+            }
+            SgrParam::ExtendedBg(idx) => {
+                seq.extend_from_slice(b"48;5;");
+                seq.extend_from_slice(idx.to_string().as_bytes());
+            }
+            SgrParam::Truecolor(r, g, b) => {
+                seq.extend_from_slice(b"38;2;");
+                seq.extend_from_slice(r.to_string().as_bytes());
+                seq.push(b';');
+                seq.extend_from_slice(g.to_string().as_bytes());
+                seq.push(b';');
+                seq.extend_from_slice(b.to_string().as_bytes());
+            }
+            SgrParam::TruecolorBg(r, g, b) => {
+                seq.extend_from_slice(b"48;2;");
+                seq.extend_from_slice(r.to_string().as_bytes());
+                seq.push(b';');
+                seq.extend_from_slice(g.to_string().as_bytes());
+                seq.push(b';');
+                seq.extend_from_slice(b.to_string().as_bytes());
+            }
+            SgrParam::Other(v) => {
+                seq.extend_from_slice(v.to_string().as_bytes());
+            }
+        }
+    }
+    seq.push(b'm');
+    seq
+}
+
+/// A typed SGR parameter for property testing.
+#[derive(Debug, Clone)]
+enum SgrParam {
+    /// Basic param (0-29, 39, 49, 90-97, 100-107)
+    Basic(u16),
+    /// 38;5;N — extended fg
+    Extended(u8),
+    /// 48;5;N — extended bg
+    ExtendedBg(u8),
+    /// 38;2;R;G;B — truecolor fg
+    Truecolor(u8, u8, u8),
+    /// 48;2;R;G;B — truecolor bg
+    TruecolorBg(u8, u8, u8),
+    /// Unknown/other param (no bits)
+    Other(u16),
+}
+
+impl SgrParam {
+    /// The SgrContent bits this param contributes.
+    fn content(&self) -> SgrContent {
+        match self {
+            SgrParam::Basic(_) => SgrContent::BASIC,
+            SgrParam::Extended(_) | SgrParam::ExtendedBg(_) => SgrContent::EXTENDED,
+            SgrParam::Truecolor(_, _, _) | SgrParam::TruecolorBg(_, _, _) => SgrContent::TRUECOLOR,
+            SgrParam::Other(_) => SgrContent::empty(),
+        }
+    }
+}
+
+fn arb_sgr_param_typed() -> impl Strategy<Value = SgrParam> {
+    prop_oneof![
+        // Basic params
+        prop_oneof![
+            (0u16..=29u16).prop_map(SgrParam::Basic),
+            Just(SgrParam::Basic(39)),
+            Just(SgrParam::Basic(49)),
+            (90u16..=97u16).prop_map(SgrParam::Basic),
+            (100u16..=107u16).prop_map(SgrParam::Basic),
+        ],
+        // Extended 256-color fg
+        any::<u8>().prop_map(SgrParam::Extended),
+        // Extended 256-color bg
+        any::<u8>().prop_map(SgrParam::ExtendedBg),
+        // Truecolor fg
+        (any::<u8>(), any::<u8>(), any::<u8>())
+            .prop_map(|(r, g, b)| SgrParam::Truecolor(r, g, b)),
+        // Truecolor bg
+        (any::<u8>(), any::<u8>(), any::<u8>())
+            .prop_map(|(r, g, b)| SgrParam::TruecolorBg(r, g, b)),
+        // Other/unknown params (no bits)
+        (50u16..=89u16).prop_map(SgrParam::Other),
+        (108u16..=200u16).prop_map(SgrParam::Other),
+    ]
+}
+
+// ── P1: SGR classification is pure set membership ────────────────────
+// **Validates: Requirements 1.1, 1.2 (AC-1.1, AC-1.2)**
+
+proptest! {
+    #![proptest_config(ProptestConfig { cases: 512, ..Default::default() })]
+    #[test]
+    fn p1_sgr_classification_is_pure_set_membership(
+        params in prop::collection::vec(arb_sgr_param_typed(), 1..=6)
+    ) {
+        // Compute expected content: union of each param's contribution.
+        let expected = params.iter().fold(SgrContent::empty(), |acc, p| acc | p.content());
+
+        // Build the SGR sequence and classify it.
+        let seq = build_sgr_sequence(&params);
+        let mut cp = ClassifyingParser::new();
+        let mut last_action = SeqAction::Emit;
+        for &byte in &seq {
+            last_action = cp.feed(byte);
+        }
+
+        prop_assert_eq!(
+            last_action,
+            SeqAction::EndSeq,
+            "expected EndSeq for sequence {:?} (params: {:?})",
+            seq, params
+        );
+        prop_assert_eq!(
+            cp.sgr_content(),
+            expected,
+            "sgr_content mismatch for sequence {:?} (params: {:?}): got {:?}, expected {:?}",
+            seq, params, cp.sgr_content(), expected
+        );
+    }
+}
+
+// ── P2: OSC type determined by first param only ──────────────────────
+// **Validates: Requirements 2.1**
+
+/// Build a well-formed OSC sequence with a specific numeric first param.
+fn build_osc_seq(n: u16, bel_terminated: bool) -> Vec<u8> {
+    let mut seq = vec![0x1B, b']'];
+    seq.extend_from_slice(n.to_string().as_bytes());
+    seq.push(b';');
+    if bel_terminated {
+        seq.push(0x07); // BEL
+    } else {
+        seq.push(0x1B);
+        seq.push(b'\\'); // ST
+    }
+    seq
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig { cases: 512, ..Default::default() })]
+    #[test]
+    fn p2_osc_type_determined_by_first_param(
+        n in any::<u16>(),
+        bel_terminated in any::<bool>(),
+    ) {
+        let seq = build_osc_seq(n, bel_terminated);
+        let expected_type = map_osc_number(n);
+
+        let mut cp = ClassifyingParser::new();
+        let mut last_action = SeqAction::Emit;
+        for &byte in &seq {
+            last_action = cp.feed(byte);
+        }
+
+        prop_assert_eq!(
+            last_action,
+            SeqAction::EndSeq,
+            "expected EndSeq for OSC {} sequence {:?}",
+            n, seq
+        );
+        prop_assert_eq!(
+            cp.current_kind(),
+            SeqKind::Osc,
+            "expected Osc kind for sequence {:?}",
+            seq
+        );
+        prop_assert_eq!(
+            cp.osc_type(),
+            expected_type,
+            "osc_type mismatch for OSC {}: got {:?}, expected {:?}",
+            n, cp.osc_type(), expected_type
+        );
+        prop_assert_eq!(
+            cp.osc_number(),
+            n,
+            "osc_number mismatch for OSC {}: got {}, expected {}",
+            n, cp.osc_number(), n
         );
     }
 }

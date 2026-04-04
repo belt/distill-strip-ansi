@@ -1,4 +1,13 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+
+/// The action to take when threats are detected.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
+pub enum OnThreatMode {
+    /// Scan only, exit 77 on detection, no output to stdout.
+    Fail,
+    /// Strip dangerous sequences, write clean output to stdout, report threats to stderr, exit 0.
+    Strip,
+}
 
 /// Strip ANSI escape sequences from stdin or a file.
 ///
@@ -7,8 +16,23 @@ use clap::Parser;
 #[command(name = "strip-ansi", version, about)]
 pub struct Args {
     /// Check for ANSI sequences without stripping (exit 1 if found)
-    #[arg(long, conflicts_with_all = ["head", "follow", "output"])]
+    #[arg(long, conflicts_with_all = ["head", "follow", "output", "check_threats"])]
     pub check: bool,
+
+    /// Scan input for echoback threat vectors
+    #[cfg(feature = "filter")]
+    #[arg(long, conflicts_with_all = ["check", "head", "follow", "output"])]
+    pub check_threats: bool,
+
+    /// Action when threats are detected (default: fail)
+    #[cfg(feature = "filter")]
+    #[arg(long, value_enum, default_value = "fail", requires = "check_threats")]
+    pub on_threat: OnThreatMode,
+
+    /// Suppress threat report on stderr (preserves exit codes)
+    #[cfg(feature = "filter")]
+    #[arg(long, requires = "check_threats")]
+    pub no_threat_report: bool,
 
     /// Output only the first N lines (after stripping)
     #[arg(long, short = 'n', value_name = "N")]
@@ -32,6 +56,26 @@ pub struct Args {
 
     /// Input file (default: stdin)
     pub input: Option<String>,
+
+    // ── Preset flag ─────────────────────────────────────────────
+
+    /// Terminal capability preset (overrides auto-detection).
+    ///
+    /// Standard: dumb, color, vt100, tmux, xterm, full.
+    /// Aliases:  pipe=dumb, ci=color, pager=color, screen=tmux, modern=full.
+    ///
+    /// Without --preset, the tool auto-detects output capabilities.
+    /// Use --preset dumb to force strip-all behavior.
+    #[cfg(feature = "filter")]
+    #[arg(long, value_name = "NAME")]
+    pub preset: Option<String>,
+
+    /// Allow presets that preserve dangerous sequences (xterm, full).
+    ///
+    /// Required for pen-testing and terminal development.
+    #[cfg(feature = "filter")]
+    #[arg(long, hide_short_help = true)]
+    pub r#unsafe: bool,
 
     // ── Filter group flags (--no-strip-{group}) ─────────────────
 
@@ -118,4 +162,9 @@ pub struct Args {
     #[cfg(feature = "toml-config")]
     #[arg(long, value_name = "PATH")]
     pub config: Option<String>,
+
+    /// Load external threat database from TOML file (additive to builtins)
+    #[cfg(feature = "toml-config")]
+    #[arg(long, value_name = "PATH", requires = "check_threats")]
+    pub threat_db: Option<String>,
 }

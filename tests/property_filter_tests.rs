@@ -27,6 +27,7 @@ const ALL_KINDS: &[SeqKind] = &[
     SeqKind::CsiMode,
     SeqKind::CsiDeviceStatus,
     SeqKind::CsiWindow,
+    SeqKind::CsiQuery,
     SeqKind::CsiOther,
     SeqKind::Osc,
     SeqKind::Dcs,
@@ -531,4 +532,364 @@ fn extract_sequences(input: &[u8]) -> Vec<(Vec<u8>, SeqKind)> {
     }
 
     sequences
+}
+
+// ── try_filter_strip_str tests ──────────────────────────────────────
+
+use std::borrow::Cow;
+
+#[test]
+fn try_filter_strip_str_clean() {
+    let config = FilterConfig::strip_all();
+    let result = strip_ansi::try_filter_strip_str("hello", &config);
+    assert_eq!(result, Some(Cow::Borrowed("hello")));
+}
+
+#[test]
+fn try_filter_strip_str_with_ansi() {
+    let config = FilterConfig::strip_all();
+    let result = strip_ansi::try_filter_strip_str("\x1b[31mred\x1b[0m", &config);
+    assert_eq!(result.as_deref(), Some("red"));
+}
+
+#[test]
+fn try_filter_strip_str_pass_all() {
+    let config = FilterConfig::pass_all();
+    let input = "\x1b[31mred\x1b[0m";
+    let result = strip_ansi::try_filter_strip_str(input, &config);
+    assert_eq!(result.as_deref(), Some(input));
+}
+
+#[test]
+fn try_filter_strip_str_preserves_utf8() {
+    let config = FilterConfig::strip_all();
+    let result = strip_ansi::try_filter_strip_str("\x1b[1m日本語\x1b[0m", &config);
+    assert_eq!(result.as_deref(), Some("日本語"));
+}
+
+#[test]
+fn try_filter_strip_str_eq_filter_strip_str() {
+    let config = FilterConfig::strip_all().no_strip_kind(SeqKind::CsiSgr);
+    let input = "\x1b[31mred\x1b[0m \x1b[5Acursor";
+    let expected = strip_ansi::filter_strip_str(input, &config);
+    let result = strip_ansi::try_filter_strip_str(input, &config);
+    assert_eq!(result.as_deref(), Some(expected.as_ref()));
+}
+
+#[test]
+fn try_filter_strip_str_empty() {
+    let config = FilterConfig::strip_all();
+    let result = strip_ansi::try_filter_strip_str("", &config);
+    assert_eq!(result, Some(Cow::Borrowed("")));
+}
+
+// ── Task 5 unit tests ───────────────────────────────────────────────
+
+use strip_ansi::{OscType, SgrContent};
+
+// ── 5.9: SGR mask filtering ─────────────────────────────────────────
+
+/// Build a CSI SGR sequence from raw bytes.
+fn sgr(params: &[u8]) -> Vec<u8> {
+    let mut v = vec![0x1B, b'['];
+    v.extend_from_slice(params);
+    v.push(b'm');
+    v
+}
+
+/// Build an OSC sequence with the given number and body, BEL-terminated.
+fn osc(number: u16, body: &[u8]) -> Vec<u8> {
+    let mut v = vec![0x1B, b']'];
+    v.extend_from_slice(number.to_string().as_bytes());
+    v.push(b';');
+    v.extend_from_slice(body);
+    v.push(0x07);
+    v
+}
+
+#[test]
+fn sgr_basic_only_mask_strips_pure_truecolor() {
+    // Config: preserve only BASIC SGR content.
+    // A pure truecolor sequence (38;2;255;0;0) has no BASIC bits → stripped.
+    let config = FilterConfig::strip_all()
+        .no_strip_kind(SeqKind::CsiSgr)
+        .with_sgr_mask(SgrContent::BASIC);
+
+    let truecolor = sgr(b"38;2;255;0;0");
+    let result = filter_strip(&truecolor, &config);
+    assert!(
+        result.is_empty(),
+        "pure truecolor SGR should be stripped by BASIC-only mask, got {:?}",
+        result
+    );
+}
+
+#[test]
+fn sgr_basic_only_mask_preserves_mixed_basic_truecolor() {
+    // A sequence with both BASIC and TRUECOLOR bits (e.g. "1;38;2;255;0;0")
+    // intersects the BASIC mask → preserved.
+    let config = FilterConfig::strip_all()
+        .no_strip_kind(SeqKind::CsiSgr)
+        .with_sgr_mask(SgrContent::BASIC);
+
+    let mixed = sgr(b"1;38;2;255;0;0");
+    let result = filter_strip(&mixed, &config);
+    assert_eq!(
+        &*result, &mixed[..],
+        "mixed basic+truecolor SGR should be preserved by BASIC-only mask"
+    );
+}
+
+#[test]
+fn sgr_basic_only_mask_preserves_pure_basic() {
+    // A pure basic sequence (e.g. "1") intersects the BASIC mask → preserved.
+    let config = FilterConfig::strip_all()
+        .no_strip_kind(SeqKind::CsiSgr)
+        .with_sgr_mask(SgrContent::BASIC);
+
+    let basic = sgr(b"1");
+    let result = filter_strip(&basic, &config);
+    assert_eq!(
+        &*result, &basic[..],
+        "pure basic SGR should be preserved by BASIC-only mask"
+    );
+}
+
+#[test]
+fn sgr_extended_mask_strips_basic_only() {
+    // Config: preserve only EXTENDED SGR content.
+    // A pure basic sequence has no EXTENDED bits → stripped.
+    let config = FilterConfig::strip_all()
+        .no_strip_kind(SeqKind::CsiSgr)
+        .with_sgr_mask(SgrContent::EXTENDED);
+
+    let basic = sgr(b"1");
+    let result = filter_strip(&basic, &config);
+    assert!(
+        result.is_empty(),
+        "pure basic SGR should be stripped by EXTENDED-only mask"
+    );
+}
+
+// ── 5.10: OSC preserve filtering ───────────────────────────────────
+
+#[test]
+fn osc_preserve_title_preserved_clipboard_stripped() {
+    // Config: preserve OSC Title only.
+    let config = FilterConfig::strip_all()
+        .no_strip_osc_type(OscType::Title);
+
+    let title_seq = osc(0, b"My Window");
+    let clipboard_seq = osc(52, b"c;dGVzdA==");
+
+    // Title (OSC 0) → preserved
+    let result_title = filter_strip(&title_seq, &config);
+    assert_eq!(
+        &*result_title, &title_seq[..],
+        "OSC Title should be preserved"
+    );
+
+    // Clipboard (OSC 52) → stripped
+    let result_clipboard = filter_strip(&clipboard_seq, &config);
+    assert!(
+        result_clipboard.is_empty(),
+        "OSC Clipboard should be stripped when only Title is preserved"
+    );
+}
+
+#[test]
+fn osc_preserve_multiple_types() {
+    // Config: preserve Title and Hyperlink.
+    let config = FilterConfig::strip_all()
+        .no_strip_osc_type(OscType::Title)
+        .no_strip_osc_type(OscType::Hyperlink);
+
+    let title_seq = osc(2, b"title");
+    let hyperlink_seq = osc(8, b";https://example.com");
+    let clipboard_seq = osc(52, b"c;dGVzdA==");
+
+    assert_eq!(&*filter_strip(&title_seq, &config), &title_seq[..]);
+    assert_eq!(&*filter_strip(&hyperlink_seq, &config), &hyperlink_seq[..]);
+    assert!(filter_strip(&clipboard_seq, &config).is_empty());
+}
+
+// ── 5.11: Fast-path — empty masks degrade to should_strip ──────────
+
+#[test]
+fn empty_masks_degrade_to_should_strip_for_sgr() {
+    // With empty sgr_preserve_mask, should_strip_detail == should_strip(kind).
+    let config_detail = FilterConfig::strip_all().no_strip_kind(SeqKind::CsiSgr);
+    let config_kind = FilterConfig::strip_all().no_strip_kind(SeqKind::CsiSgr);
+
+    let seq = sgr(b"38;2;255;0;0");
+    assert_eq!(
+        &*filter_strip(&seq, &config_detail),
+        &*filter_strip(&seq, &config_kind),
+        "empty sgr_preserve_mask must degrade to should_strip(kind)"
+    );
+}
+
+#[test]
+fn empty_masks_degrade_to_should_strip_for_osc() {
+    // With empty osc_preserve, should_strip_detail == should_strip(kind).
+    let config_detail = FilterConfig::strip_all().no_strip_group(SeqGroup::Osc);
+    let config_kind = FilterConfig::strip_all().no_strip_group(SeqGroup::Osc);
+
+    let seq = osc(52, b"c;dGVzdA==");
+    assert_eq!(
+        &*filter_strip(&seq, &config_detail),
+        &*filter_strip(&seq, &config_kind),
+        "empty osc_preserve must degrade to should_strip(kind)"
+    );
+}
+
+#[test]
+fn empty_masks_strip_all_unchanged() {
+    // strip_all with no masks: should_strip_detail always returns true.
+    let config = FilterConfig::strip_all();
+    let seq = sgr(b"1");
+    assert!(
+        filter_strip(&seq, &config).is_empty(),
+        "strip_all with empty masks must strip everything"
+    );
+}
+
+#[test]
+fn seq_detail_accessor_snapshot() {
+    // Verify detail() returns correct snapshot at EndSeq.
+    use strip_ansi::{ClassifyingParser, SeqAction};
+
+    let mut cp = ClassifyingParser::new();
+    let seq = sgr(b"1;38;2;255;0;0");
+    let mut detail = None;
+    for &b in &seq {
+        let action = cp.feed(b);
+        if action == SeqAction::EndSeq {
+            detail = Some(cp.detail());
+        }
+    }
+    let d = detail.expect("EndSeq must be reached");
+    assert_eq!(d.kind, SeqKind::CsiSgr);
+    assert!(d.sgr_content.contains(SgrContent::BASIC));
+    assert!(d.sgr_content.contains(SgrContent::TRUECOLOR));
+    assert!(!d.dcs_is_query, "dcs_is_query must be false for CSI SGR sequences");
+}
+
+#[test]
+fn debug_idempotency_regression() {
+    // Regression case from p3_idempotency
+    // Config: mode: StripExcept, preserved: 295, sub_preserved: [CsiMode]
+    // preserved: 295 = 0b100100111 = bits 0(Csi), 1(Osc), 2(Dcs), 5(Sos), 8(Fe)
+    let config = FilterConfig::strip_all()
+        .no_strip_group(SeqGroup::Csi)
+        .no_strip_group(SeqGroup::Osc)
+        .no_strip_group(SeqGroup::Dcs)
+        .no_strip_group(SeqGroup::Sos)
+        .no_strip_group(SeqGroup::Fe)
+        .no_strip_kind(SeqKind::CsiMode);
+    
+    // The regression input (first 200 bytes of the regression case)
+    let input: &[u8] = &[103, 103, 114, 210, 11, 118, 139, 3, 123, 138, 198, 36, 190, 130, 52, 202, 198, 141, 135, 90, 48, 190, 9, 106, 57, 50, 182, 23, 190, 162, 118, 102, 8, 54, 242, 128, 186, 227, 255, 81, 87, 191, 211, 165, 142, 200, 85, 18, 205, 156, 49, 22, 47, 33, 184, 142, 78, 81, 157, 226, 63, 63, 121, 208, 121, 205, 173, 75, 119, 222, 100, 188, 211, 69, 102, 23, 121, 20, 187, 75, 133, 113, 185, 175, 35, 123, 43, 205, 210, 137, 38, 187, 234, 74, 179, 89, 123, 224, 193, 55, 74, 133, 21, 184, 152, 198, 33, 217, 46, 146, 219, 125, 55, 135, 31, 205, 175, 218, 223, 21, 126, 59, 92, 153, 121, 62, 241, 213, 114, 115, 43, 87, 106, 3, 41, 85, 138, 230, 167, 254, 142, 147, 40, 67, 143, 112, 226, 204, 187, 158, 237, 246, 88, 243, 150, 137, 56, 104, 217, 14, 81, 88, 220, 185, 78, 54, 153, 238, 55, 180, 165, 180, 76, 153, 33, 242, 115, 86, 24, 45, 129, 134, 55, 21, 67, 230, 21, 197, 182, 94, 211, 128, 166, 204, 19, 84, 172, 38, 61, 46];
+    
+    let once = filter_strip(input, &config);
+    let twice = filter_strip(&once, &config);
+    
+    if once != twice {
+        // Find first difference
+        let min_len = once.len().min(twice.len());
+        for i in 0..min_len {
+            if once[i] != twice[i] {
+                let start = if i >= 10 { i - 10 } else { 0 };
+                let end = (i + 20).min(min_len);
+                panic!(
+                    "First diff at index {}: once={} twice={}\nonce[{}..{}]={:?}\ntwice[{}..{}]={:?}",
+                    i, once[i], twice[i],
+                    start, end, &once[start..end],
+                    start, end, &twice[start..end]
+                );
+            }
+        }
+        if once.len() != twice.len() {
+            panic!("Same up to {} but lengths differ: {} vs {}", min_len, once.len(), twice.len());
+        }
+    }
+}
+
+#[test]
+fn debug_streaming_regression() {
+    use strip_ansi::{filter_strip, FilterConfig, FilterStream};
+    
+    // Regression case from p6_streaming_equivalence
+    // Config: mode: StripAll, preserved: 0, sub_preserved: []
+    let config = FilterConfig::strip_all();
+    
+    // Use a simple test case that might trigger the issue
+    // ESC [ ... ESC 0x82 (ESC inside CSI sequence)
+    let input: &[u8] = &[0x1B, b'[', b'1', b'm', 0x1B, b'[', b'2', b'm'];
+    
+    let stateless = filter_strip(input, &config);
+    
+    let mut stream = FilterStream::new();
+    let mut streaming = Vec::new();
+    stream.push(input, &config, &mut streaming);
+    
+    assert_eq!(&streaming, &*stateless, "streaming must equal stateless for strip_all");
+}
+
+#[test]
+fn debug_streaming_esc_inside_seq() {
+    use strip_ansi::{filter_strip, FilterConfig, FilterStream};
+    
+    let config = FilterConfig::strip_all();
+    
+    // ESC 0x82 ESC 0xE6 — two ESC bytes where the first starts a sequence
+    // that ends when 0x82 is fed (since 0x82 > 0x7E, EscapeStart → Ground)
+    let input: &[u8] = &[0x1B, 0x82, 0x1B, 0xE6];
+    
+    let stateless = filter_strip(input, &config);
+    
+    let mut stream = FilterStream::new();
+    let mut streaming = Vec::new();
+    stream.push(input, &config, &mut streaming);
+    
+    println!("stateless: {:?}", stateless);
+    println!("streaming: {:?}", streaming);
+    
+    assert_eq!(&streaming, &*stateless, "streaming must equal stateless for strip_all");
+}
+
+#[test]
+fn debug_p6_regression_exact() {
+    use strip_ansi::{filter_strip, FilterConfig, FilterStream};
+    
+    let config = FilterConfig::strip_all();
+    
+    // Exact regression case input (first 300 bytes)
+    let input: &[u8] = &[240, 94, 114, 144, 251, 36, 145, 37, 75, 39, 225, 191, 21, 128, 185, 202, 223, 130, 150, 153, 147, 114, 2, 174, 17, 232, 242, 103, 79, 100, 124, 3, 110, 129, 169, 97, 186, 137, 149, 201, 104, 118, 29, 64, 169, 92, 151, 231, 242, 252, 158, 130, 181, 122, 102, 127, 235, 138, 89, 71, 178, 170, 114, 5, 68, 46, 52, 65, 223, 105, 103, 112, 250, 154, 2, 146, 9, 212, 32, 175, 12, 245, 250, 199, 199, 10, 42, 242, 254, 6, 124, 167, 232, 102, 44, 182, 180, 68, 165, 174, 218, 221, 243, 20, 61, 193, 255, 99, 15, 26, 157, 95, 183, 186, 16, 107, 95, 95, 198, 90, 87, 89, 34, 6, 212, 117, 230, 173, 206, 122, 54, 46, 89, 134, 42, 95, 253, 25, 107, 16, 146, 121, 23, 198, 80, 82, 148, 244, 213, 123, 4, 23, 184, 47, 157, 225, 18, 238, 205, 46, 155, 231, 189, 6, 251, 78, 79, 159, 231, 227, 126, 66, 231, 51, 110, 79, 75, 130, 88, 22, 91, 72, 103, 185, 55, 169, 170, 199, 91, 35, 49, 192, 32, 80, 213, 172, 251, 93, 182, 179, 94, 46, 229, 217, 99, 131, 128, 34, 246, 123, 211, 50, 230, 105, 241, 141, 191, 128, 120, 91, 43, 201, 182, 255, 56, 6, 200, 40, 85, 73, 128, 80, 76, 136, 133, 142, 71, 238, 235, 239, 28, 131, 83, 2, 117, 231, 11, 125, 122, 97, 29, 103, 23, 21, 71, 73, 55, 67, 175, 25, 214, 73, 19, 18, 8, 52, 15, 159, 80, 171, 217, 129, 0, 117, 52, 162, 33, 28, 176, 57, 120, 197, 34, 64, 212, 77, 196, 89, 0, 186, 147, 227, 253, 62, 190, 87, 155, 121, 198, 249];
+    
+    let stateless = filter_strip(input, &config);
+    
+    let mut stream = FilterStream::new();
+    let mut streaming = Vec::new();
+    stream.push(input, &config, &mut streaming);
+    
+    if streaming != *stateless {
+        // Find first difference
+        let min_len = streaming.len().min(stateless.len());
+        for i in 0..min_len {
+            if streaming[i] != stateless[i] {
+                let start = if i >= 5 { i - 5 } else { 0 };
+                let end = (i + 10).min(min_len);
+                panic!(
+                    "First diff at index {}: streaming={} stateless={}\nstreaming[{}..{}]={:?}\nstateless[{}..{}]={:?}",
+                    i, streaming[i], stateless[i],
+                    start, end, &streaming[start..end],
+                    start, end, &stateless[start..end]
+                );
+            }
+        }
+        if streaming.len() != stateless.len() {
+            panic!("Same up to {} but lengths differ: {} vs {}", min_len, streaming.len(), stateless.len());
+        }
+    }
 }

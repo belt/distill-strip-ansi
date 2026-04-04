@@ -405,3 +405,73 @@ fn strip_ansi_escapes_accepts_string() {
     let result = strip_ansi::strip_ansi_escapes(input);
     assert_eq!(result, b"green");
 }
+
+// ── try_strip_str tests ─────────────────────────────────────────────
+
+#[test]
+fn try_strip_str_clean() {
+    let result = strip_ansi::try_strip_str("hello world");
+    assert_eq!(result, Some(Cow::Borrowed("hello world")));
+}
+
+#[test]
+fn try_strip_str_with_ansi() {
+    let result = strip_ansi::try_strip_str("\x1b[31mred\x1b[0m");
+    assert_eq!(result.as_deref(), Some("red"));
+}
+
+#[test]
+fn try_strip_str_empty() {
+    let result = strip_ansi::try_strip_str("");
+    assert_eq!(result, Some(Cow::Borrowed("")));
+}
+
+#[test]
+fn try_strip_str_utf8_preserved() {
+    let result = strip_ansi::try_strip_str("\x1b[1m日本語\x1b[0m");
+    assert_eq!(result.as_deref(), Some("日本語"));
+}
+
+#[test]
+fn try_strip_str_eq_strip_str() {
+    let input = "\x1b[38;2;255;0;0mhello\x1b[0m world";
+    let expected = strip_ansi::strip_str(input);
+    let result = strip_ansi::try_strip_str(input);
+    assert_eq!(result.as_deref(), Some(expected.as_ref()));
+}
+
+// ── contains_ansi_c1 tests ──────────────────────────────────────────
+
+#[test]
+fn contains_ansi_c1_detects_8bit_csi() {
+    // 0x9B is the 8-bit C1 form of CSI (ESC [)
+    assert!(strip_ansi::contains_ansi_c1(&[0x9B, b'3', b'1', b'm']));
+}
+
+#[test]
+fn contains_ansi_c1_detects_8bit_osc() {
+    // 0x9D is the 8-bit C1 form of OSC (ESC ])
+    assert!(strip_ansi::contains_ansi_c1(&[0x9D, b'0', b';', b'x', 0x07]));
+}
+
+#[test]
+fn contains_ansi_c1_detects_8bit_dcs() {
+    // 0x90 is the 8-bit C1 form of DCS (ESC P)
+    assert!(strip_ansi::contains_ansi_c1(&[0x90, b'q', 0x1B, b'\\']));
+}
+
+#[test]
+fn contains_ansi_c1_clean_ascii() {
+    assert!(!strip_ansi::contains_ansi_c1(b"hello world"));
+}
+
+#[test]
+fn contains_ansi_c1_also_detects_7bit() {
+    // Should still detect normal 7-bit ESC sequences
+    assert!(strip_ansi::contains_ansi_c1(b"\x1b[31m"));
+}
+
+#[test]
+fn contains_ansi_c1_empty() {
+    assert!(!strip_ansi::contains_ansi_c1(b""));
+}

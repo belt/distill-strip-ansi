@@ -22,6 +22,16 @@ const CSI_SUB_KIND_NAMES: &[&str] = &[
     "csi_other",
 ];
 
+/// OSC sub-type names accepted by the TOML config parser.
+const OSC_TYPE_NAMES: &[&str] = &[
+    "osc_title",
+    "osc_hyperlink",
+    "osc_clipboard",
+    "osc_notify",
+    "osc_shell_integration",
+    "osc_other",
+];
+
 // ── Generator ───────────────────────────────────────────────────────
 
 /// Generate a valid TOML configuration string matching the
@@ -33,6 +43,7 @@ fn arb_filter_toml() -> impl Strategy<Value = String> {
     let all_names: Vec<&'static str> = GROUP_NAMES
         .iter()
         .chain(CSI_SUB_KIND_NAMES.iter())
+        .chain(OSC_TYPE_NAMES.iter())
         .copied()
         .collect();
 
@@ -42,7 +53,7 @@ fn arb_filter_toml() -> impl Strategy<Value = String> {
         // mode: None, Some("strip"), or Some("check")
         prop::option::of(prop::sample::select(&["strip", "check"][..])),
         // no_strip: random subset of valid names (0..all)
-        prop::collection::hash_set(prop::sample::select(all_names), 0..=17),
+        prop::collection::hash_set(prop::sample::select(all_names), 0..=23),
     )
         .prop_map(|(buffer_size, mode, no_strip_set)| {
             let mut toml = String::new();

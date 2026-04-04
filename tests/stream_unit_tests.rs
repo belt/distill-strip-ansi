@@ -263,3 +263,51 @@ fn multiple_escapes_across_many_chunks() {
     ]);
     assert_eq!(result, b"bold normal red");
 }
+
+// ── Cross-chunk echoback regression tests ───────────────────────────
+// Verify that echoback attack sequences split across chunk boundaries
+// are always stripped (never partially emitted). See doc/SECURITY.md.
+
+#[test]
+fn cross_chunk_dcs_decrqss_stripped() {
+    // DECRQSS: ESC P $ q " p ESC \ (CVE-2008-2383 vector)
+    // Split across two chunks at the passthrough boundary.
+    let result = stream_chunks(&[
+        b"\x1bP$q",   // DCS entry + params
+        b"\"p\x1b\\", // passthrough + ST
+    ]);
+    assert_eq!(result, b"");
+}
+
+#[test]
+fn cross_chunk_osc50_query_stripped() {
+    // OSC 50 font query: ESC ] 50 ; ? BEL (CVE-2022-45063 vector)
+    // Split between the OSC number and the query character.
+    let result = stream_chunks(&[
+        b"before\x1b]50;",  // content + OSC start
+        b"?\x07after",      // query + BEL + content
+    ]);
+    assert_eq!(result, b"beforeafter");
+}
+
+#[test]
+fn cross_chunk_csi_title_report_stripped() {
+    // CSI 21 t — title report request (HD Moore 2003 vector)
+    // Split between param bytes and final byte.
+    let result = stream_chunks(&[
+        b"safe\x1b[21",  // content + CSI + params
+        b"tunsafe",       // final byte 't' + content
+    ]);
+    assert_eq!(result, b"safeunsafe");
+}
+
+#[test]
+fn cross_chunk_osc52_clipboard_stripped() {
+    // OSC 52 clipboard: ESC ] 52 ; c ; <base64> BEL
+    // Split in the middle of the payload.
+    let result = stream_chunks(&[
+        b"\x1b]52;c;SGVs",  // OSC 52 start + partial base64
+        b"bG8=\x07done",    // rest of base64 + BEL + content
+    ]);
+    assert_eq!(result, b"done");
+}

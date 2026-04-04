@@ -226,5 +226,213 @@ criterion_group!(
     bench_contains_ansi,
     bench_stream,
     bench_ecosystem_comparison,
+    bench_classifier,
+    bench_filter_detail,
+    bench_check_threats,
 );
 criterion_main!(benches);
+
+// --- Task 12: Security-aware filtering benchmarks ---
+
+fn bench_classifier(c: &mut Criterion) {
+    use strip_ansi::{ClassifyingParser, SeqAction};
+
+    let mut group = c.benchmark_group("classifier");
+
+    let cargo = real_world_cargo();
+    let osc8 = real_world_osc8();
+
+    // 12.1: ClassifyingParser overhead on real-world input.
+    group.throughput(Throughput::Bytes(cargo.len() as u64));
+    group.bench_with_input(
+        BenchmarkId::new("cargo_classify", cargo.len()),
+        &cargo,
+        |b, input| {
+            b.iter(|| {
+                let mut cp = ClassifyingParser::new();
+                for &byte in black_box(input) {
+                    let _ = cp.feed(byte);
+                }
+            });
+        },
+    );
+
+    group.throughput(Throughput::Bytes(osc8.len() as u64));
+    group.bench_with_input(
+        BenchmarkId::new("osc8_classify", osc8.len()),
+        &osc8,
+        |b, input| {
+            b.iter(|| {
+                let mut cp = ClassifyingParser::new();
+                for &byte in black_box(input) {
+                    let _ = cp.feed(byte);
+                }
+            });
+        },
+    );
+
+    // Classify + detail() snapshot at EndSeq.
+    group.throughput(Throughput::Bytes(cargo.len() as u64));
+    group.bench_with_input(
+        BenchmarkId::new("cargo_classify_detail", cargo.len()),
+        &cargo,
+        |b, input| {
+            b.iter(|| {
+                let mut cp = ClassifyingParser::new();
+                let mut count = 0u32;
+                for &byte in black_box(input) {
+                    if cp.feed(byte) == SeqAction::EndSeq {
+                        let _ = black_box(cp.detail());
+                        count += 1;
+                    }
+                }
+                count
+            });
+        },
+    );
+
+    group.finish();
+}
+
+fn bench_filter_detail(c: &mut Criterion) {
+    use strip_ansi::{filter_strip, FilterConfig, SeqKind, OscType, SgrContent};
+
+    let mut group = c.benchmark_group("filter_detail");
+
+    let cargo = real_world_cargo();
+
+    // 12.2: Extended strip decision vs existing should_strip.
+    // Baseline: should_strip(kind) only (no SGR/OSC masks).
+    group.throughput(Throughput::Bytes(cargo.len() as u64));
+
+    let config_kind_only = FilterConfig::strip_all()
+        .no_strip_kind(SeqKind::CsiSgr);
+
+    group.bench_with_input(
+        BenchmarkId::new("kind_only", cargo.len()),
+        &cargo,
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_kind_only));
+        },
+    );
+
+    // With SGR mask (triggers should_strip_detail path).
+    let config_sgr_mask = FilterConfig::strip_all()
+        .no_strip_kind(SeqKind::CsiSgr)
+        .with_sgr_mask(SgrContent::BASIC);
+
+    group.bench_with_input(
+        BenchmarkId::new("sgr_mask", cargo.len()),
+        &cargo,
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_sgr_mask));
+        },
+    );
+
+    // With OSC preserve (triggers should_strip_detail path).
+    let config_osc_preserve = FilterConfig::strip_all()
+        .no_strip_kind(SeqKind::CsiSgr)
+        .no_strip_osc_type(OscType::Title)
+        .no_strip_osc_type(OscType::Hyperlink);
+
+    let osc8 = real_world_osc8();
+    group.throughput(Throughput::Bytes(osc8.len() as u64));
+
+    group.bench_with_input(
+        BenchmarkId::new("osc_preserve", osc8.len()),
+        &osc8,
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_osc_preserve));
+        },
+    );
+
+    // Sanitize preset (full detail path).
+    let config_sanitize = strip_ansi::TerminalPreset::Sanitize.to_filter_config();
+    group.throughput(Throughput::Bytes(cargo.len() as u64));
+
+    group.bench_with_input(
+        BenchmarkId::new("sanitize_preset", cargo.len()),
+        &cargo,
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_sanitize));
+        },
+    );
+
+    group.finish();
+}
+
+fn bench_check_threats(c: &mut Criterion) {
+    use strip_ansi::{ClassifyingParser, SeqAction, SeqKind};
+
+    let mut group = c.benchmark_group("check_threats");
+
+    // 12.3: Threat scanning throughput.
+    // Build input with embedded threats.
+    let mut threat_input = Vec::new();
+    for _ in 0..100 {
+        threat_input.extend_from_slice(
+            b"\x1b[0m\x1b[1m\x1b[32m   Compiling\x1b[0m memchr v2.7.1\n",
+        );
+    }
+    // Inject a few threats.
+    threat_input.extend_from_slice(b"\x1b[21t"); // CSI 21t
+    threat_input.extend_from_slice(b"\x1b]50;?\x07"); // OSC 50
+    threat_input.extend_from_slice(b"\x1bP$qm\x1b\\"); // DECRQSS
+
+    group.throughput(Throughput::Bytes(threat_input.len() as u64));
+
+    // Scan-only (no filtering, just classify + match).
+    group.bench_with_input(
+        BenchmarkId::new("scan_only", threat_input.len()),
+        &threat_input,
+        |b, input| {
+            b.iter(|| {
+                let mut cp = ClassifyingParser::new();
+                let mut threats = 0u32;
+                for &byte in black_box(input) {
+                    if cp.feed(byte) == SeqAction::EndSeq {
+                        let d = cp.detail();
+                        if matches!(
+                            d.kind,
+                            SeqKind::Dcs | SeqKind::CsiQuery
+                        ) || (d.kind == SeqKind::Osc && d.osc_number == 50)
+                        {
+                            threats += 1;
+                        }
+                    }
+                }
+                threats
+            });
+        },
+    );
+
+    // Clean input (no threats) — measures overhead of scanning.
+    let clean_cargo = real_world_cargo();
+    group.throughput(Throughput::Bytes(clean_cargo.len() as u64));
+
+    group.bench_with_input(
+        BenchmarkId::new("scan_clean", clean_cargo.len()),
+        &clean_cargo,
+        |b, input| {
+            b.iter(|| {
+                let mut cp = ClassifyingParser::new();
+                let mut threats = 0u32;
+                for &byte in black_box(input) {
+                    if cp.feed(byte) == SeqAction::EndSeq {
+                        let d = cp.detail();
+                        if matches!(
+                            d.kind,
+                            SeqKind::Dcs | SeqKind::CsiQuery
+                        ) || (d.kind == SeqKind::Osc && d.osc_number == 50)
+                        {
+                            threats += 1;
+                        }
+                    }
+                }
+                threats
+            });
+        },
+    );
+
+    group.finish();
+}

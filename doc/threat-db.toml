@@ -1,0 +1,16 @@
+# Reference threat database for strip-ansi --threat-db
+#
+# Built-in threats are compiled into the binary and cannot be
+# overridden. This file is for ADDING new threat patterns.
+# Entries with the same "type" as a built-in are rejected.
+
+# Example: add a custom threat pattern
+# [[threats]]
+# type = "custom_osc_999"
+# cve = "CVE-2024-XXXXX"
+# description = "Custom OSC 999 threat"
+# ref = "https://example.com/advisory"
+#
+# [threats.match]
+# kind = "Osc"
+# osc_number = 999

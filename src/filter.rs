@@ -28,7 +28,7 @@ use alloc::vec::Vec;
 use memchr::memchr;
 use smallvec::SmallVec;
 
-use crate::classifier::{ClassifyingParser, SeqAction, SeqKind, SeqGroup};
+use crate::classifier::{ClassifyingParser, OscType, SeqAction, SeqGroup, SeqKind, SgrContent};
 use crate::strip::strip;
 
 /// All group bits set (bits 0..8 inclusive).
@@ -60,6 +60,14 @@ pub struct FilterConfig {
     preserved: u16,
     /// Sub-kind-level preservation overrides.
     sub_preserved: SmallVec<[SeqKind; 4]>,
+    /// SGR content mask: preserve a CsiSgr sequence when
+    /// `(detail.sgr_content & sgr_preserve_mask) != 0`.
+    /// `SgrContent::empty()` (= 0) means fall through to `should_strip(kind)`.
+    sgr_preserve_mask: SgrContent,
+    /// OSC type preserve list: preserve an OSC sequence when its
+    /// `osc_type` is in this list.
+    /// Empty means fall through to `should_strip(kind)`.
+    osc_preserve: SmallVec<[OscType; 2]>,
 }
 
 impl FilterConfig {
@@ -71,6 +79,8 @@ impl FilterConfig {
             mode: FilterMode::StripAll,
             preserved: 0,
             sub_preserved: SmallVec::new(),
+            sgr_preserve_mask: SgrContent::empty(),
+            osc_preserve: SmallVec::new(),
         }
     }
 
@@ -83,6 +93,8 @@ impl FilterConfig {
             mode: FilterMode::StripExcept,
             preserved: ALL_GROUPS,
             sub_preserved: SmallVec::new(),
+            sgr_preserve_mask: SgrContent::empty(),
+            osc_preserve: SmallVec::new(),
         }
     }
 
@@ -100,16 +112,47 @@ impl FilterConfig {
 
     /// Preserve a specific sequence sub-kind (e.g. `CsiSgr` only).
     ///
-    /// Switches mode to [`FilterMode::StripExcept`], sets the group
-    /// bit for the kind's parent group, and adds the kind to the
-    /// sub-preserved list.
+    /// Switches mode to [`FilterMode::StripExcept`] and adds the kind
+    /// to the sub-preserved list. Unlike [`no_strip_group`], this does
+    /// NOT set the parent group bit — only the exact kind is preserved.
     #[inline]
     #[must_use]
     pub fn no_strip_kind(mut self, kind: SeqKind) -> Self {
         self.mode = FilterMode::StripExcept;
-        self.preserved |= 1 << (kind.group() as u16);
         if !self.sub_preserved.contains(&kind) {
             self.sub_preserved.push(kind);
+        }
+        self
+    }
+
+    /// Set the SGR content preserve mask.
+    ///
+    /// A `CsiSgr` sequence is preserved when
+    /// `(detail.sgr_content & mask) != 0` (i.e. the sequence contains
+    /// at least one of the requested color depths).
+    ///
+    /// `SgrContent::empty()` (the default) disables SGR-level filtering
+    /// and falls through to the existing `should_strip(kind)` logic.
+    #[inline]
+    #[must_use]
+    pub fn with_sgr_mask(mut self, mask: SgrContent) -> Self {
+        self.sgr_preserve_mask = mask;
+        self
+    }
+
+    /// Preserve OSC sequences whose `osc_type` matches `osc_type`.
+    ///
+    /// Adds `osc_type` to the OSC preserve list. An OSC sequence is
+    /// preserved when its classified type is in this list.
+    ///
+    /// An empty list (the default) disables OSC-level filtering and
+    /// falls through to the existing `should_strip(kind)` logic.
+    #[inline]
+    #[must_use]
+    pub fn no_strip_osc_type(mut self, osc_type: OscType) -> Self {
+        self.mode = FilterMode::StripExcept;
+        if !self.osc_preserve.contains(&osc_type) {
+            self.osc_preserve.push(osc_type);
         }
         self
     }
@@ -150,6 +193,45 @@ impl FilterConfig {
     #[must_use]
     pub fn is_pass_all(&self) -> bool {
         self.mode == FilterMode::StripExcept && self.preserved == ALL_GROUPS
+    }
+
+    /// Returns `true` when SGR mask or OSC preserve list are non-empty,
+    /// meaning `should_strip_detail` may differ from `should_strip(kind)`.
+    #[inline]
+    #[must_use]
+    fn has_detail_filters(&self) -> bool {
+        !self.sgr_preserve_mask.is_empty() || !self.osc_preserve.is_empty()
+    }
+
+    /// Extended strip decision using full [`SeqDetail`].
+    ///
+    /// Fast-path: when `sgr_preserve_mask` is empty AND `osc_preserve`
+    /// is empty, this is identical to `should_strip(detail.kind)` with
+    /// zero added branches.
+    ///
+    /// Algorithm:
+    /// - `StripAll` → `true`
+    /// - `kind == CsiSgr` AND `sgr_preserve_mask` non-empty →
+    ///   strip when `(sgr_content & sgr_preserve_mask).is_empty()`
+    /// - `kind.group() == Osc` AND `osc_preserve` non-empty →
+    ///   strip when `osc_type` is NOT in `osc_preserve`
+    /// - Otherwise → fall through to `should_strip(kind)`
+    #[inline]
+    #[must_use]
+    pub fn should_strip_detail(&self, detail: &crate::classifier::SeqDetail) -> bool {
+        if self.mode == FilterMode::StripAll {
+            return true;
+        }
+        // SGR mask check (only when mask is non-empty and kind is CsiSgr).
+        if detail.kind == SeqKind::CsiSgr && !self.sgr_preserve_mask.is_empty() {
+            return (detail.sgr_content.0 & self.sgr_preserve_mask.0) == 0;
+        }
+        // OSC preserve list check (only when list is non-empty and kind is Osc).
+        if detail.kind.group() == SeqGroup::Osc && !self.osc_preserve.is_empty() {
+            return !self.osc_preserve.contains(&detail.osc_type);
+        }
+        // Fall through to existing kind-level decision.
+        self.should_strip(detail.kind)
     }
 }
 
@@ -215,6 +297,25 @@ pub fn filter_strip_str<'a>(input: &'a str, config: &FilterConfig) -> Cow<'a, st
     }
 }
 
+/// Fallible variant of [`filter_strip_str`].
+///
+/// Returns `None` if the filtered output is not valid UTF-8.
+/// In practice this cannot happen (filtering only removes complete
+/// escape sequence bytes, all ≤ 0x7E, never UTF-8 continuation
+/// bytes), but this variant avoids the `expect` panic path for
+/// defensive consumers.
+#[inline]
+#[must_use]
+pub fn try_filter_strip_str<'a>(input: &'a str, config: &FilterConfig) -> Option<Cow<'a, str>> {
+    match filter_strip(input.as_bytes(), config) {
+        Cow::Borrowed(b) => {
+            let start = b.as_ptr() as usize - input.as_ptr() as usize;
+            Some(Cow::Borrowed(&input[start..start + b.len()]))
+        }
+        Cow::Owned(v) => String::from_utf8(v).ok().map(Cow::Owned),
+    }
+}
+
 /// Strip ANSI escape sequences from a byte slice, appending to `out`.
 ///
 /// Does not clear `out` first. Fast paths delegate to borrowed returns
@@ -254,6 +355,7 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
     let mut seq_buf: [u8; 16] = [0; 16];
     let mut seq_buf_len: usize = 0;
     let mut seq_spill: Vec<u8> = Vec::new();
+    let mut in_seq = false;
     let mut remaining = input;
 
     while !remaining.is_empty() {
@@ -274,9 +376,11 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
             match action {
                 SeqAction::StartSeq => {
                     strip_current = true; // tentative until kind is known
+                    in_seq = true;
                     seq_buf_len = 0;
                     seq_buf[0] = remaining[i];
                     seq_buf_len = 1;
+                    seq_spill.clear();
                 }
                 SeqAction::InSeq => {
                     if cp.current_kind() != SeqKind::Unknown {
@@ -290,7 +394,13 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
                     }
                 }
                 SeqAction::EndSeq => {
-                    strip_current = config.should_strip(cp.current_kind());
+                    in_seq = false;
+                    strip_current = if config.has_detail_filters() {
+                        let detail = cp.detail();
+                        config.should_strip_detail(&detail)
+                    } else {
+                        config.should_strip(cp.current_kind())
+                    };
                     if !strip_current {
                         output.extend_from_slice(&seq_buf[..seq_buf_len]);
                         if !seq_spill.is_empty() {
@@ -304,7 +414,18 @@ fn filter_strip_core(input: &[u8], config: &FilterConfig, output: &mut Vec<u8>) 
                     break;
                 }
                 SeqAction::Emit => {
-                    output.push(remaining[i]);
+                    // CAN (0x18) / SUB (0x1A) abort bytes are emitted
+                    // by ClassifyingParser but should be suppressed to
+                    // match the strip() behavior (Parser skips them).
+                    // Only suppress when aborting a sequence (in_seq),
+                    // not when they appear as content in ground state.
+                    let b = remaining[i];
+                    if in_seq && (b == 0x18 || b == 0x1A) {
+                        // Abort byte — suppress it.
+                    } else {
+                        output.push(b);
+                    }
+                    in_seq = false;
                 }
             }
 
@@ -462,7 +583,15 @@ impl<'a> Iterator for FilterSlices<'a, '_> {
                     }
                     SeqAction::Emit => {
                         // Content byte emitted mid-sequence (abort).
-                        self.remaining = &self.remaining[i - 1..];
+                        // CAN/SUB abort bytes should be skipped to
+                        // match strip() behavior. Non-CAN/SUB bytes
+                        // are content that should be yielded.
+                        let byte = self.remaining[i - 1];
+                        if byte == 0x18 || byte == 0x1A {
+                            self.remaining = &self.remaining[i..];
+                        } else {
+                            self.remaining = &self.remaining[i - 1..];
+                        }
                         return self.next_ground();
                     }
                     SeqAction::InSeq => {
@@ -528,8 +657,12 @@ impl<'a> FilterSlices<'a, '_> {
                                 }
                             }
                             SeqAction::EndSeq => {
-                                *self.strip_current =
-                                    self.config.should_strip(self.cp.current_kind());
+                                *self.strip_current = if self.config.has_detail_filters() {
+                                    let detail = self.cp.detail();
+                                    self.config.should_strip_detail(&detail)
+                                } else {
+                                    self.config.should_strip(self.cp.current_kind())
+                                };
                                 if !*self.strip_current {
                                     // Preserve: yield the full sequence.
                                     let seq_slice = &seq_start[..i];
@@ -542,9 +675,14 @@ impl<'a> FilterSlices<'a, '_> {
                             }
                             SeqAction::Emit => {
                                 // Content byte emitted mid-sequence
-                                // (e.g. CAN/SUB abort). Yield it via
-                                // next_ground on the remaining slice.
-                                self.remaining = &self.remaining[i - 1..];
+                                // (e.g. CAN/SUB abort). CAN/SUB bytes
+                                // are skipped to match strip() behavior.
+                                let byte = self.remaining[i - 1];
+                                if byte == 0x18 || byte == 0x1A {
+                                    self.remaining = &self.remaining[i..];
+                                } else {
+                                    self.remaining = &self.remaining[i - 1..];
+                                }
                                 break;
                             }
                         }

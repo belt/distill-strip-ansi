@@ -14,8 +14,9 @@ use std::path::Path;
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::classifier::{SeqGroup, SeqKind};
+use crate::classifier::{OscType, SeqGroup, SeqKind, SgrContent};
 use crate::filter::FilterConfig;
+use crate::preset::TerminalPreset;
 
 // ── Errors ──────────────────────────────────────────────────────────
 
@@ -59,6 +60,10 @@ pub struct GeneralConfig {
     /// Operating mode: `"strip"` or `"check"`.
     #[serde(default)]
     pub mode: Option<String>,
+
+    /// Allow presets above sanitize (xterm, full). Default: false.
+    #[serde(default, rename = "unsafe")]
+    pub unsafe_mode: bool,
 }
 
 fn default_buffer_size() -> usize {
@@ -70,6 +75,7 @@ impl Default for GeneralConfig {
         Self {
             buffer_size: default_buffer_size(),
             mode: None,
+            unsafe_mode: false,
         }
     }
 }
@@ -80,6 +86,15 @@ pub struct FilterToml {
     /// Names of groups or sub-kinds to preserve (not strip).
     #[serde(default)]
     pub no_strip: Vec<String>,
+
+    /// Preset name (overrides no_strip when present).
+    #[serde(default)]
+    pub preset: Option<String>,
+
+    /// SGR color depth: `"16"`, `"256"`, `"truecolor"`, or `"all"`.
+    /// Maps to an [`SgrContent`] preserve mask.
+    #[serde(default)]
+    pub sgr_depth: Option<String>,
 }
 
 // ── Parsing ─────────────────────────────────────────────────────────
@@ -114,12 +129,34 @@ impl StripAnsiConfig {
             )));
         }
 
+        // If a preset is specified, resolve it and validate the unsafe gate.
+        if let Some(ref name) = self.filter.preset {
+            let preset = TerminalPreset::from_name(name).ok_or_else(|| {
+                ConfigError::Validation(format!("unknown preset: {name:?}"))
+            })?;
+            if preset.requires_unsafe() && !self.general.unsafe_mode {
+                return Err(ConfigError::Validation(format!(
+                    "--preset {} preserves dangerous sequences (OSC 50, CSI 21t). \
+                     Set unsafe = true in [general] to acknowledge the risk.",
+                    preset.name(),
+                )));
+            }
+            return Ok(preset.to_filter_config());
+        }
+
         // Empty no_strip → strip all.
-        if self.filter.no_strip.is_empty() {
+        if self.filter.no_strip.is_empty() && self.filter.sgr_depth.is_none() {
             return Ok(FilterConfig::strip_all());
         }
 
         let mut config = FilterConfig::strip_all();
+
+        // Apply sgr_depth mask if specified.
+        if let Some(ref depth) = self.filter.sgr_depth {
+            let mask = parse_sgr_depth(depth)?;
+            config = config.with_sgr_mask(mask);
+        }
+
         for name in &self.filter.no_strip {
             match parse_filter_name(name)? {
                 FilterName::Group(g) => {
@@ -127,6 +164,9 @@ impl StripAnsiConfig {
                 }
                 FilterName::Kind(k) => {
                     config = config.no_strip_kind(k);
+                }
+                FilterName::OscType(t) => {
+                    config = config.no_strip_osc_type(t);
                 }
             }
         }
@@ -138,13 +178,14 @@ impl StripAnsiConfig {
 
 // ── Name resolution ─────────────────────────────────────────────────
 
-/// Resolved filter name: either a group or a specific sub-kind.
+/// Resolved filter name: group, sub-kind, or OSC type.
 enum FilterName {
     Group(SeqGroup),
     Kind(SeqKind),
+    OscType(OscType),
 }
 
-/// Parse a snake_case filter name into a group or sub-kind.
+/// Parse a snake_case filter name into a group, sub-kind, or OSC type.
 fn parse_filter_name(name: &str) -> Result<FilterName, ConfigError> {
     match name {
         // Group names
@@ -168,8 +209,29 @@ fn parse_filter_name(name: &str) -> Result<FilterName, ConfigError> {
         "csi_window" => Ok(FilterName::Kind(SeqKind::CsiWindow)),
         "csi_other" => Ok(FilterName::Kind(SeqKind::CsiOther)),
 
+        // OSC sub-type names
+        "osc_title" => Ok(FilterName::OscType(OscType::Title)),
+        "osc_hyperlink" => Ok(FilterName::OscType(OscType::Hyperlink)),
+        "osc_clipboard" => Ok(FilterName::OscType(OscType::Clipboard)),
+        "osc_notify" => Ok(FilterName::OscType(OscType::Notify)),
+        "osc_shell_integration" => Ok(FilterName::OscType(OscType::ShellInteg)),
+        "osc_other" => Ok(FilterName::OscType(OscType::Other)),
+
         _ => Err(ConfigError::Validation(format!(
             "unknown filter name: {name:?}"
+        ))),
+    }
+}
+
+/// Parse an `sgr_depth` string into an [`SgrContent`] mask.
+fn parse_sgr_depth(depth: &str) -> Result<SgrContent, ConfigError> {
+    match depth {
+        "16" => Ok(SgrContent::BASIC),
+        "256" => Ok(SgrContent::BASIC | SgrContent::EXTENDED),
+        "truecolor" => Ok(SgrContent::BASIC | SgrContent::EXTENDED | SgrContent::TRUECOLOR),
+        "all" => Ok(SgrContent::BASIC | SgrContent::EXTENDED | SgrContent::TRUECOLOR),
+        _ => Err(ConfigError::Validation(format!(
+            "unknown sgr_depth: {depth:?} (expected \"16\", \"256\", \"truecolor\", or \"all\")"
         ))),
     }
 }
@@ -318,9 +380,8 @@ no_strip = ["csi_sgr", "osc"]
         let fc = config.to_filter_config().unwrap();
         assert!(!fc.should_strip(SeqKind::CsiSgr));
         assert!(!fc.should_strip(SeqKind::Osc));
-        // CsiCursor is also preserved because no_strip_kind(CsiSgr)
-        // sets the CSI group bit, preserving all CSI sub-kinds.
-        assert!(!fc.should_strip(SeqKind::CsiCursor));
+        // no_strip_kind(CsiSgr) preserves only SGR, not all CSI.
+        assert!(fc.should_strip(SeqKind::CsiCursor));
         assert!(fc.should_strip(SeqKind::Dcs));
     }
 
@@ -357,5 +418,172 @@ no_strip = ["csi_sgr", "osc"]
                 "sub-kind name {name:?} should be valid"
             );
         }
+    }
+
+    #[test]
+    fn all_osc_type_names_valid() {
+        for name in &[
+            "osc_title",
+            "osc_hyperlink",
+            "osc_clipboard",
+            "osc_notify",
+            "osc_shell_integration",
+            "osc_other",
+        ] {
+            assert!(
+                parse_filter_name(name).is_ok(),
+                "OSC type name {name:?} should be valid"
+            );
+        }
+    }
+
+    #[test]
+    fn osc_title_in_no_strip_preserves_osc_title() {
+        let toml = r#"
+[filter]
+no_strip = ["osc_title", "osc_hyperlink"]
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        // OSC types are preserved via osc_preserve, not group-level.
+        // The filter should not strip-all since we have osc types.
+        assert!(!fc.is_strip_all());
+    }
+
+    #[test]
+    fn sgr_depth_16() {
+        let toml = r#"
+[filter]
+no_strip = ["csi_sgr"]
+sgr_depth = "16"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(!fc.is_strip_all());
+    }
+
+    #[test]
+    fn sgr_depth_256() {
+        let toml = r#"
+[filter]
+no_strip = ["csi_sgr"]
+sgr_depth = "256"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(!fc.is_strip_all());
+    }
+
+    #[test]
+    fn sgr_depth_truecolor() {
+        let toml = r#"
+[filter]
+no_strip = ["csi_sgr"]
+sgr_depth = "truecolor"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(!fc.is_strip_all());
+    }
+
+    #[test]
+    fn sgr_depth_all() {
+        let toml = r#"
+[filter]
+no_strip = ["csi_sgr"]
+sgr_depth = "all"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(!fc.is_strip_all());
+    }
+
+    #[test]
+    fn sgr_depth_invalid() {
+        let toml = r#"
+[filter]
+sgr_depth = "bogus"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let err = config.to_filter_config().unwrap_err();
+        assert!(matches!(err, ConfigError::Validation(_)));
+        assert!(err.to_string().contains("bogus"));
+    }
+
+    #[test]
+    fn preset_sanitize() {
+        let toml = r#"
+[filter]
+preset = "sanitize"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(!fc.should_strip(SeqKind::CsiSgr));
+        assert!(fc.should_strip(SeqKind::Dcs));
+    }
+
+    #[test]
+    fn preset_xterm_without_unsafe_errors() {
+        let toml = r#"
+[filter]
+preset = "xterm"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let err = config.to_filter_config().unwrap_err();
+        assert!(matches!(err, ConfigError::Validation(_)));
+        assert!(err.to_string().contains("unsafe"));
+    }
+
+    #[test]
+    fn preset_xterm_with_unsafe_ok() {
+        let toml = r#"
+[general]
+unsafe = true
+
+[filter]
+preset = "xterm"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(!fc.should_strip(SeqKind::CsiSgr));
+        assert!(!fc.should_strip(SeqKind::Osc));
+    }
+
+    #[test]
+    fn preset_unknown_errors() {
+        let toml = r#"
+[filter]
+preset = "bogus"
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let err = config.to_filter_config().unwrap_err();
+        assert!(matches!(err, ConfigError::Validation(_)));
+        assert!(err.to_string().contains("bogus"));
+    }
+
+    #[test]
+    fn preset_overrides_no_strip() {
+        // When preset is set, no_strip is ignored.
+        let toml = r#"
+[filter]
+preset = "dumb"
+no_strip = ["csi_sgr", "osc"]
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(fc.is_strip_all());
+    }
+
+    #[test]
+    fn backward_compat_no_sgr_depth_no_preset() {
+        // Existing configs without sgr_depth/preset still work.
+        let toml = r#"
+[filter]
+no_strip = ["csi_sgr"]
+"#;
+        let config = StripAnsiConfig::from_str(toml).unwrap();
+        let fc = config.to_filter_config().unwrap();
+        assert!(!fc.should_strip(SeqKind::CsiSgr));
+        assert!(fc.should_strip(SeqKind::Dcs));
     }
 }

@@ -99,6 +99,24 @@ pub fn strip_str(input: &str) -> Cow<'_, str> {
     }
 }
 
+/// Fallible variant of [`strip_str`].
+///
+/// Returns `None` if the stripped output is not valid UTF-8.
+/// In practice this cannot happen (stripping only removes complete
+/// escape sequence bytes, all ≤ 0x7E, never UTF-8 continuation
+/// bytes), but this variant avoids the `expect` panic path for
+/// defensive consumers.
+#[must_use]
+pub fn try_strip_str(input: &str) -> Option<Cow<'_, str>> {
+    match strip(input.as_bytes()) {
+        Cow::Borrowed(b) => {
+            let start = b.as_ptr() as usize - input.as_ptr() as usize;
+            Some(Cow::Borrowed(&input[start..start + b.len()]))
+        }
+        Cow::Owned(v) => String::from_utf8(v).ok().map(Cow::Owned),
+    }
+}
+
 /// Strip ANSI escape sequences into a caller-provided buffer.
 ///
 /// Appends stripped content to `out`. Does not clear `out` first.
@@ -186,6 +204,31 @@ pub fn contains_ansi(input: &[u8]) -> bool {
         remaining = &remaining[pos + 1..];
     }
     false
+}
+
+/// Check whether a byte slice contains ANSI escape sequences,
+/// including 8-bit C1 control codes (0x80–0x9F).
+///
+/// Unlike [`contains_ansi`], this also detects raw C1 introducers
+/// (`0x9B` = CSI, `0x9D` = OSC, `0x90` = DCS, etc.) used in
+/// legacy 8-bit encodings. These collide with valid UTF-8 lead
+/// bytes, so this function will false-positive on UTF-8 input
+/// containing characters in the U+0080–U+009F range (rare but
+/// possible in Latin-1 or Windows-1252 encoded streams).
+///
+/// Use [`contains_ansi`] for UTF-8 streams (the common case).
+/// Use this function for binary or known-8-bit-encoded streams
+/// where C1 bypass attacks are a concern.
+#[must_use]
+pub fn contains_ansi_c1(input: &[u8]) -> bool {
+    // Check 7-bit forms first.
+    if contains_ansi(input) {
+        return true;
+    }
+    // Check 8-bit C1 control codes.
+    // CSI=0x9B, OSC=0x9D, DCS=0x90, SOS=0x98, PM=0x9E, APC=0x9F
+    const C1_CODES: [u8; 6] = [0x9B, 0x9D, 0x90, 0x98, 0x9E, 0x9F];
+    input.iter().any(|b| C1_CODES.contains(b))
 }
 
 // --- Drop-in compatibility aliases ---
