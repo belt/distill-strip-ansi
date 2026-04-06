@@ -6,8 +6,8 @@ use std::collections::HashSet;
 use std::hint::black_box;
 
 use crate::{
-    BenchConfig, CacheInfo, CapturePoint, FlushParams, InputSource, ResourceTracker,
-    clean_input, flush_resources, fmt_bytes, load_fixture, select_input,
+    BenchConfig, CacheInfo, CapturePoint, FlushParams, InputSource, ResourceTracker, clean_input,
+    flush_resources, fmt_bytes, load_fixture, select_input,
 };
 
 /// Parameters for a crate strip benchmark.
@@ -34,14 +34,19 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
     eprintln!(
         "[{}] Cache: L1d={}  L2={}  L3={}  RAM={}",
         bench.crate_name,
-        fmt_bytes(cache.l1d), fmt_bytes(cache.l2),
-        fmt_bytes(cache.l3), fmt_bytes(cache.ram),
+        fmt_bytes(cache.l1d),
+        fmt_bytes(cache.l2),
+        fmt_bytes(cache.l3),
+        fmt_bytes(cache.ram),
     );
     eprintln!(
         "[{}] Sizes ({}): {:?}",
         bench.crate_name,
         sizes.len(),
-        sizes.iter().map(|&s| fmt_bytes(s as u64)).collect::<Vec<_>>(),
+        sizes
+            .iter()
+            .map(|&s| fmt_bytes(s as u64))
+            .collect::<Vec<_>>(),
     );
 
     let mut group = c.benchmark_group("ecosystem");
@@ -73,10 +78,7 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
             // Also deduplicate the generated fallback.
             let fb_key = (fb_label.clone(), fallback.len());
             if !seen_ids.insert(fb_key) {
-                eprintln!(
-                    "  {}: skipped (duplicate)",
-                    fmt_bytes(target_size as u64),
-                );
+                eprintln!("  {}: skipped (duplicate)", fmt_bytes(target_size as u64),);
                 continue;
             }
             (fallback, fb_meta, fb_label)
@@ -93,16 +95,20 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
 
         group.throughput(Throughput::Bytes(actual_size as u64));
 
-        let point = CapturePoint { crate_name: bench.crate_name, size: actual_size };
+        let point = CapturePoint {
+            crate_name: bench.crate_name,
+            size: actual_size,
+        };
         tracker.before(point);
 
-        group.bench_with_input(
-            BenchmarkId::new(&label, actual_size),
-            &input,
-            |b, inp| { b.iter(|| (bench.strip_fn)(black_box(inp))); },
-        );
+        group.bench_with_input(BenchmarkId::new(&label, actual_size), &input, |b, inp| {
+            b.iter(|| (bench.strip_fn)(black_box(inp)));
+        });
 
-        let point = CapturePoint { crate_name: bench.crate_name, size: actual_size };
+        let point = CapturePoint {
+            crate_name: bench.crate_name,
+            size: actual_size,
+        };
         tracker.after(point);
     }
 
@@ -115,7 +121,9 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
         group.bench_with_input(
             BenchmarkId::new(format!("{}_clean", bench.bench_id), size),
             &input,
-            |b, inp| { b.iter(|| (bench.strip_fn)(black_box(inp))); },
+            |b, inp| {
+                b.iter(|| (bench.strip_fn)(black_box(inp)));
+            },
         );
     }
 
@@ -146,16 +154,24 @@ fn bench_fixture(
     let size = input.len();
     group.throughput(Throughput::Bytes(size as u64));
 
-    let point = CapturePoint { crate_name: bench.crate_name, size };
+    let point = CapturePoint {
+        crate_name: bench.crate_name,
+        size,
+    };
     tracker.before(point);
 
     group.bench_with_input(
         BenchmarkId::new(format!("{}_{}", bench.bench_id, label), size),
         input,
-        |b, inp| { b.iter(|| (bench.strip_fn)(black_box(inp))); },
+        |b, inp| {
+            b.iter(|| (bench.strip_fn)(black_box(inp)));
+        },
     );
 
-    let point = CapturePoint { crate_name: bench.crate_name, size };
+    let point = CapturePoint {
+        crate_name: bench.crate_name,
+        size,
+    };
     tracker.after(point);
 }
 

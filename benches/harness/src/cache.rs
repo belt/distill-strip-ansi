@@ -184,10 +184,22 @@ mod tests {
         let cache = test_cache();
         let sizes = cache.build_sizes(128 * 1024 * 1024); // 128M
         // Should have L3*2=24M, L3*4=48M, L3*8=96M, plus 128M
-        assert!(sizes.contains(&(24 * 1024 * 1024)), "24M missing: {sizes:?}");
-        assert!(sizes.contains(&(48 * 1024 * 1024)), "48M missing: {sizes:?}");
-        assert!(sizes.contains(&(96 * 1024 * 1024)), "96M missing: {sizes:?}");
-        assert!(sizes.contains(&(128 * 1024 * 1024)), "128M missing: {sizes:?}");
+        assert!(
+            sizes.contains(&(24 * 1024 * 1024)),
+            "24M missing: {sizes:?}"
+        );
+        assert!(
+            sizes.contains(&(48 * 1024 * 1024)),
+            "48M missing: {sizes:?}"
+        );
+        assert!(
+            sizes.contains(&(96 * 1024 * 1024)),
+            "96M missing: {sizes:?}"
+        );
+        assert!(
+            sizes.contains(&(128 * 1024 * 1024)),
+            "128M missing: {sizes:?}"
+        );
     }
 
     #[test]
@@ -204,6 +216,9 @@ mod tests {
         let cache = test_cache();
         let sizes = cache.build_sizes(usize::MAX);
         // Should NOT contain usize::MAX as a size entry
-        assert!(!sizes.contains(&usize::MAX), "usize::MAX should not be a size");
+        assert!(
+            !sizes.contains(&usize::MAX),
+            "usize::MAX should not be a size"
+        );
     }
 }

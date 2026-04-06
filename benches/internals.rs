@@ -1,10 +1,10 @@
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use distill_bench_harness::{
+    BenchConfig, CacheInfo, CapturePoint, FlushParams, ResourceTracker, clean_input, dirty_input,
+    flush_resources,
+};
 use std::hint::black_box;
 use std::sync::OnceLock;
-use distill_bench_harness::{
-    BenchConfig, CacheInfo, CapturePoint, FlushParams, ResourceTracker,
-    clean_input, dirty_input, flush_resources,
-};
 
 // ── Shared resource tracker (spans all benchmark functions) ─────────
 
@@ -14,7 +14,10 @@ fn tracker() -> &'static ResourceTracker {
 }
 
 fn capture(name: &str, size: usize) -> CapturePoint<'_> {
-    CapturePoint { crate_name: name, size }
+    CapturePoint {
+        crate_name: name,
+        size,
+    }
 }
 
 // ── Test data ───────────────────────────────────────────────────────
@@ -30,9 +33,7 @@ fn real_world_cargo() -> Vec<u8> {
 fn real_world_osc8() -> Vec<u8> {
     let mut v = Vec::new();
     for _ in 0..50 {
-        v.extend_from_slice(
-            b"\x1b]8;;https://docs.rs/memchr/2.7.1\x07memchr\x1b]8;;\x07 v2.7.1\n",
-        );
+        v.extend_from_slice(b"\x1b]8;;https://docs.rs/memchr/2.7.1\x07memchr\x1b]8;;\x07 v2.7.1\n");
     }
     v
 }
@@ -62,7 +63,9 @@ fn bench_strip(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("real_cargo", cargo.len()),
         &cargo,
-        |b, input| { b.iter(|| strip_ansi::strip(black_box(input))); },
+        |b, input| {
+            b.iter(|| strip_ansi::strip(black_box(input)));
+        },
     );
 
     let osc8 = real_world_osc8();
@@ -70,7 +73,9 @@ fn bench_strip(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("real_osc8", osc8.len()),
         &osc8,
-        |b, input| { b.iter(|| strip_ansi::strip(black_box(input))); },
+        |b, input| {
+            b.iter(|| strip_ansi::strip(black_box(input)));
+        },
     );
 
     group.finish();
@@ -185,7 +190,9 @@ fn bench_classifier(c: &mut Criterion) {
         |b, input| {
             b.iter(|| {
                 let mut cp = ClassifyingParser::new();
-                for &byte in black_box(input) { let _ = cp.feed(byte); }
+                for &byte in black_box(input) {
+                    let _ = cp.feed(byte);
+                }
             });
         },
     );
@@ -198,7 +205,9 @@ fn bench_classifier(c: &mut Criterion) {
         |b, input| {
             b.iter(|| {
                 let mut cp = ClassifyingParser::new();
-                for &byte in black_box(input) { let _ = cp.feed(byte); }
+                for &byte in black_box(input) {
+                    let _ = cp.feed(byte);
+                }
             });
         },
     );
@@ -242,7 +251,9 @@ fn bench_filter_detail(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("kind_only", cargo.len()),
         &cargo,
-        |b, input| { b.iter(|| filter_strip(black_box(input), &config_kind_only)); },
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_kind_only));
+        },
     );
     t.after(capture("filter_detail/kind_only", cargo.len()));
 
@@ -253,7 +264,9 @@ fn bench_filter_detail(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("sgr_mask", cargo.len()),
         &cargo,
-        |b, input| { b.iter(|| filter_strip(black_box(input), &config_sgr_mask)); },
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_sgr_mask));
+        },
     );
     t.after(capture("filter_detail/sgr_mask", cargo.len()));
 
@@ -267,7 +280,9 @@ fn bench_filter_detail(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("osc_preserve", osc8.len()),
         &osc8,
-        |b, input| { b.iter(|| filter_strip(black_box(input), &config_osc_preserve)); },
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_osc_preserve));
+        },
     );
     t.after(capture("filter_detail/osc_preserve", osc8.len()));
 
@@ -277,7 +292,9 @@ fn bench_filter_detail(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("sanitize_preset", cargo.len()),
         &cargo,
-        |b, input| { b.iter(|| filter_strip(black_box(input), &config_sanitize)); },
+        |b, input| {
+            b.iter(|| filter_strip(black_box(input), &config_sanitize));
+        },
     );
     t.after(capture("filter_detail/sanitize_preset", cargo.len()));
 
@@ -314,7 +331,9 @@ fn bench_check_threats(c: &mut Criterion) {
                         let d = cp.detail();
                         if matches!(d.kind, SeqKind::Dcs | SeqKind::CsiQuery)
                             || (d.kind == SeqKind::Osc && d.osc_number == 50)
-                        { threats += 1; }
+                        {
+                            threats += 1;
+                        }
                     }
                 }
                 threats
@@ -338,7 +357,9 @@ fn bench_check_threats(c: &mut Criterion) {
                         let d = cp.detail();
                         if matches!(d.kind, SeqKind::Dcs | SeqKind::CsiQuery)
                             || (d.kind == SeqKind::Osc && d.osc_number == 50)
-                        { threats += 1; }
+                        {
+                            threats += 1;
+                        }
                     }
                 }
                 threats
@@ -361,8 +382,14 @@ fn bench_transform_pipeline(c: &mut Criterion) {
     let mut truecolor_input = Vec::new();
     for i in 0..100u8 {
         truecolor_input.extend_from_slice(
-            format!("\x1b[38;2;{};{};{}m   Compiling\x1b[0m crate v0.{}.0\n", i, 255 - i, 128, i)
-                .as_bytes(),
+            format!(
+                "\x1b[38;2;{};{};{}m   Compiling\x1b[0m crate v0.{}.0\n",
+                i,
+                255 - i,
+                128,
+                i
+            )
+            .as_bytes(),
         );
     }
     let mut color256_input = Vec::new();
@@ -396,7 +423,11 @@ fn bench_transform_pipeline(c: &mut Criterion) {
     }
 
     bench_xform!("truecolor_to_mono", truecolor_input, ColorDepth::Mono);
-    bench_xform!("truecolor_to_greyscale", truecolor_input, ColorDepth::Greyscale);
+    bench_xform!(
+        "truecolor_to_greyscale",
+        truecolor_input,
+        ColorDepth::Greyscale
+    );
     bench_xform!("truecolor_to_16", truecolor_input, ColorDepth::Color16);
     bench_xform!("truecolor_to_256", truecolor_input, ColorDepth::Color256);
     bench_xform!("256_to_mono", color256_input, ColorDepth::Mono);
@@ -475,7 +506,9 @@ fn unicode_fullwidth_mixed(size: usize) -> Vec<u8> {
             let c = char::from_u32(cp).unwrap_or('Ａ');
             let mut buf = [0u8; 3];
             let s = c.encode_utf8(&mut buf);
-            if v.len() + s.len() <= size { v.extend_from_slice(s.as_bytes()); }
+            if v.len() + s.len() <= size {
+                v.extend_from_slice(s.as_bytes());
+            }
         } else {
             v.push(b'A' + (i % 26) as u8);
         }
@@ -494,7 +527,9 @@ fn unicode_math_bold_mixed(size: usize) -> Vec<u8> {
             let c = char::from_u32(cp).unwrap_or('\u{1D400}');
             let mut buf = [0u8; 4];
             let s = c.encode_utf8(&mut buf);
-            if v.len() + s.len() <= size { v.extend_from_slice(s.as_bytes()); }
+            if v.len() + s.len() <= size {
+                v.extend_from_slice(s.as_bytes());
+            }
         } else {
             v.push(b'A' + (i % 26) as u8);
         }
@@ -549,7 +584,38 @@ fn bench_unicode_normalize(c: &mut Criterion) {
     for size in [1024, 4096, 16384] {
         let mixed = unicode_fullwidth_mixed(size);
         group.throughput(Throughput::Bytes(mixed.len() as u64));
-        group.bench_with_input(BenchmarkId::new("fullwidth_mixed", size), &mixed, |b, input| {
+        group.bench_with_input(
+            BenchmarkId::new("fullwidth_mixed", size),
+            &mixed,
+            |b, input| {
+                b.iter(|| {
+                    let s = std::str::from_utf8(black_box(input)).unwrap();
+                    let mut out = Vec::with_capacity(input.len());
+                    let mut char_buf = Vec::new();
+                    for ch in s.chars() {
+                        char_buf.clear();
+                        if map.lookup_into(ch, &mut char_buf) {
+                            for &tc in &char_buf {
+                                let mut enc = [0u8; 4];
+                                out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes());
+                            }
+                        } else {
+                            let mut enc = [0u8; 4];
+                            out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+                        }
+                    }
+                    out
+                });
+            },
+        );
+    }
+
+    let math = unicode_math_bold_mixed(4096);
+    group.throughput(Throughput::Bytes(math.len() as u64));
+    group.bench_with_input(
+        BenchmarkId::new("math_bold_mixed", math.len()),
+        &math,
+        |b, input| {
             b.iter(|| {
                 let s = std::str::from_utf8(black_box(input)).unwrap();
                 let mut out = Vec::with_capacity(input.len());
@@ -557,64 +623,69 @@ fn bench_unicode_normalize(c: &mut Criterion) {
                 for ch in s.chars() {
                     char_buf.clear();
                     if map.lookup_into(ch, &mut char_buf) {
-                        for &tc in &char_buf { let mut enc = [0u8; 4]; out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes()); }
+                        for &tc in &char_buf {
+                            let mut enc = [0u8; 4];
+                            out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes());
+                        }
                     } else {
-                        let mut enc = [0u8; 4]; out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+                        let mut enc = [0u8; 4];
+                        out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
                     }
                 }
                 out
             });
-        });
-    }
-
-    let math = unicode_math_bold_mixed(4096);
-    group.throughput(Throughput::Bytes(math.len() as u64));
-    group.bench_with_input(BenchmarkId::new("math_bold_mixed", math.len()), &math, |b, input| {
-        b.iter(|| {
-            let s = std::str::from_utf8(black_box(input)).unwrap();
-            let mut out = Vec::with_capacity(input.len());
-            let mut char_buf = Vec::new();
-            for ch in s.chars() {
-                char_buf.clear();
-                if map.lookup_into(ch, &mut char_buf) {
-                    for &tc in &char_buf { let mut enc = [0u8; 4]; out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes()); }
-                } else {
-                    let mut enc = [0u8; 4]; out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
-                }
-            }
-            out
-        });
-    });
+        },
+    );
 
     let real = unicode_real_world();
     group.throughput(Throughput::Bytes(real.len() as u64));
     t.before(capture("unicode_normalize/real_world_cargo", real.len()));
-    group.bench_with_input(BenchmarkId::new("real_world_cargo", real.len()), &real, |b, input| {
-        b.iter(|| {
-            let s = std::str::from_utf8(black_box(input)).unwrap();
-            let mut out = Vec::with_capacity(input.len());
-            let mut char_buf = Vec::new();
-            for ch in s.chars() {
-                char_buf.clear();
-                if map.lookup_into(ch, &mut char_buf) {
-                    for &tc in &char_buf { let mut enc = [0u8; 4]; out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes()); }
-                } else {
-                    let mut enc = [0u8; 4]; out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+    group.bench_with_input(
+        BenchmarkId::new("real_world_cargo", real.len()),
+        &real,
+        |b, input| {
+            b.iter(|| {
+                let s = std::str::from_utf8(black_box(input)).unwrap();
+                let mut out = Vec::with_capacity(input.len());
+                let mut char_buf = Vec::new();
+                for ch in s.chars() {
+                    char_buf.clear();
+                    if map.lookup_into(ch, &mut char_buf) {
+                        for &tc in &char_buf {
+                            let mut enc = [0u8; 4];
+                            out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes());
+                        }
+                    } else {
+                        let mut enc = [0u8; 4];
+                        out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+                    }
                 }
-            }
-            out
-        });
-    });
+                out
+            });
+        },
+    );
     t.after(capture("unicode_normalize/real_world_cargo", real.len()));
 
-    let fullwidth_chars: Vec<char> = (0xFF01..=0xFF5Eu32).map(|cp| char::from_u32(cp).unwrap()).collect();
+    let fullwidth_chars: Vec<char> = (0xFF01..=0xFF5Eu32)
+        .map(|cp| char::from_u32(cp).unwrap())
+        .collect();
     group.bench_function("lookup_fullwidth_94", |b| {
-        b.iter(|| { for &c in black_box(&fullwidth_chars) { let _ = black_box(map.lookup_char(c)); } });
+        b.iter(|| {
+            for &c in black_box(&fullwidth_chars) {
+                let _ = black_box(map.lookup_char(c));
+            }
+        });
     });
 
-    let ascii_chars: Vec<char> = (0x20..=0x7Eu32).map(|cp| char::from_u32(cp).unwrap()).collect();
+    let ascii_chars: Vec<char> = (0x20..=0x7Eu32)
+        .map(|cp| char::from_u32(cp).unwrap())
+        .collect();
     group.bench_function("lookup_ascii_miss_95", |b| {
-        b.iter(|| { for &c in black_box(&ascii_chars) { let _ = black_box(map.lookup_char(c)); } });
+        b.iter(|| {
+            for &c in black_box(&ascii_chars) {
+                let _ = black_box(map.lookup_char(c));
+            }
+        });
     });
 
     group.finish();
