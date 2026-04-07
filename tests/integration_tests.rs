@@ -955,6 +955,7 @@ fn no_threat_report_requires_check_threats() {
 // ── --threat-db integration (Task 11.5.13) ──
 
 #[test]
+#[cfg(feature = "toml-config")]
 fn threat_db_loads_file_and_uses_for_reporting() {
     let dir = tempfile::tempdir().unwrap();
     let db_path = dir.path().join("threat-db.toml");
@@ -999,6 +1000,7 @@ osc_number = 999
 }
 
 #[test]
+#[cfg(feature = "toml-config")]
 fn threat_db_builtins_still_detected() {
     let dir = tempfile::tempdir().unwrap();
     let db_path = dir.path().join("threat-db.toml");
@@ -1021,6 +1023,7 @@ fn threat_db_builtins_still_detected() {
 }
 
 #[test]
+#[cfg(feature = "toml-config")]
 fn threat_db_nonexistent_file_exits_error() {
     let mut cmd = cmd();
     cmd.arg("--check-threats")
@@ -1038,6 +1041,7 @@ fn threat_db_nonexistent_file_exits_error() {
 }
 
 #[test]
+#[cfg(feature = "toml-config")]
 fn threat_db_duplicate_type_warns_and_uses_builtin() {
     let dir = tempfile::tempdir().unwrap();
     let db_path = dir.path().join("threat-db.toml");
