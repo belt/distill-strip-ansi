@@ -27,7 +27,7 @@ Uses `vt-push-parser` (a push-based VT-100 state machine). Claims
 fastest performance. Benchmarks show ~2x faster than `strip-ansi`
 0.1.0 and ~25x faster than `strip-ansi-escapes` on an M3 MacBook Pro.
 No streaming API. No `no_std` support.
-Likely slower than `distill-strip-ansi` on an M3 and is much slower on authors
+Likely slower than `distill-strip-ansi` on an M3 and is much slower on author's
 hardware.
 
 Good choice when: you need raw single-buffer throughput and don't

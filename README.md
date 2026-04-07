@@ -58,15 +58,15 @@ Piping to a file → `dumb` (strip all). Terminal output
 → `sanitize` (safe sequences preserved, echoback vectors
 stripped).
 
-| Preset     | Preserves                    | --unsafe |
-| ---------- | ---------------------------- | -------- |
-| `dumb`     | nothing                      |          |
-| `color`    | SGR (colors/styles)          |          |
-| `vt100`    | + cursor, erase              |          |
-| `tmux`     | + all CSI, Fe                |          |
-| `sanitize` | + safe OSC (titles, links)   |          |
-| `xterm`    | + all OSC                    | required |
-| `full`     | everything                   | required |
+| Preset     | Preserves                  | --unsafe |
+| ---------- | -------------------------- | -------- |
+| `dumb`     | nothing                    |          |
+| `color`    | SGR (colors/styles)        |          |
+| `vt100`    | + cursor, erase            |          |
+| `tmux`     | + all CSI, Fe              |          |
+| `sanitize` | + safe OSC (titles, links) |          |
+| `xterm`    | + all OSC                  | required |
+| `full`     | everything                 | required |
 
 Aliases: `pipe`=dumb, `ci`/`pager`=color, `screen`=tmux,
 `safe`=sanitize, `modern`=full.
@@ -108,52 +108,54 @@ the database format.
 
 ## CLI Reference
 
-| Flag               | Description                              |
-| ------------------ | ---------------------------------------- |
-| `--check`          | Detect ANSI sequences (exit 1 if found)  |
-| `--check-threats`  | Scan for echoback vectors (exit 77)      |
-| `--on-threat=MODE` | `fail` (default) or `strip`              |
-| `--no-threat-report` | Suppress stderr threat output          |
-| `--threat-db=PATH` | Load external threat database (TOML)     |
-| `--preset NAME`    | Force a terminal preset                  |
-| `--unsafe`         | Allow xterm/full presets                 |
-| `--no-strip-*`     | Preserve specific groups or sub-kinds    |
-| `-n N` / `--head`  | Output first N lines only                |
-| `-o` / `--output`  | Write to file instead of stdout          |
-| `-c` / `--count`   | Print stripped byte count on stderr      |
-| `--max-size`       | Stop reading after N bytes               |
-| `-f` / `--follow`  | Keep reading after EOF                   |
-| `--config PATH`    | Load TOML config file                    |
+| Flag                 | Description                             |
+| -------------------- | --------------------------------------- |
+| `--check`            | Detect ANSI sequences (exit 1 if found) |
+| `--check-threats`    | Scan for echoback vectors (exit 77)     |
+| `--on-threat=MODE`   | `fail` (default) or `strip`             |
+| `--no-threat-report` | Suppress stderr threat output           |
+| `--threat-db=PATH`   | Load external threat database (TOML)    |
+| `--preset NAME`      | Force a terminal preset                 |
+| `--unsafe`           | Allow xterm/full presets                |
+| `--no-strip-*`       | Preserve specific groups or sub-kinds   |
+| `-n N` / `--head`    | Output first N lines only               |
+| `-o` / `--output`    | Write to file instead of stdout         |
+| `-c` / `--count`     | Print stripped byte count on stderr     |
+| `--max-size`         | Stop reading after N bytes              |
+| `-f` / `--follow`    | Keep reading after EOF                  |
+| `--config PATH`      | Load TOML config file                   |
 
 ## Library Usage
 
-See [doc/DESIGN.md](doc/DESIGN.md) for the API
-architecture and code examples.
+See [doc/DESIGN.md](doc/DESIGN.md) for the architecture and
+[doc/LIBRARY-USAGE.md](doc/LIBRARY-USAGE.md) for API examples.
 
 ```toml
-[dependencies.distill-strip-ansi]
-version = "0.2"
-default-features = false
-features = ["std"]
+[dependencies]
+strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false, features = ["std"] }
 ```
 
 For `no_std` (requires `alloc`):
 
 ```toml
-[dependencies.distill-strip-ansi]
-version = "0.2"
-default-features = false
+[dependencies]
+strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false }
 ```
 
 ## Feature Flags
 
-| Feature           | Default | Description                       |
-| ----------------- | ------- | --------------------------------- |
-| `std`             | yes     | StripWriter and I/O traits        |
-| `cli`             | yes     | Builds the `strip-ansi` binary    |
-| `filter`          | yes     | Selective sequence filtering      |
-| `terminal-detect` | yes     | Auto-detect terminal capabilities |
-| `toml-config`     | no      | TOML config + threat database     |
+| Feature             | Default | Description                         |
+| ------------------- | ------- | ----------------------------------- |
+| `std`               | yes     | StripWriter and I/O traits          |
+| `cli`               | yes     | Builds the `strip-ansi` binary      |
+| `filter`            | yes     | Selective sequence filtering        |
+| `terminal-detect`   | yes     | Auto-detect terminal capabilities   |
+| `transform`         | no      | Streaming SGR color rewriting       |
+| `downgrade-color`   | no      | Color depth reduction algorithms    |
+| `color-palette`     | no      | 3x3 matrix color transforms         |
+| `unicode-normalize` | no      | Unicode homograph normalization     |
+| `toml-config`       | no      | TOML config + threat database       |
+| `distill-ansi-cli`  | no      | Full-featured `distill-ansi` binary |
 
 ## MSRV
 

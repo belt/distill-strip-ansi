@@ -3,7 +3,6 @@
 How this crate defends against ANSI escape sequence attacks.
 Assumes ECMA-48 familiarity ([ANSI-REFERENCE.md](ANSI-REFERENCE.md)).
 CVE-specific coverage in [CVE-MITIGATION.md](CVE-MITIGATION.md).
-Research sources in [REFERENCES.md](REFERENCES.md).
 
 ## Threat Model
 

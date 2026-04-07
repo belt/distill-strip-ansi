@@ -86,7 +86,7 @@ Step sizes: 0 to 95 (95), then 40, 40, 40, 40.
 24 shades from dark to light, excluding pure black and white:
 
 ```text
-232: #080808    238: #448444    244: #808080    250: #bcbcbc
+232: #080808    238: #444444    244: #808080    250: #bcbcbc
 233: #121212    239: #4e4e4e    245: #8a8a8a    251: #c6c6c6
 234: #1c1c1c    240: #585858    246: #949494    252: #d0d0d0
 235: #262626    241: #626262    247: #9e9e9e    253: #dadada

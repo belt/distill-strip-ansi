@@ -41,28 +41,39 @@ See `doc/SECURITY.md` for the threat model and
 
 ```text
 src/
-  parser.rs       1-byte ECMA-48 state machine
-  classifier.rs   12-byte ClassifyingParser (SeqDetail)
-  filter.rs       FilterConfig + FilterStream
-  preset.rs       Terminal presets (dumb..full)
-  detect.rs       Auto-detection (terminal-detect)
-  threat_db.rs    External threat database (toml-config)
-  toml_config.rs  TOML config loading (toml-config)
-  cli.rs          CLI argument definitions
-  main.rs         CLI entry point
-  strip.rs        Core strip functions
-  stream.rs       StripStream
-  writer.rs       StripWriter (std)
-  io.rs           Output buffering
-  lib.rs          Public API surface
+  parser.rs            1-byte ECMA-48 state machine
+  classifier.rs        12-byte ClassifyingParser (SeqDetail)
+  filter.rs            FilterConfig + FilterStream
+  preset.rs            Terminal presets (dumb..full)
+  detect.rs            Auto-detection (terminal-detect)
+  threat_db.rs         External threat database (toml-config)
+  toml_config.rs       TOML config loading (toml-config)
+  sgr_rewrite.rs       SGR param parser/rewriter (transform)
+  downgrade.rs         Color depth reduction (downgrade-color)
+  palette.rs           Palette transforms (color-palette)
+  unicode_map.rs       Unicode normalization (unicode-normalize)
+  transform_stream.rs  TransformStream (transform)
+  cli.rs               CLI argument definitions
+  main.rs              strip-ansi entry point
+  distill_ansi_main.rs distill-ansi entry point
+  strip.rs             Core strip functions
+  stream.rs            StripStream
+  writer.rs            StripWriter (std)
+  io.rs                Output buffering
+  lib.rs               Public API surface
 
 doc/
-  DESIGN.md          Architecture and data models
-  SECURITY.md        Threat model and defenses
-  PRESETS.md         Preset reference and gradient
-  ANSI-REFERENCE.md  ECMA-48 sequence taxonomy
-  ECOSYSTEM.md       Crate comparison
-  threat-db.toml     Reference threat database
+  DESIGN.md                Architecture and data models
+  LIBRARY-USAGE.md         API examples by feature
+  SECURITY.md              Threat model and defenses
+  CVE-MITIGATION.md        CVE defense matrix
+  PRESETS.md               Preset reference and gradient
+  ANSI-REFERENCE.md        ECMA-48 sequence taxonomy
+  COLOR-TRANSFORMS.md      Color depth + palette transforms
+  UNICODE-NORMALIZATION.md Unicode normalization design
+  ECOSYSTEM.md             Crate comparison
+  CONTRIBUTING.md          This file
+  threat-db.toml           Reference threat database
 
 tests/
   integration_tests.rs          CLI end-to-end
