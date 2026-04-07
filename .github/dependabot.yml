@@ -1,9 +1,29 @@
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# Dependabot version updates — keeps dependencies and Actions current.
+#
+# Config reference: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+# Supported ecosystems: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/about-dependabot-version-updates#supported-repositories-and-ecosystems
+# Grouping: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups
 ---
 version: 2
 updates:
-  - package-ecosystem: "rust-toolchain"
+  # Keep SHA-pinned Actions up to date.
+  # Dependabot resolves new SHAs automatically when tags move
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci(deps): "
+
+  # Rust crate updates — minor/patch grouped into a single PR to reduce noise
+  - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore(deps): "
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
