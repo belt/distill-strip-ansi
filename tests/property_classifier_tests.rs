@@ -1,7 +1,7 @@
 #![cfg(feature = "filter")]
 
 use proptest::prelude::*;
-use strip_ansi::{ClassifyingParser, OscType, SeqAction, SeqKind, SgrContent, map_osc_number};
+use strip_ansi::{ClassifyingParser, SeqAction, SeqKind, SgrContent, map_osc_number};
 
 // ── Generators ──────────────────────────────────────────────────────
 

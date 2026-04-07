@@ -96,7 +96,6 @@ proptest! {
         let val = grey_index_to_value(idx);
         let result = nearest_256(val, val, val);
         // Should map to this grey index or the corresponding cube diagonal.
-        let grey_val = grey_index_to_value(result);
         if (232..=255).contains(&result) {
             prop_assert_eq!(result, idx);
         }
