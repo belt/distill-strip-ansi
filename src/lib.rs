@@ -53,3 +53,18 @@ mod threat_db;
 
 #[cfg(feature = "toml-config")]
 pub use threat_db::{ThreatDb, ThreatEntry};
+
+#[cfg(feature = "downgrade-color")]
+pub mod downgrade;
+
+#[cfg(feature = "transform")]
+pub mod sgr_rewrite;
+
+#[cfg(feature = "transform")]
+mod transform_stream;
+
+#[cfg(feature = "transform")]
+pub use transform_stream::{TransformConfig, TransformSlice, TransformSlices, TransformStream};
+
+#[cfg(feature = "color-palette")]
+pub mod palette;
