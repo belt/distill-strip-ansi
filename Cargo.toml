@@ -18,11 +18,20 @@ name = "strip-ansi"
 path = "src/main.rs"
 required-features = ["cli"]
 
+[[bin]]
+name = "distill-ansi"
+path = "src/distill_ansi_main.rs"
+required-features = ["distill-ansi-cli"]
+
 [features]
 default = ["std", "cli", "filter"]
 std = []
 filter = ["dep:smallvec"]
+transform = ["filter"]
+downgrade-color = ["transform"]
+color-palette = ["transform"]
 cli = ["std", "dep:clap", "dep:sigpipe", "terminal-detect"]
+distill-ansi-cli = ["std", "downgrade-color", "color-palette", "terminal-detect", "dep:clap", "dep:sigpipe"]
 terminal-detect = ["filter", "std", "dep:supports-color", "dep:supports-hyperlinks"]
 toml-config = ["filter", "std", "dep:serde", "dep:toml", "dep:thiserror"]
 
