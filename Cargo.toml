@@ -51,7 +51,7 @@ supports-hyperlinks = { version = "3.2", optional = true }
 proptest = { version = "1.6" }
 assert_cmd = { version = "2.0" }
 insta = { version = "1.41" }
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.7", features = ["html_reports"] }
 strip-ansi-escapes = "0.2"
 console = { version = "0.15" }
 tempfile = "3.27.0"
