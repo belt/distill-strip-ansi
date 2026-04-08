@@ -68,3 +68,6 @@ pub use transform_stream::{TransformConfig, TransformSlice, TransformSlices, Tra
 
 #[cfg(feature = "color-palette")]
 pub mod palette;
+
+#[cfg(feature = "unicode-normalize")]
+pub mod unicode_map;
