@@ -175,7 +175,11 @@ impl<'a> SgrEmitter<'a> {
     fn feed_saw38(&mut self, val: u16) {
         match val {
             2 => {
-                self.state = ExtState::FgRgb { count: 0, r: 0, g: 0 };
+                self.state = ExtState::FgRgb {
+                    count: 0,
+                    r: 0,
+                    g: 0,
+                };
             }
             5 => {
                 self.state = ExtState::Fg256;
@@ -193,7 +197,11 @@ impl<'a> SgrEmitter<'a> {
     fn feed_saw48(&mut self, val: u16) {
         match val {
             2 => {
-                self.state = ExtState::BgRgb { count: 0, r: 0, g: 0 };
+                self.state = ExtState::BgRgb {
+                    count: 0,
+                    r: 0,
+                    g: 0,
+                };
             }
             5 => {
                 self.state = ExtState::Bg256;
@@ -210,10 +218,18 @@ impl<'a> SgrEmitter<'a> {
         let component = val.min(255) as u8;
         match count {
             0 => {
-                self.state = ExtState::FgRgb { count: 1, r: component, g: 0 };
+                self.state = ExtState::FgRgb {
+                    count: 1,
+                    r: component,
+                    g: 0,
+                };
             }
             1 => {
-                self.state = ExtState::FgRgb { count: 2, r, g: component };
+                self.state = ExtState::FgRgb {
+                    count: 2,
+                    r,
+                    g: component,
+                };
             }
             _ => {
                 // count == 2: have all three components.
@@ -227,10 +243,18 @@ impl<'a> SgrEmitter<'a> {
         let component = val.min(255) as u8;
         match count {
             0 => {
-                self.state = ExtState::BgRgb { count: 1, r: component, g: 0 };
+                self.state = ExtState::BgRgb {
+                    count: 1,
+                    r: component,
+                    g: 0,
+                };
             }
             1 => {
-                self.state = ExtState::BgRgb { count: 2, r, g: component };
+                self.state = ExtState::BgRgb {
+                    count: 2,
+                    r,
+                    g: component,
+                };
             }
             _ => {
                 self.emit_bg_rgb(r, g, component);

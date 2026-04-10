@@ -53,17 +53,28 @@ pub struct Stats {
 }
 
 impl Default for Stats {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Stats {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            bytes_in: 0, bytes_out: 0, lines: 0, words: 0, chars: 0,
-            sequences: 0, seq_bytes: 0, plain_bytes: 0,
-            by_kind: Default::default(), threats: Vec::new(),
-            seq_len: 0, seq_start_offset: 0, in_word: false,
+            bytes_in: 0,
+            bytes_out: 0,
+            lines: 0,
+            words: 0,
+            chars: 0,
+            sequences: 0,
+            seq_bytes: 0,
+            plain_bytes: 0,
+            by_kind: Default::default(),
+            threats: Vec::new(),
+            seq_len: 0,
+            seq_start_offset: 0,
+            in_word: false,
         }
     }
 
@@ -75,16 +86,26 @@ impl Stats {
             SeqAction::Emit => {
                 self.bytes_out += 1;
                 self.plain_bytes += 1;
-                if byte == b'\n' { self.lines += 1; }
-                let is_ws = byte == b' ' || byte == b'\t' || byte == b'\n'
-                    || byte == b'\r' || byte == 0x0B || byte == 0x0C;
+                if byte == b'\n' {
+                    self.lines += 1;
+                }
+                let is_ws = byte == b' '
+                    || byte == b'\t'
+                    || byte == b'\n'
+                    || byte == b'\r'
+                    || byte == 0x0B
+                    || byte == 0x0C;
                 if !is_ws {
-                    if !self.in_word { self.words += 1; }
+                    if !self.in_word {
+                        self.words += 1;
+                    }
                     self.in_word = true;
                 } else {
                     self.in_word = false;
                 }
-                if byte & 0xC0 != 0x80 { self.chars += 1; }
+                if byte & 0xC0 != 0x80 {
+                    self.chars += 1;
+                }
             }
             SeqAction::StartSeq => {
                 self.seq_len = 1;
@@ -141,31 +162,48 @@ impl Stats {
     pub fn to_json(&self) -> String {
         use alloc::fmt::Write;
         let mut s = String::with_capacity(512);
-        let _ = write!(s,
+        let _ = write!(
+            s,
             concat!(
                 "{{\"bytes_in\":{},\"bytes_out\":{},",
                 "\"lines\":{},\"words\":{},\"chars\":{},",
                 "\"sequences\":{},\"seq_bytes\":{},\"plain_bytes\":{},",
                 "\"by_kind\":{{"
             ),
-            self.bytes_in, self.bytes_out,
-            self.lines, self.words, self.chars,
-            self.sequences, self.seq_bytes, self.plain_bytes,
+            self.bytes_in,
+            self.bytes_out,
+            self.lines,
+            self.words,
+            self.chars,
+            self.sequences,
+            self.seq_bytes,
+            self.plain_bytes,
         );
         let mut first = true;
         for (i, kc) in self.by_kind.iter().enumerate() {
-            if kc.count == 0 && kc.bytes == 0 { continue; }
-            if !first { s.push(','); }
+            if kc.count == 0 && kc.bytes == 0 {
+                continue;
+            }
+            if !first {
+                s.push(',');
+            }
             first = false;
-            let _ = write!(s, "\"{}\":{{\"count\":{},\"bytes\":{}}}",
-                KIND_NAMES[i], kc.count, kc.bytes);
+            let _ = write!(
+                s,
+                "\"{}\":{{\"count\":{},\"bytes\":{}}}",
+                KIND_NAMES[i], kc.count, kc.bytes
+            );
         }
         s.push_str("},\"threats\":[");
         for (i, t) in self.threats.iter().enumerate() {
-            if i > 0 { s.push(','); }
-            let _ = write!(s,
+            if i > 0 {
+                s.push(',');
+            }
+            let _ = write!(
+                s,
                 "{{\"type\":\"{}\",\"kind\":\"{}\",\"offset\":{},\"len\":{}}}",
-                t.type_name, KIND_NAMES[t.kind as u8 as usize], t.offset, t.len);
+                t.type_name, KIND_NAMES[t.kind as u8 as usize], t.offset, t.len
+            );
         }
         s.push_str("]}");
         s
@@ -175,10 +213,24 @@ impl Stats {
 // ── SeqKind name table ──────────────────────────────────────────────
 
 static KIND_NAMES: [&str; NUM_KINDS] = [
-    "csi_sgr", "csi_cursor", "csi_erase", "csi_scroll",
-    "csi_mode", "csi_device_status", "csi_window", "csi_other",
-    "osc", "dcs", "apc", "pm", "sos", "ss2", "ss3", "fe",
-    "unknown", "csi_query",
+    "csi_sgr",
+    "csi_cursor",
+    "csi_erase",
+    "csi_scroll",
+    "csi_mode",
+    "csi_device_status",
+    "csi_window",
+    "csi_other",
+    "osc",
+    "dcs",
+    "apc",
+    "pm",
+    "sos",
+    "ss2",
+    "ss3",
+    "fe",
+    "unknown",
+    "csi_query",
 ];
 
 // ── Builtin threat classification ───────────────────────────────────
@@ -186,18 +238,29 @@ static KIND_NAMES: [&str; NUM_KINDS] = [
 fn classify_threat(detail: &crate::classifier::SeqDetail) -> Option<&'static str> {
     match detail.kind {
         SeqKind::Dcs => {
-            if detail.dcs_is_query { Some("dcs_decrqss") }
-            else { Some("dcs_other") }
+            if detail.dcs_is_query {
+                Some("dcs_decrqss")
+            } else {
+                Some("dcs_other")
+            }
         }
         SeqKind::Osc => {
-            if detail.osc_number == 50 { Some("osc_50") }
-            else if detail.osc_type == crate::classifier::OscType::Clipboard { Some("osc_clipboard") }
-            else { None }
+            if detail.osc_number == 50 {
+                Some("osc_50")
+            } else if detail.osc_type == crate::classifier::OscType::Clipboard {
+                Some("osc_clipboard")
+            } else {
+                None
+            }
         }
         SeqKind::CsiQuery => {
-            if detail.first_param == 21 { Some("csi_21t") }
-            else if detail.first_param == 6 { Some("csi_6n") }
-            else { None }
+            if detail.first_param == 21 {
+                Some("csi_21t")
+            } else if detail.first_param == 6 {
+                Some("csi_6n")
+            } else {
+                None
+            }
         }
         _ => None,
     }

@@ -19,8 +19,8 @@ stripping ecosystem: `distill-strip-ansi`, `fast-strip-ansi`,
 
 ## Highlights for Humans
 
-- 528 MiB/s dirty throughput (4 KiB, ~20% ANSI)
-- 3.1 GiB/s clean fast path (24 MiB)
+- 541 MiB/s dirty throughput (4 KiB, ~20% ANSI)
+- 3.3 GiB/s clean fast path (24 MiB)
 - Zero allocation on clean input (`Cow::Borrowed`)
 - O(n) linear scaling — constant MiB/s to 1 GiB+
 - No temp files, no disk I/O — pure in-memory
@@ -35,13 +35,13 @@ stripping ecosystem: `distill-strip-ansi`, `fast-strip-ansi`,
 | Arch       | x86_64                                   |
 | OS         | macOS 26.4                               |
 | Rust       | 1.94.1                                   |
-| Date       | 2026-04-09                               |
+| Date       | 2026-04-10                               |
 | L1d        | 32.0K                                    |
 | L2         | 256.0K                                   |
 | L3         | 12.0 MiB                                 |
 | RAM        | 32.0 GiB                                 |
 | Sizes      | 15 tiers (hardware-adaptive)             |
-| Bench time | 2m35s                                    |
+| Bench time | 2m22s                                    |
 
 <!-- BENCH:ENV:END -->
 
@@ -51,7 +51,7 @@ stripping ecosystem: `distill-strip-ansi`, `fast-strip-ansi`,
 
 | Crate                | Version |
 | -------------------- | ------: |
-| `distill-strip-ansi` |   0.5.0 |
+| `distill-strip-ansi` |   0.5.1 |
 | `fast-strip-ansi`    |  0.13.1 |
 | `console`            |  0.16.3 |
 | `strip-ansi-escapes` |   0.2.1 |
@@ -65,10 +65,10 @@ stripping ecosystem: `distill-strip-ansi`, `fast-strip-ansi`,
 
 | Crate                |  Binary | Deps |  Peak RSS |    RSS Δ |    CPU |
 | -------------------- | ------: | ---: | --------: | -------: | -----: |
-| `distill-strip-ansi` | 1.5 MiB |   24 | 192.7 MiB | 20.5 MiB | 13.3 s |
-| `fast-strip-ansi`    |     n/a |    3 | 232.2 MiB | 19.8 MiB | 13.8 s |
-| `console`            |     n/a |    — | 197.5 MiB |  2.1 MiB | 12.6 s |
-| `strip-ansi-escapes` |     n/a |    2 | 192.9 MiB |  8.9 MiB | 16.7 s |
+| `distill-strip-ansi` | 1.5 MiB |   24 | 199.7 MiB | 20.2 MiB | 13.8 s |
+| `fast-strip-ansi`    |     n/a |    3 | 243.6 MiB | 20.9 MiB | 12.9 s |
+| `console`            |     n/a |    — | 174.7 MiB |   132.0K | 11.3 s |
+| `strip-ansi-escapes` |     n/a |    2 | 185.2 MiB | 14.4 MiB | 14.8 s |
 
 <!-- BENCH:FOOTPRINT:END -->
 
@@ -83,7 +83,7 @@ outside the timed loop — no measurement overhead.
 ## HOWTO: Reproduce
 
 ```bash
-# Quick run: up to 2×L3 cache (~2m35s)
+# Quick run: up to 2×L3 cache (~2m22s)
 ./bin/generate-benchmarks-md.py
 
 # Full run: all sizes including GiB-scale (~30 min)
@@ -137,125 +137,125 @@ used as baseline (Relative = time / baseline time).
 
 <!-- BENCH:ECO_DIRTY_2048:START -->
 
-| Crate                |    Time |     MiB/s | Relative |
-| -------------------- | ------: | --------: | -------: |
-| `distill-strip-ansi` |  3.8 µs | 508 MiB/s | baseline |
-| `fast-strip-ansi`    |  4.1 µs | 480 MiB/s |     1.1× |
-| `console`            | 11.8 µs | 165 MiB/s |     3.1× |
-| `strip-ansi-escapes` | 42.4 µs |  46 MiB/s |    11.0× |
+| Crate                |    Time | MiB/s |        × |   RSS Δ |    CPU |
+| -------------------- | ------: | ----: | -------: | ------: | -----: |
+| `distill-strip-ansi` |  3.8 µs |   520 | baseline | 2.9 MiB | 12.2 s |
+| `fast-strip-ansi`    |  4.0 µs |   490 |     1.1× | 1.9 MiB | 12.4 s |
+| `console`            |  9.8 µs |   200 |     2.6× |  916.0K | 12.5 s |
+| `strip-ansi-escapes` | 35.5 µs |    55 |     9.4× | 2.7 MiB | 12.3 s |
 <!-- BENCH:ECO_DIRTY_2048:END -->
 
 ### Dirty 4 KiB
 
 <!-- BENCH:ECO_DIRTY_4096:START -->
 
-| Crate                |    Time |     MiB/s | Relative |
-| -------------------- | ------: | --------: | -------: |
-| `distill-strip-ansi` |  7.4 µs | 528 MiB/s | baseline |
-| `fast-strip-ansi`    |  8.1 µs | 484 MiB/s |     1.1× |
-| `console`            | 22.4 µs | 174 MiB/s |     3.0× |
-| `strip-ansi-escapes` | 86.6 µs |  45 MiB/s |    11.7× |
+| Crate                |    Time | MiB/s |        × |   RSS Δ |    CPU |
+| -------------------- | ------: | ----: | -------: | ------: | -----: |
+| `distill-strip-ansi` |  7.2 µs |   541 | baseline | 2.8 MiB | 13.2 s |
+| `fast-strip-ansi`    |  8.3 µs |   470 |     1.2× | 5.1 MiB | 12.6 s |
+| `console`            | 19.4 µs |   201 |     2.7× | 2.9 MiB | 12.6 s |
+| `strip-ansi-escapes` | 70.9 µs |    55 |     9.8× |  448.0K | 12.4 s |
 <!-- BENCH:ECO_DIRTY_4096:END -->
 
 ### Dirty 32 KiB
 
 <!-- BENCH:ECO_DIRTY_32768:START -->
 
-| Crate                |     Time |     MiB/s | Relative |
-| -------------------- | -------: | --------: | -------: |
-| `distill-strip-ansi` |  57.8 µs | 540 MiB/s | baseline |
-| `fast-strip-ansi`    |  62.3 µs | 502 MiB/s |     1.1× |
-| `console`            | 168.6 µs | 185 MiB/s |     2.9× |
-| `strip-ansi-escapes` | 684.3 µs |  46 MiB/s |    11.8× |
+| Crate                |     Time | MiB/s |        × |   RSS Δ |    CPU |
+| -------------------- | -------: | ----: | -------: | ------: | -----: |
+| `distill-strip-ansi` |  56.5 µs |   553 | baseline | 1.8 MiB | 13.1 s |
+| `fast-strip-ansi`    |  61.2 µs |   510 |     1.1× |  836.0K | 12.6 s |
+| `console`            | 147.8 µs |   211 |     2.6× |  652.0K | 12.1 s |
+| `strip-ansi-escapes` | 595.2 µs |    53 |    10.5× |  680.0K | 12.3 s |
 <!-- BENCH:ECO_DIRTY_32768:END -->
 
 ### Dirty 256 KiB
 
 <!-- BENCH:ECO_DIRTY_262144:START -->
 
-| Crate                |     Time |     MiB/s | Relative |
-| -------------------- | -------: | --------: | -------: |
-| `distill-strip-ansi` | 468.0 µs | 534 MiB/s | baseline |
-| `fast-strip-ansi`    | 559.2 µs | 447 MiB/s |     1.2× |
-| `console`            |   1.4 ms | 178 MiB/s |     3.0× |
-| `strip-ansi-escapes` |   5.5 ms |  45 MiB/s |    11.8× |
+| Crate                |     Time | MiB/s |        × |   RSS Δ |    CPU |
+| -------------------- | -------: | ----: | -------: | ------: | -----: |
+| `distill-strip-ansi` | 451.9 µs |   553 | baseline | 2.0 MiB | 13.2 s |
+| `fast-strip-ansi`    | 520.7 µs |   480 |     1.2× |   40.0K | 12.6 s |
+| `console`            |   1.2 ms |   216 |     2.6× | 1.2 MiB | 12.4 s |
+| `strip-ansi-escapes` |   4.7 ms |    53 |    10.5× |  664.0K | 12.3 s |
 <!-- BENCH:ECO_DIRTY_262144:END -->
 
 ### Dirty 24 MiB
 
 <!-- BENCH:ECO_DIRTY_25165824:START -->
 
-| Crate                |     Time |     MiB/s | Relative |
-| -------------------- | -------: | --------: | -------: |
-| `distill-strip-ansi` |  45.3 ms | 530 MiB/s | baseline |
-| `fast-strip-ansi`    |  54.8 ms | 438 MiB/s |     1.2× |
-| `console`            | 134.7 ms | 178 MiB/s |     3.0× |
-| `strip-ansi-escapes` | 528.4 ms |  45 MiB/s |    11.7× |
+| Crate                |     Time | MiB/s |        × |    RSS Δ |    CPU |
+| -------------------- | -------: | ----: | -------: | -------: | -----: |
+| `distill-strip-ansi` |  44.9 ms |   535 | baseline | 15.2 MiB | 14.7 s |
+| `fast-strip-ansi`    |  47.5 ms |   505 |     1.1× | 32.4 MiB | 15.1 s |
+| `console`            | 111.7 ms |   215 |     2.5× | 16.1 MiB | 12.4 s |
+| `strip-ansi-escapes` | 460.9 ms |    52 |    10.3× | 18.0 MiB | 13.2 s |
 <!-- BENCH:ECO_DIRTY_25165824:END -->
 
 ### Dirty 32 MiB
 
 <!-- BENCH:ECO_DIRTY_33554432:START -->
 
-| Crate                |     Time |     MiB/s | Relative |
-| -------------------- | -------: | --------: | -------: |
-| `distill-strip-ansi` |  67.5 ms | 474 MiB/s | baseline |
-| `fast-strip-ansi`    |  75.6 ms | 423 MiB/s |     1.1× |
-| `console`            | 180.5 ms | 177 MiB/s |     2.7× |
-| `strip-ansi-escapes` | 680.0 ms |  47 MiB/s |    10.1× |
+| Crate                |     Time | MiB/s |        × |    RSS Δ |    CPU |
+| -------------------- | -------: | ----: | -------: | -------: | -----: |
+| `distill-strip-ansi` |  64.1 ms |   499 | baseline | 20.2 MiB | 13.8 s |
+| `fast-strip-ansi`    |  65.3 ms |   490 |    ~1.0× | 20.9 MiB | 12.9 s |
+| `console`            | 148.6 ms |   215 |     2.3× |   132.0K | 11.3 s |
+| `strip-ansi-escapes` | 576.3 ms |    56 |     9.0× | 14.4 MiB | 14.8 s |
 <!-- BENCH:ECO_DIRTY_33554432:END -->
 
 ### Cargo Output (5 KiB)
 
 <!-- BENCH:ECO_CARGO:START -->
 
-| Crate                |     Time |       MiB/s | Relative |
-| -------------------- | -------: | ----------: | -------: |
-| `distill-strip-ansi` | 144.6 ns | 36925 MiB/s | baseline |
-| `fast-strip-ansi`    |   3.5 µs |  1525 MiB/s |    24.2× |
-| `console`            |  17.9 µs |   298 MiB/s |   124.1× |
-| `strip-ansi-escapes` | 150.8 µs |    35 MiB/s |  1042.5× |
+| Crate                |     Time | MiB/s |        × |   RSS Δ |    CPU |
+| -------------------- | -------: | ----: | -------: | ------: | -----: |
+| `distill-strip-ansi` | 146.8 ns | 36377 | baseline |  792.0K | 12.4 s |
+| `fast-strip-ansi`    |   2.9 µs |  1814 |    20.1× | 1.2 MiB | 12.6 s |
+| `console`            |  15.6 µs |   343 |   106.0× |  640.0K | 12.2 s |
+| `strip-ansi-escapes` | 132.5 µs |    40 |   902.6× | 1.4 MiB | 12.0 s |
 <!-- BENCH:ECO_CARGO:END -->
 
 ### OSC 8 Hyperlinks (4 KiB)
 
 <!-- BENCH:ECO_OSC8:START -->
 
-| Crate                |     Time |       MiB/s | Relative |
-| -------------------- | -------: | ----------: | -------: |
-| `distill-strip-ansi` | 130.3 ns | 31530 MiB/s | baseline |
-| `fast-strip-ansi`    |   2.7 µs |  1509 MiB/s |    20.9× |
-| `console`            |  14.0 µs |   294 MiB/s |   107.2× |
-| `strip-ansi-escapes` | 116.3 µs |    35 MiB/s |   892.2× |
+| Crate                |     Time | MiB/s |        × |   RSS Δ |    CPU |
+| -------------------- | -------: | ----: | -------: | ------: | -----: |
+| `distill-strip-ansi` | 128.5 ns | 31961 | baseline |  928.0K | 12.4 s |
+| `fast-strip-ansi`    |   2.3 µs |  1778 |    18.0× |  988.0K | 12.1 s |
+| `console`            |  12.0 µs |   343 |    93.3× | 2.3 MiB | 12.7 s |
+| `strip-ansi-escapes` | 103.6 µs |    40 |   806.0× |  784.0K | 12.8 s |
 <!-- BENCH:ECO_OSC8:END -->
 
 ### Extended Capabilities
 
 Additional features available in `distill-strip-ansi`.
 
-| Feature                   |     Time |       MiB/s | Others |
-| ------------------------- | -------: | ----------: | ------ |
-| Classify (parse only)     |  12.0 µs |   349 MiB/s | n/a    |
-| Classify + detail         |  13.5 µs |   312 MiB/s | n/a    |
-| Filter: SGR mask          |  15.3 µs |   275 MiB/s | n/a    |
-| Filter: sanitize preset   |  16.3 µs |   258 MiB/s | n/a    |
-| Threat scan (clean)       |  12.5 µs |   337 MiB/s | n/a    |
-| Threat scan (dirty)       |  12.8 µs |   330 MiB/s | n/a    |
-| Streaming (L1)            |  46.3 µs |   675 MiB/s | n/a    |
-| Streaming (L2)            | 372.9 µs |   670 MiB/s | n/a    |
-| Streaming (L3)            |  18.2 ms |   659 MiB/s | n/a    |
-| Unicode normalize         |  26.1 µs |   124 MiB/s | n/a    |
-| Transform: passthrough    | 118.1 ns | 35521 MiB/s | n/a    |
-| Transform: truecolor→mono |  27.3 µs |   171 MiB/s | n/a    |
-| Transform: truecolor→grey |  28.8 µs |   162 MiB/s | n/a    |
-| Transform: truecolor→16   |  28.8 µs |   161 MiB/s | n/a    |
-| Transform: truecolor→256  |  28.7 µs |   162 MiB/s | n/a    |
-| Transform: 256→16         |  21.6 µs |   180 MiB/s | n/a    |
-| Transform: 256→grey       |  21.9 µs |   178 MiB/s | n/a    |
-| Transform: basic→mono     |  30.0 µs |   140 MiB/s | n/a    |
-| Augment: protanopia       |   3.6 µs |   206 MiB/s | n/a    |
-| Augment: deuteranopia     |   4.0 µs |   183 MiB/s | n/a    |
-| Augment: sRGB roundtrip   | 810.7 ns |   301 MiB/s | n/a    |
+| Feature                   |     Time | MiB/s |   RSS Δ |    CPU |
+| ------------------------- | -------: | ----: | ------: | -----: |
+| Classify (parse only)     |  13.0 µs |   324 | 1.1 MiB | 13.1 s |
+| Classify + detail         |  13.1 µs |   321 |   16.0K | 13.2 s |
+| Filter: SGR mask          |  16.5 µs |   254 |  228.0K | 12.7 s |
+| Filter: sanitize preset   |  16.4 µs |   256 | 1.1 MiB | 12.6 s |
+| Threat scan (clean)       |  13.0 µs |   323 |  760.0K | 13.2 s |
+| Threat scan (dirty)       |  13.8 µs |   305 |  128.0K | 13.2 s |
+| Streaming (L1)            |  46.3 µs |   675 | 1.0 MiB | 13.1 s |
+| Streaming (L2)            | 366.0 µs |   683 |  428.0K | 13.0 s |
+| Streaming (L3)            |  23.2 ms |   518 | 8.8 MiB | 13.3 s |
+| Unicode normalize         |  25.3 µs |   128 |  104.0K | 13.0 s |
+| Transform: passthrough    | 114.7 ns | 36581 |  792.0K | 13.3 s |
+| Transform: truecolor→mono |  26.1 µs |   178 |  316.0K | 13.1 s |
+| Transform: truecolor→grey |  27.7 µs |   168 |    8.0K | 13.2 s |
+| Transform: truecolor→16   |  28.8 µs |   162 |    4.0K | 13.3 s |
+| Transform: truecolor→256  |  31.3 µs |   149 |    4.0K | 12.3 s |
+| Transform: 256→16         |  21.3 µs |   183 |  664.0K | 12.7 s |
+| Transform: 256→grey       |  22.3 µs |   175 | 1.7 MiB | 12.9 s |
+| Transform: basic→mono     |  28.9 µs |   145 |  424.0K | 13.2 s |
+| Augment: protanopia       |   3.4 µs |   218 |  320.0K | 13.1 s |
+| Augment: deuteranopia     |   3.3 µs |   224 | 1.0 MiB | 13.0 s |
+| Augment: sRGB roundtrip   | 735.9 ns |   332 |    4.0K | 12.8 s |
 
 ## Scaling
 
@@ -264,84 +264,84 @@ Constant bar length = O(n). Shrinking = super-linear.
 
 RSS Δ and CPU shown at largest size only — small-size
 values are dominated by benchmark harness overhead.
-### `distill-strip-ansi` v0.5.0 — O(n) · RSS Δ 20.5 MiB · CPU 13.3 s
+### `distill-strip-ansi` v0.5.0 — O(n) · RSS Δ 20.2 MiB · CPU 13.8 s
 
 ```text
-  2 KiB ███████████████████████████ 508
-  4 KiB ████████████████████████████ 528
-  8 KiB ████████████████████████████ 522
- 16 KiB █████████████████████████████ 535
- 32 KiB █████████████████████████████ 540
- 64 KiB █████████████████████████████ 533
-128 KiB █████████████████████████████ 535
-256 KiB █████████████████████████████ 534
-512 KiB █████████████████████████████ 536
-  1 MiB ██████████████████████████████ 549
-  2 MiB ██████████████████████████ 484
-  4 MiB █████████████████████████ 471
-  8 MiB █████████████████████████ 467
- 24 MiB █████████████████████████████ 530
- 32 MiB █████████████████████████ 474
+  2 KiB ████████████████████████████ 520
+  4 KiB █████████████████████████████ 541
+  8 KiB █████████████████████████████ 554
+ 16 KiB ██████████████████████████████ 555
+ 32 KiB █████████████████████████████ 553
+ 64 KiB █████████████████████████████ 542
+128 KiB █████████████████████████████ 554
+256 KiB █████████████████████████████ 553
+512 KiB █████████████████████████████ 540
+  1 MiB ███████████████████████████ 505
+  2 MiB ███████████████████████████ 509
+  4 MiB ███████████████████████████ 505
+  8 MiB ████████████████████████████ 528
+ 24 MiB ████████████████████████████ 535
+ 32 MiB ███████████████████████████ 499
 ```
 
-### `fast-strip-ansi` v0.13.1 — O(n) · RSS Δ 19.8 MiB · CPU 13.8 s
+### `fast-strip-ansi` v0.13.1 — O(n) · RSS Δ 20.9 MiB · CPU 12.9 s
 
 ```text
-  2 KiB ██████████████████████████ 480
-  4 KiB ██████████████████████████ 484
-  8 KiB ██████████████████████████ 484
- 16 KiB ███████████████████████████ 498
- 32 KiB ███████████████████████████ 502
- 64 KiB ███████████████████████ 435
+  2 KiB ██████████████████████████ 490
+  4 KiB █████████████████████████ 470
+  8 KiB ██████████████████████████ 486
+ 16 KiB ███████████████████████████ 507
+ 32 KiB ███████████████████████████ 510
+ 64 KiB ██████████████████████ 418
 128 KiB █████████████████████████ 473
-256 KiB ████████████████████████ 447
-512 KiB █████████████████████████ 461
-  1 MiB █████████████████████████ 459
-  2 MiB ████████████████████████ 456
-  4 MiB ███████████████████████ 422
-  8 MiB ██████████████████████ 405
- 24 MiB ███████████████████████ 438
- 32 MiB ███████████████████████ 423
+256 KiB █████████████████████████ 480
+512 KiB ███████████████████████████ 499
+  1 MiB ██████████████████████████ 486
+  2 MiB ████████████████████████ 450
+  4 MiB ████████████████████████ 448
+  8 MiB ██████████████████████████ 484
+ 24 MiB ███████████████████████████ 505
+ 32 MiB ██████████████████████████ 490
 ```
 
-### `console` v0.16.3 — O(n) · RSS Δ 2.1 MiB · CPU 12.6 s
+### `console` v0.16.3 — O(n) · RSS Δ 132.0K · CPU 11.3 s
 
 ```text
-  2 KiB █████████ 165
-  4 KiB █████████ 174
-  8 KiB █████████ 179
- 16 KiB ██████████ 183
- 32 KiB ██████████ 185
- 64 KiB ██████████ 186
-128 KiB █████████ 173
-256 KiB █████████ 178
-512 KiB █████████ 182
-  1 MiB ██████████ 183
-  2 MiB █████████ 182
-  4 MiB █████████ 182
-  8 MiB █████████ 181
- 24 MiB █████████ 178
- 32 MiB █████████ 177
+  2 KiB ██████████ 200
+  4 KiB ██████████ 201
+  8 KiB ███████████ 211
+ 16 KiB ███████████ 214
+ 32 KiB ███████████ 211
+ 64 KiB ███████████ 214
+128 KiB ███████████ 206
+256 KiB ███████████ 216
+512 KiB ████████████ 222
+  1 MiB ███████████ 203
+  2 MiB ███████████ 220
+  4 MiB ███████████ 220
+  8 MiB ███████████ 213
+ 24 MiB ███████████ 215
+ 32 MiB ███████████ 215
 ```
 
-### `strip-ansi-escapes` v0.2.1 — O(n) · RSS Δ 8.9 MiB · CPU 16.7 s
+### `strip-ansi-escapes` v0.2.1 — O(n) · RSS Δ 14.4 MiB · CPU 14.8 s
 
 ```text
-  2 KiB ██ 46
-  4 KiB ██ 45
-  8 KiB ██ 46
- 16 KiB ██ 46
- 32 KiB ██ 46
- 64 KiB ██ 46
-128 KiB ██ 45
-256 KiB ██ 45
-512 KiB ██ 46
-  1 MiB ██ 46
-  2 MiB ██ 46
-  4 MiB ██ 46
-  8 MiB ██ 46
- 24 MiB ██ 45
- 32 MiB ██ 47
+  2 KiB ██ 55
+  4 KiB ██ 55
+  8 KiB ███ 56
+ 16 KiB ██ 54
+ 32 KiB ██ 53
+ 64 KiB ██ 54
+128 KiB ██ 53
+256 KiB ██ 53
+512 KiB ██ 54
+  1 MiB ██ 53
+  2 MiB ██ 52
+  4 MiB ███ 56
+  8 MiB ██ 52
+ 24 MiB ██ 52
+ 32 MiB ███ 56
 ```
 
 
