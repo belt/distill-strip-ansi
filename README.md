@@ -52,9 +52,22 @@ Criterion results and reproduction steps.
 
 ## Install
 
+### Homebrew (macOS / Linux)
+
+```sh
+brew install belt/distill/distill-strip-ansi
+```
+
+See the [Homebrew tap](https://github.com/belt/homebrew-distill)
+for Brewfile usage and bottle details.
+
+### Cargo (any platform)
+
 ```sh
 cargo install distill-strip-ansi
 ```
+
+[crates.io](https://crates.io/crates/distill-strip-ansi)
 
 ## Quick Start
 
@@ -195,11 +208,10 @@ attack vectors emerge before a crate release.
 
 Rust 1.85+ (edition 2024).
 
-## Coming soon
+## Coming Soon
 
 - Criterion 0.7 → 0.8 (MSRV 1.86, breaking API)
 - MSRV 1.86
-- Homebrew tap
 - Better ops
 
 ## Contributing
