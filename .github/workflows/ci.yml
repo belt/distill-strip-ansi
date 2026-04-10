@@ -70,7 +70,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           components: clippy
-      - uses: Swatinem/rust-cache@aa7c1c80a07a27a84c0aa76d0cef0aad3830e330 # v2.7.8
+      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc # v2.9.1
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   test:
@@ -79,7 +79,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd       # v6.0.2
       - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
-      - uses: Swatinem/rust-cache@aa7c1c80a07a27a84c0aa76d0cef0aad3830e330    # v2.7.8
+      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc    # v2.9.1
         # --locked: fail if Cargo.lock is out of date (reproducible builds)
         # --all-features: exercise feature-gated code (e.g. toml-config, filter)
       - run: cargo test --locked --all-features
@@ -92,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd       # v6.0.2
       - uses: dtolnay/rust-toolchain@c56a35af9328d0bc581dc86c05e58f97f7c38a0e # 1.85
-      - uses: Swatinem/rust-cache@aa7c1c80a07a27a84c0aa76d0cef0aad3830e330    # v2.7.8
+      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc    # v2.9.1
       - run: cargo check --locked
 
   # License, advisory, ban, and source checks via deny.toml.
@@ -111,6 +111,7 @@ jobs:
     continue-on-error: ${{ matrix.checks == 'advisories' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: EmbarkStudios/cargo-deny-action@9b7d65878c2d28c8e3c16e30bf555c29abe505bd # v2.0.11
+      - uses: EmbarkStudios/cargo-deny-action@5b143841a37c3f676a9f7c1c8646cf093b04a0a3 # v2.0.16
         with:
-          command: check ${{ matrix.checks }}
+          command: check
+          command-arguments: ${{ matrix.checks }}
