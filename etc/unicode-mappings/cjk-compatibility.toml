@@ -1,0 +1,248 @@
+# CJK Compatibility — Square Katakana Words and Abbreviations
+#
+# Square symbols embedding Japanese Katakana words (U+3300-337F)
+# and Latin/CJK abbreviations (U+3380-33FF). Each decomposes to
+# a multi-codepoint Katakana or Latin sequence.
+#
+# Source: Unicode block U+3300-U+33FF
+# Reference: https://en.wikipedia.org/wiki/CJK_Compatibility
+#
+# NOTE: All entries have multi-codepoint targets (to_seq).
+# This file contains a representative subset. The complete
+# mapping (~256 entries) should be generated from UnicodeData.txt.
+#
+#   awk -F';' '$1 ~ /^33[0-9A-F]/ && $6 != "" {
+#     split($6, a, " "); target="";
+#     for (i in a) { if (a[i] !~ /^</) target = target " " a[i] }
+#     gsub(/^ /, "", target);
+#     if (target != "")
+#       print "[[pairs]]\nfrom = \"" $1 "\"\nto_seq = \"" target "\"\n"
+#   }' UnicodeData.txt
+
+[metadata]
+type = "cjk_compatibility"
+description = "CJK Compatibility square forms → Katakana/Latin sequences"
+direction = "narrowing"
+tags = ["japanese", "cjk", "canonicalize"]
+
+# ── Square Katakana words (3300-337F) ────────────────────────────────
+# Each decomposes to a sequence of standard Katakana characters.
+
+# ㌀ SQUARE APAATO → アパート
+[[pairs]]
+from = "3300"
+to_seq = "30A2 30D1 30FC 30C8"
+
+# ㌁ SQUARE ARUHUA → アルファ
+[[pairs]]
+from = "3301"
+to_seq = "30A2 30EB 30D5 30A1"
+
+# ㌂ SQUARE ANPEA → アンペア
+[[pairs]]
+from = "3302"
+to_seq = "30A2 30F3 30DA 30A2"
+
+# ㌃ SQUARE AARU → アール
+[[pairs]]
+from = "3303"
+to_seq = "30A2 30FC 30EB"
+
+# ㌄ SQUARE ININGU → イニング
+[[pairs]]
+from = "3304"
+to_seq = "30A4 30CB 30F3 30B0"
+
+# ㌅ SQUARE INTI → インチ
+[[pairs]]
+from = "3305"
+to_seq = "30A4 30F3 30C1"
+
+# ㌆ SQUARE UON → ウォン
+[[pairs]]
+from = "3306"
+to_seq = "30A6 30A9 30F3"
+
+# ㌇ SQUARE ESUKUUDO → エスクード
+[[pairs]]
+from = "3307"
+to_seq = "30A8 30B9 30AF 30FC 30C9"
+
+# ㌔ SQUARE KIRO → キロ
+[[pairs]]
+from = "3314"
+to_seq = "30AD 30ED"
+
+# ㌘ SQUARE GURAMU → グラム
+[[pairs]]
+from = "3318"
+to_seq = "30B0 30E9 30E0"
+
+# ㌢ SQUARE SENTI → センチ
+[[pairs]]
+from = "3322"
+to_seq = "30BB 30F3 30C1"
+
+# ㌧ SQUARE TON → トン
+[[pairs]]
+from = "3327"
+to_seq = "30C8 30F3"
+
+# ㌫ SQUARE PAASENTO → パーセント
+[[pairs]]
+from = "332B"
+to_seq = "30D1 30FC 30BB 30F3 30C8"
+
+# ㌶ SQUARE HEKUTAARU → ヘクタール
+[[pairs]]
+from = "3336"
+to_seq = "30D8 30AF 30BF 30FC 30EB"
+
+# ㌻ SQUARE PEEZI → ページ
+[[pairs]]
+from = "333B"
+to_seq = "30DA 30FC 30B8"
+
+# ㍉ SQUARE MIRI → ミリ
+[[pairs]]
+from = "3349"
+to_seq = "30DF 30EA"
+
+# ㍊ SQUARE MIRIBAARU → ミリバール
+[[pairs]]
+from = "334A"
+to_seq = "30DF 30EA 30D0 30FC 30EB"
+
+# ㍍ SQUARE MEETORU → メートル
+[[pairs]]
+from = "334D"
+to_seq = "30E1 30FC 30C8 30EB"
+
+# ㍑ SQUARE RITTORU → リットル
+[[pairs]]
+from = "3351"
+to_seq = "30EA 30C3 30C8 30EB"
+
+# ㍗ SQUARE WATTO → ワット
+[[pairs]]
+from = "3357"
+to_seq = "30EF 30C3 30C8"
+
+# ── Square Latin abbreviations (3380-33FF) ───────────────────────────
+
+# ㎐ SQUARE HZ → Hz
+[[pairs]]
+from = "3390"
+to_seq = "0048 007A"
+
+# ㎑ SQUARE KHZ → kHz
+[[pairs]]
+from = "3391"
+to_seq = "006B 0048 007A"
+
+# ㎒ SQUARE MHZ → MHz
+[[pairs]]
+from = "3392"
+to_seq = "004D 0048 007A"
+
+# ㎓ SQUARE GHZ → GHz
+[[pairs]]
+from = "3393"
+to_seq = "0047 0048 007A"
+
+# ㎔ SQUARE THZ → THz
+[[pairs]]
+from = "3394"
+to_seq = "0054 0048 007A"
+
+# ㎕ SQUARE MICRO LITRE → μl
+[[pairs]]
+from = "3395"
+to_seq = "03BC 006C"
+
+# ㎖ SQUARE MILLI LITRE → ml
+[[pairs]]
+from = "3396"
+to_seq = "006D 006C"
+
+# ㎗ SQUARE DECI LITRE → dl
+[[pairs]]
+from = "3397"
+to_seq = "0064 006C"
+
+# ㎘ SQUARE KILO LITRE → kl
+[[pairs]]
+from = "3398"
+to_seq = "006B 006C"
+
+# ㎙ SQUARE FM → fm
+[[pairs]]
+from = "3399"
+to_seq = "0066 006D"
+
+# ㎚ SQUARE NM → nm
+[[pairs]]
+from = "339A"
+to_seq = "006E 006D"
+
+# ㎛ SQUARE MICRO METRE → μm
+[[pairs]]
+from = "339B"
+to_seq = "03BC 006D"
+
+# ㎜ SQUARE MM → mm
+[[pairs]]
+from = "339C"
+to_seq = "006D 006D"
+
+# ㎝ SQUARE CM → cm
+[[pairs]]
+from = "339D"
+to_seq = "0063 006D"
+
+# ㎞ SQUARE KM → km
+[[pairs]]
+from = "339E"
+to_seq = "006B 006D"
+
+# ㎟ SQUARE MM SQUARED → mm²
+[[pairs]]
+from = "339F"
+to_seq = "006D 006D 00B2"
+
+# ㎠ SQUARE CM SQUARED → cm²
+[[pairs]]
+from = "33A0"
+to_seq = "0063 006D 00B2"
+
+# ㎡ SQUARE M SQUARED → m²
+[[pairs]]
+from = "33A1"
+to_seq = "006D 00B2"
+
+# ㎢ SQUARE KM SQUARED → km²
+[[pairs]]
+from = "33A2"
+to_seq = "006B 006D 00B2"
+
+# ── Japanese era names (337B-337E) ───────────────────────────────────
+
+# ㍻ SQUARE ERA NAME HEISEI → 平成
+[[pairs]]
+from = "337B"
+to_seq = "5E73 6210"
+
+# ㍼ SQUARE ERA NAME SYOUWA → 昭和
+[[pairs]]
+from = "337C"
+to_seq = "662D 548C"
+
+# ㍽ SQUARE ERA NAME TAISYOU → 大正
+[[pairs]]
+from = "337D"
+to_seq = "5927 6B63"
+
+# ㍾ SQUARE ERA NAME MEIZI → 明治
+[[pairs]]
+from = "337E"
+to_seq = "660E 6CBB"

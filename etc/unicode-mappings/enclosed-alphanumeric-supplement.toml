@@ -1,0 +1,110 @@
+# Enclosed Alphanumeric Supplement
+#
+# Enclosed letters and digits in the Supplementary Multilingual Plane.
+# Includes negative circled, squared, and regional indicator symbols.
+#
+# Source: Unicode block U+1F100-U+1F1FF
+# Reference: https://en.wikipedia.org/wiki/Enclosed_Alphanumeric_Supplement
+#
+# NOTE: Regional Indicator Symbols (1F1E6-1F1FF) are excluded —
+# they combine to form flag emoji and should not be decomposed.
+#
+# This file contains a representative subset. Generate the complete
+# mapping from UnicodeData.txt:
+#
+#   awk -F';' '$1 ~ /^1F1[0-9A-E]/ && $6 != "" {
+#     split($6, a, " "); target="";
+#     for (i in a) { if (a[i] !~ /^</) target = target " " a[i] }
+#     gsub(/^ /, "", target);
+#     if (target ~ / /)
+#       print "[[pairs]]\nfrom = \"" $1 "\"\nto_seq = \"" target "\"\n"
+#     else if (target != "")
+#       print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" target "\"\n"
+#   }' UnicodeData.txt
+
+[metadata]
+type = "enclosed_alphanumeric_supplement"
+description = "Enclosed Alphanumeric Supplement → plain letters/digits"
+direction = "narrowing"
+tags = ["ascii-normalize", "canonicalize"]
+
+# ── Digit comma/full stop variants (1F100-1F10A) ────────────────────
+
+# 🄀 U+1F100 → 0.
+[[pairs]]
+from = "1F100"
+to_seq = "0030 002E"
+
+# 🄁 U+1F101 → 0,
+[[pairs]]
+from = "1F101"
+to_seq = "0030 002C"
+
+# 🄂 U+1F102 → 1,
+[[pairs]]
+from = "1F102"
+to_seq = "0031 002C"
+
+# 🄃 U+1F103 → 2,
+[[pairs]]
+from = "1F103"
+to_seq = "0032 002C"
+
+# 🄄 U+1F104 → 3,
+[[pairs]]
+from = "1F104"
+to_seq = "0033 002C"
+
+# 🄅 U+1F105 → 4,
+[[pairs]]
+from = "1F105"
+to_seq = "0034 002C"
+
+# 🄆 U+1F106 → 5,
+[[pairs]]
+from = "1F106"
+to_seq = "0035 002C"
+
+# 🄇 U+1F107 → 6,
+[[pairs]]
+from = "1F107"
+to_seq = "0036 002C"
+
+# 🄈 U+1F108 → 7,
+[[pairs]]
+from = "1F108"
+to_seq = "0037 002C"
+
+# 🄉 U+1F109 → 8,
+[[pairs]]
+from = "1F109"
+to_seq = "0038 002C"
+
+# 🄊 U+1F10A → 9,
+[[pairs]]
+from = "1F10A"
+to_seq = "0039 002C"
+
+# ── Parenthesized Latin capital letters (1F110-1F129) → A-Z ─────────
+[[ranges]]
+from_start = "1F110"
+from_end = "1F129"
+to_start = "0041"
+
+# ── Squared Latin capital letters (1F130-1F149) → A-Z ───────────────
+[[ranges]]
+from_start = "1F130"
+from_end = "1F149"
+to_start = "0041"
+
+# ── Negative circled Latin capital letters (1F150-1F169) → A-Z ──────
+[[ranges]]
+from_start = "1F150"
+from_end = "1F169"
+to_start = "0041"
+
+# ── Negative squared Latin capital letters (1F170-1F189) → A-Z ──────
+[[ranges]]
+from_start = "1F170"
+from_end = "1F189"
+to_start = "0041"

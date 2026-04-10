@@ -1,0 +1,631 @@
+# Arabic Presentation Forms A and B
+#
+# Contextual forms (isolated, initial, medial, final) and ligatures
+# of Arabic letters. Maps to base Arabic characters.
+#
+# Source: Unicode blocks U+FB50-U+FDFF (Forms-A) and U+FE70-U+FEFF (Forms-B)
+# Reference: https://en.wikipedia.org/wiki/Arabic_Presentation_Forms-A
+#            https://en.wikipedia.org/wiki/Arabic_Presentation_Forms-B
+#
+# Forms-A (FB50-FDFF): 631 assigned, contextual forms + ligatures
+#   for Persian, Urdu, Sindhi, Central Asian languages.
+# Forms-B (FE70-FEFF): 141 assigned, spacing forms of Arabic
+#   diacritics and contextual letter forms.
+#
+# NOTE: This file contains a representative subset of Forms-B
+# (the most commonly encountered block). The complete mapping
+# (~770 entries across both blocks) should be generated from
+# UnicodeData.txt:
+#
+#   awk -F';' '($1 ~ /^FB[5-9A-F]/ || $1 ~ /^F[CD]/ || $1 ~ /^FE[7-F]/) && $6 != "" {
+#     split($6, a, " "); target="";
+#     for (i in a) { if (a[i] !~ /^</) target = target " " a[i] }
+#     gsub(/^ /, "", target);
+#     if (target ~ / /)
+#       print "[[pairs]]\nfrom = \"" $1 "\"\nto_seq = \"" target "\"\n"
+#     else if (target != "")
+#       print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" target "\"\n"
+#   }' UnicodeData.txt
+
+[metadata]
+type = "arabic_presentation_forms"
+description = "Arabic Presentation Forms → base Arabic characters"
+direction = "neutral"
+tags = ["arabic", "canonicalize"]
+
+# ── Arabic Presentation Forms-B (FE70-FEFF) ─────────────────────────
+# Contextual forms of basic Arabic letters.
+
+# Isolated forms
+[[pairs]]
+from = "FE70"
+to_seq = "0020 064B"
+
+[[pairs]]
+from = "FE71"
+to_seq = "0640 064B"
+
+[[pairs]]
+from = "FE72"
+to_seq = "0020 064C"
+
+[[pairs]]
+from = "FE74"
+to_seq = "0020 064D"
+
+[[pairs]]
+from = "FE76"
+to_seq = "0020 064E"
+
+[[pairs]]
+from = "FE77"
+to_seq = "0640 064E"
+
+[[pairs]]
+from = "FE78"
+to_seq = "0020 064F"
+
+[[pairs]]
+from = "FE79"
+to_seq = "0640 064F"
+
+[[pairs]]
+from = "FE7A"
+to_seq = "0020 0650"
+
+[[pairs]]
+from = "FE7B"
+to_seq = "0640 0650"
+
+[[pairs]]
+from = "FE7C"
+to_seq = "0020 0651"
+
+[[pairs]]
+from = "FE7D"
+to_seq = "0640 0651"
+
+[[pairs]]
+from = "FE7E"
+to_seq = "0020 0652"
+
+[[pairs]]
+from = "FE7F"
+to_seq = "0640 0652"
+
+# Hamza forms
+[[pairs]]
+from = "FE80"
+to = "0621"
+
+# Alef with madda above
+[[pairs]]
+from = "FE81"
+to = "0622"
+
+[[pairs]]
+from = "FE82"
+to = "0622"
+
+# Alef with hamza above
+[[pairs]]
+from = "FE83"
+to = "0623"
+
+[[pairs]]
+from = "FE84"
+to = "0623"
+
+# Waw with hamza above
+[[pairs]]
+from = "FE85"
+to = "0624"
+
+[[pairs]]
+from = "FE86"
+to = "0624"
+
+# Alef with hamza below
+[[pairs]]
+from = "FE87"
+to = "0625"
+
+[[pairs]]
+from = "FE88"
+to = "0625"
+
+# Yeh with hamza above
+[[pairs]]
+from = "FE89"
+to = "0626"
+
+[[pairs]]
+from = "FE8A"
+to = "0626"
+
+[[pairs]]
+from = "FE8B"
+to = "0626"
+
+[[pairs]]
+from = "FE8C"
+to = "0626"
+
+# Alef
+[[pairs]]
+from = "FE8D"
+to = "0627"
+
+[[pairs]]
+from = "FE8E"
+to = "0627"
+
+# Beh
+[[pairs]]
+from = "FE8F"
+to = "0628"
+
+[[pairs]]
+from = "FE90"
+to = "0628"
+
+[[pairs]]
+from = "FE91"
+to = "0628"
+
+[[pairs]]
+from = "FE92"
+to = "0628"
+
+# Teh marbuta
+[[pairs]]
+from = "FE93"
+to = "0629"
+
+[[pairs]]
+from = "FE94"
+to = "0629"
+
+# Teh
+[[pairs]]
+from = "FE95"
+to = "062A"
+
+[[pairs]]
+from = "FE96"
+to = "062A"
+
+[[pairs]]
+from = "FE97"
+to = "062A"
+
+[[pairs]]
+from = "FE98"
+to = "062A"
+
+# Theh
+[[pairs]]
+from = "FE99"
+to = "062B"
+
+[[pairs]]
+from = "FE9A"
+to = "062B"
+
+[[pairs]]
+from = "FE9B"
+to = "062B"
+
+[[pairs]]
+from = "FE9C"
+to = "062B"
+
+# Jeem
+[[pairs]]
+from = "FE9D"
+to = "062C"
+
+[[pairs]]
+from = "FE9E"
+to = "062C"
+
+[[pairs]]
+from = "FE9F"
+to = "062C"
+
+[[pairs]]
+from = "FEA0"
+to = "062C"
+
+# Hah
+[[pairs]]
+from = "FEA1"
+to = "062D"
+
+[[pairs]]
+from = "FEA2"
+to = "062D"
+
+[[pairs]]
+from = "FEA3"
+to = "062D"
+
+[[pairs]]
+from = "FEA4"
+to = "062D"
+
+# Khah
+[[pairs]]
+from = "FEA5"
+to = "062E"
+
+[[pairs]]
+from = "FEA6"
+to = "062E"
+
+[[pairs]]
+from = "FEA7"
+to = "062E"
+
+[[pairs]]
+from = "FEA8"
+to = "062E"
+
+# Dal
+[[pairs]]
+from = "FEA9"
+to = "062F"
+
+[[pairs]]
+from = "FEAA"
+to = "062F"
+
+# Thal
+[[pairs]]
+from = "FEAB"
+to = "0630"
+
+[[pairs]]
+from = "FEAC"
+to = "0630"
+
+# Reh
+[[pairs]]
+from = "FEAD"
+to = "0631"
+
+[[pairs]]
+from = "FEAE"
+to = "0631"
+
+# Zain
+[[pairs]]
+from = "FEAF"
+to = "0632"
+
+[[pairs]]
+from = "FEB0"
+to = "0632"
+
+# Seen
+[[pairs]]
+from = "FEB1"
+to = "0633"
+
+[[pairs]]
+from = "FEB2"
+to = "0633"
+
+[[pairs]]
+from = "FEB3"
+to = "0633"
+
+[[pairs]]
+from = "FEB4"
+to = "0633"
+
+# Sheen
+[[pairs]]
+from = "FEB5"
+to = "0634"
+
+[[pairs]]
+from = "FEB6"
+to = "0634"
+
+[[pairs]]
+from = "FEB7"
+to = "0634"
+
+[[pairs]]
+from = "FEB8"
+to = "0634"
+
+# Sad
+[[pairs]]
+from = "FEB9"
+to = "0635"
+
+[[pairs]]
+from = "FEBA"
+to = "0635"
+
+[[pairs]]
+from = "FEBB"
+to = "0635"
+
+[[pairs]]
+from = "FEBC"
+to = "0635"
+
+# Dad
+[[pairs]]
+from = "FEBD"
+to = "0636"
+
+[[pairs]]
+from = "FEBE"
+to = "0636"
+
+[[pairs]]
+from = "FEBF"
+to = "0636"
+
+[[pairs]]
+from = "FEC0"
+to = "0636"
+
+# Tah
+[[pairs]]
+from = "FEC1"
+to = "0637"
+
+[[pairs]]
+from = "FEC2"
+to = "0637"
+
+[[pairs]]
+from = "FEC3"
+to = "0637"
+
+[[pairs]]
+from = "FEC4"
+to = "0637"
+
+# Zah
+[[pairs]]
+from = "FEC5"
+to = "0638"
+
+[[pairs]]
+from = "FEC6"
+to = "0638"
+
+[[pairs]]
+from = "FEC7"
+to = "0638"
+
+[[pairs]]
+from = "FEC8"
+to = "0638"
+
+# Ain
+[[pairs]]
+from = "FEC9"
+to = "0639"
+
+[[pairs]]
+from = "FECA"
+to = "0639"
+
+[[pairs]]
+from = "FECB"
+to = "0639"
+
+[[pairs]]
+from = "FECC"
+to = "0639"
+
+# Ghain
+[[pairs]]
+from = "FECD"
+to = "063A"
+
+[[pairs]]
+from = "FECE"
+to = "063A"
+
+[[pairs]]
+from = "FECF"
+to = "063A"
+
+[[pairs]]
+from = "FED0"
+to = "063A"
+
+# Feh
+[[pairs]]
+from = "FED1"
+to = "0641"
+
+[[pairs]]
+from = "FED2"
+to = "0641"
+
+[[pairs]]
+from = "FED3"
+to = "0641"
+
+[[pairs]]
+from = "FED4"
+to = "0641"
+
+# Qaf
+[[pairs]]
+from = "FED5"
+to = "0642"
+
+[[pairs]]
+from = "FED6"
+to = "0642"
+
+[[pairs]]
+from = "FED7"
+to = "0642"
+
+[[pairs]]
+from = "FED8"
+to = "0642"
+
+# Kaf
+[[pairs]]
+from = "FED9"
+to = "0643"
+
+[[pairs]]
+from = "FEDA"
+to = "0643"
+
+[[pairs]]
+from = "FEDB"
+to = "0643"
+
+[[pairs]]
+from = "FEDC"
+to = "0643"
+
+# Lam
+[[pairs]]
+from = "FEDD"
+to = "0644"
+
+[[pairs]]
+from = "FEDE"
+to = "0644"
+
+[[pairs]]
+from = "FEDF"
+to = "0644"
+
+[[pairs]]
+from = "FEE0"
+to = "0644"
+
+# Meem
+[[pairs]]
+from = "FEE1"
+to = "0645"
+
+[[pairs]]
+from = "FEE2"
+to = "0645"
+
+[[pairs]]
+from = "FEE3"
+to = "0645"
+
+[[pairs]]
+from = "FEE4"
+to = "0645"
+
+# Noon
+[[pairs]]
+from = "FEE5"
+to = "0646"
+
+[[pairs]]
+from = "FEE6"
+to = "0646"
+
+[[pairs]]
+from = "FEE7"
+to = "0646"
+
+[[pairs]]
+from = "FEE8"
+to = "0646"
+
+# Heh
+[[pairs]]
+from = "FEE9"
+to = "0647"
+
+[[pairs]]
+from = "FEEA"
+to = "0647"
+
+[[pairs]]
+from = "FEEB"
+to = "0647"
+
+[[pairs]]
+from = "FEEC"
+to = "0647"
+
+# Waw
+[[pairs]]
+from = "FEED"
+to = "0648"
+
+[[pairs]]
+from = "FEEE"
+to = "0648"
+
+# Alef maksura
+[[pairs]]
+from = "FEEF"
+to = "0649"
+
+[[pairs]]
+from = "FEF0"
+to = "0649"
+
+# Yeh
+[[pairs]]
+from = "FEF1"
+to = "064A"
+
+[[pairs]]
+from = "FEF2"
+to = "064A"
+
+[[pairs]]
+from = "FEF3"
+to = "064A"
+
+[[pairs]]
+from = "FEF4"
+to = "064A"
+
+# Lam-Alef ligatures
+[[pairs]]
+from = "FEF5"
+to_seq = "0644 0622"
+
+[[pairs]]
+from = "FEF6"
+to_seq = "0644 0622"
+
+[[pairs]]
+from = "FEF7"
+to_seq = "0644 0623"
+
+[[pairs]]
+from = "FEF8"
+to_seq = "0644 0623"
+
+[[pairs]]
+from = "FEF9"
+to_seq = "0644 0625"
+
+[[pairs]]
+from = "FEFA"
+to_seq = "0644 0625"
+
+[[pairs]]
+from = "FEFB"
+to_seq = "0644 0627"
+
+[[pairs]]
+from = "FEFC"
+to_seq = "0644 0627"

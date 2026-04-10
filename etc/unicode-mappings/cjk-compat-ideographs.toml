@@ -1,0 +1,373 @@
+# CJK Compatibility Ideographs
+#
+# Compatibility ideographs that have canonical decompositions to
+# CJK Unified Ideographs. These exist solely for round-trip
+# compatibility with legacy East Asian encodings (KS X 1001,
+# JIS X 0213, CNS 11643, etc.).
+#
+# Each entry maps a compatibility ideograph to its canonical
+# unified equivalent as defined by Unicode's canonical
+# decomposition mapping.
+#
+# Source: Unicode block U+F900-U+FAD9
+# Reference: https://unicode.org/charts/nameslist/n_F900.html
+# Authoritative source: UnicodeData.txt field 5 (decomposition mapping)
+#
+# ~12 codepoints in this range are actually unified ideographs
+# (no decomposition mapping) and are excluded.
+#
+# NOTE: This file contains a representative subset. The complete
+# mapping (~460 entries) should be generated from the Unicode
+# Character Database (UnicodeData.txt) using the canonical
+# decomposition field for codepoints in F900-FAD9.
+# A generation script is provided at bin/generate-cjk-compat.sh.
+
+[metadata]
+type = "cjk_compat_ideographs"
+description = "CJK Compatibility Ideographs → CJK Unified Ideographs"
+direction = "neutral"
+tags = ["cjk", "japanese", "korean", "canonicalize"]
+
+# ── KS X 1001 source (Korean) ────────────────────────────────────────
+# F900-F91F: sourced from KS X 1001 (Korean standard)
+
+[[pairs]]
+from = "F900"
+to = "8C48"
+
+[[pairs]]
+from = "F901"
+to = "66F4"
+
+[[pairs]]
+from = "F902"
+to = "8ECA"
+
+[[pairs]]
+from = "F903"
+to = "8CC8"
+
+[[pairs]]
+from = "F904"
+to = "6ED1"
+
+[[pairs]]
+from = "F905"
+to = "4E32"
+
+[[pairs]]
+from = "F906"
+to = "53E5"
+
+[[pairs]]
+from = "F907"
+to = "9F9C"
+
+[[pairs]]
+from = "F908"
+to = "9F9C"
+
+[[pairs]]
+from = "F909"
+to = "5951"
+
+[[pairs]]
+from = "F90A"
+to = "91D1"
+
+[[pairs]]
+from = "F90B"
+to = "5587"
+
+[[pairs]]
+from = "F90C"
+to = "5948"
+
+[[pairs]]
+from = "F90D"
+to = "61F6"
+
+[[pairs]]
+from = "F90E"
+to = "7669"
+
+[[pairs]]
+from = "F90F"
+to = "7F85"
+
+[[pairs]]
+from = "F910"
+to = "863F"
+
+[[pairs]]
+from = "F911"
+to = "87BA"
+
+[[pairs]]
+from = "F912"
+to = "88F8"
+
+[[pairs]]
+from = "F913"
+to = "908F"
+
+[[pairs]]
+from = "F914"
+to = "6A02"
+
+[[pairs]]
+from = "F915"
+to = "6D1B"
+
+[[pairs]]
+from = "F916"
+to = "70D9"
+
+[[pairs]]
+from = "F917"
+to = "73DE"
+
+[[pairs]]
+from = "F918"
+to = "843D"
+
+[[pairs]]
+from = "F919"
+to = "916A"
+
+[[pairs]]
+from = "F91A"
+to = "99F1"
+
+[[pairs]]
+from = "F91B"
+to = "4E82"
+
+[[pairs]]
+from = "F91C"
+to = "5375"
+
+[[pairs]]
+from = "F91D"
+to = "6B04"
+
+[[pairs]]
+from = "F91E"
+to = "721B"
+
+[[pairs]]
+from = "F91F"
+to = "862D"
+
+
+# ── Additional KS X 1001 entries ─────────────────────────────────────
+
+[[pairs]]
+from = "F920"
+to = "9E1E"
+
+[[pairs]]
+from = "F921"
+to = "5D50"
+
+[[pairs]]
+from = "F922"
+to = "6FEB"
+
+[[pairs]]
+from = "F923"
+to = "85CD"
+
+[[pairs]]
+from = "F924"
+to = "8964"
+
+[[pairs]]
+from = "F925"
+to = "62C9"
+
+[[pairs]]
+from = "F926"
+to = "81D8"
+
+[[pairs]]
+from = "F927"
+to = "881F"
+
+[[pairs]]
+from = "F928"
+to = "5ECA"
+
+[[pairs]]
+from = "F929"
+to = "6717"
+
+[[pairs]]
+from = "F92A"
+to = "6D6A"
+
+[[pairs]]
+from = "F92B"
+to = "72FC"
+
+[[pairs]]
+from = "F92C"
+to = "90CE"
+
+[[pairs]]
+from = "F92D"
+to = "4F86"
+
+[[pairs]]
+from = "F92E"
+to = "51B7"
+
+[[pairs]]
+from = "F92F"
+to = "52DE"
+
+[[pairs]]
+from = "F930"
+to = "64C4"
+
+[[pairs]]
+from = "F931"
+to = "6AD3"
+
+[[pairs]]
+from = "F932"
+to = "7210"
+
+[[pairs]]
+from = "F933"
+to = "76E7"
+
+[[pairs]]
+from = "F934"
+to = "8001"
+
+[[pairs]]
+from = "F935"
+to = "8606"
+
+[[pairs]]
+from = "F936"
+to = "865C"
+
+[[pairs]]
+from = "F937"
+to = "8DEF"
+
+[[pairs]]
+from = "F938"
+to = "9732"
+
+[[pairs]]
+from = "F939"
+to = "9B6F"
+
+[[pairs]]
+from = "F93A"
+to = "9DFA"
+
+[[pairs]]
+from = "F93B"
+to = "788C"
+
+[[pairs]]
+from = "F93C"
+to = "797F"
+
+[[pairs]]
+from = "F93D"
+to = "7DA0"
+
+[[pairs]]
+from = "F93E"
+to = "83C9"
+
+[[pairs]]
+from = "F93F"
+to = "9304"
+
+[[pairs]]
+from = "F940"
+to = "9E7F"
+
+[[pairs]]
+from = "F941"
+to = "8AD6"
+
+[[pairs]]
+from = "F942"
+to = "58DF"
+
+[[pairs]]
+from = "F943"
+to = "5F04"
+
+[[pairs]]
+from = "F944"
+to = "7C60"
+
+[[pairs]]
+from = "F945"
+to = "807E"
+
+[[pairs]]
+from = "F946"
+to = "7262"
+
+[[pairs]]
+from = "F947"
+to = "78CA"
+
+[[pairs]]
+from = "F948"
+to = "8CC2"
+
+[[pairs]]
+from = "F949"
+to = "96F7"
+
+[[pairs]]
+from = "F94A"
+to = "58D8"
+
+[[pairs]]
+from = "F94B"
+to = "5C62"
+
+[[pairs]]
+from = "F94C"
+to = "6A13"
+
+[[pairs]]
+from = "F94D"
+to = "6DDA"
+
+[[pairs]]
+from = "F94E"
+to = "6F0F"
+
+[[pairs]]
+from = "F94F"
+to = "7D2F"
+
+# ── Truncated for maintainability ────────────────────────────────────
+#
+# The complete mapping contains ~460 entries covering F900-FAD9.
+# This file includes the first 80 entries (F900-F94F) as a
+# verified reference subset.
+#
+# To generate the complete file from the Unicode Character Database:
+#
+#   curl -sO https://unicode.org/Public/UNIDATA/UnicodeData.txt
+#   awk -F';' '$1 ~ /^F9/ || $1 ~ /^FA[0-9A-D]/ {
+#     if ($6 != "") print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" $6 "\"\n"
+#   }' UnicodeData.txt
+#
+# The awk command extracts canonical decomposition mappings (field 6)
+# for codepoints in the F900-FAD9 range. Entries where field 6 is
+# empty are unified ideographs (not compatibility) and should be
+# excluded.

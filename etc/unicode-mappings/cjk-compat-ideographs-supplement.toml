@@ -1,0 +1,184 @@
+# CJK Compatibility Ideographs Supplement
+#
+# Compatibility ideographs in the Supplementary Ideographic Plane,
+# primarily for CNS 11643 round-trip compatibility. Each has a
+# canonical decomposition to a CJK Unified Ideograph.
+#
+# Source: Unicode block U+2F800-U+2FA1F
+# Reference: https://unicode.org/charts/nameslist/n_2F800.html
+#
+# NOTE: This file contains a representative subset (first 40 entries).
+# The complete mapping (~542 entries) should be generated from
+# UnicodeData.txt:
+#
+#   awk -F';' '$1 ~ /^2F[89A]/ && $6 != "" {
+#     print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" $6 "\"\n"
+#   }' UnicodeData.txt
+
+[metadata]
+type = "cjk_compat_ideographs_supplement"
+description = "CJK Compatibility Ideographs Supplement → CJK Unified"
+direction = "neutral"
+tags = ["cjk", "canonicalize"]
+
+# ── CNS 11643 compatibility ideographs ───────────────────────────────
+
+[[pairs]]
+from = "2F800"
+to = "4E3D"
+
+[[pairs]]
+from = "2F801"
+to = "4E38"
+
+[[pairs]]
+from = "2F802"
+to = "4E41"
+
+[[pairs]]
+from = "2F803"
+to = "20122"
+
+[[pairs]]
+from = "2F804"
+to = "4F60"
+
+[[pairs]]
+from = "2F805"
+to = "4FAE"
+
+[[pairs]]
+from = "2F806"
+to = "4FBB"
+
+[[pairs]]
+from = "2F807"
+to = "5002"
+
+[[pairs]]
+from = "2F808"
+to = "507A"
+
+[[pairs]]
+from = "2F809"
+to = "5099"
+
+[[pairs]]
+from = "2F80A"
+to = "50E7"
+
+[[pairs]]
+from = "2F80B"
+to = "50CF"
+
+[[pairs]]
+from = "2F80C"
+to = "349E"
+
+[[pairs]]
+from = "2F80D"
+to = "2063A"
+
+[[pairs]]
+from = "2F80E"
+to = "514D"
+
+[[pairs]]
+from = "2F80F"
+to = "5154"
+
+[[pairs]]
+from = "2F810"
+to = "5164"
+
+[[pairs]]
+from = "2F811"
+to = "5177"
+
+[[pairs]]
+from = "2F812"
+to = "2051C"
+
+[[pairs]]
+from = "2F813"
+to = "34B9"
+
+[[pairs]]
+from = "2F814"
+to = "5167"
+
+[[pairs]]
+from = "2F815"
+to = "518D"
+
+[[pairs]]
+from = "2F816"
+to = "2054B"
+
+[[pairs]]
+from = "2F817"
+to = "5197"
+
+[[pairs]]
+from = "2F818"
+to = "51A4"
+
+[[pairs]]
+from = "2F819"
+to = "4ECC"
+
+[[pairs]]
+from = "2F81A"
+to = "51AC"
+
+[[pairs]]
+from = "2F81B"
+to = "51B5"
+
+[[pairs]]
+from = "2F81C"
+to = "291DF"
+
+[[pairs]]
+from = "2F81D"
+to = "51F5"
+
+[[pairs]]
+from = "2F81E"
+to = "5203"
+
+[[pairs]]
+from = "2F81F"
+to = "34DF"
+
+[[pairs]]
+from = "2F820"
+to = "523B"
+
+[[pairs]]
+from = "2F821"
+to = "5246"
+
+[[pairs]]
+from = "2F822"
+to = "5272"
+
+[[pairs]]
+from = "2F823"
+to = "5277"
+
+[[pairs]]
+from = "2F824"
+to = "3515"
+
+[[pairs]]
+from = "2F825"
+to = "52C7"
+
+[[pairs]]
+from = "2F826"
+to = "52C9"
+
+[[pairs]]
+from = "2F827"
+to = "52E4"
