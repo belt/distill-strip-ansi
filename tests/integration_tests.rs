@@ -10,7 +10,11 @@ fn get_fixture_path(name: &str) -> String {
 
 fn read_fixture(name: &str) -> String {
     let path = get_fixture_path(name);
-    fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read fixture: {}", name))
+    let content =
+        fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read fixture: {}", name));
+    // Normalize \r\n → \n so fixtures work on Windows where git
+    // may check out files with CRLF line endings.
+    content.replace("\r\n", "\n")
 }
 
 fn cmd() -> Command {
