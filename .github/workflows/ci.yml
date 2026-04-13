@@ -503,11 +503,11 @@ jobs:
         if: matrix.container == 'rust:alpine'
         run: apk del -q .ci-deps
       - name: Stage Artifacts
-        shell: bash
+        shell: sh
         run: |
           mkdir -p dist/
           EXT=""
-          [[ "${{ matrix.target }}" == *"windows"* ]] && EXT=".exe"
+          case "${{ matrix.target }}" in *windows*) EXT=".exe" ;; esac
           cp target/${{ matrix.target }}/release/strip-ansi${EXT} dist/strip-ansi-${{ matrix.name }}${EXT}
           cp target/${{ matrix.target }}/release/distill-ansi${EXT} dist/distill-ansi-${{ matrix.name }}${EXT}
       - name: Upload Staging Artifacts
