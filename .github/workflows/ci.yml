@@ -398,7 +398,7 @@ jobs:
           apk del -q .ci-deps
       - name: Install uv
         if: ${{ !env.ACT }}
-        uses: astral-sh/setup-uv@3650047249a008c2901306c4f0393081e7d23d8c  # v5.3.0
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78  # v7.6.0
         with:
           enable-cache: true
       - name: Enforce Diff Coverage
