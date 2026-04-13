@@ -2,7 +2,7 @@
 //!
 //! Companion to `strip-ansi`. Where `strip-ansi` removes sequences,
 //! `distill-ansi` rewrites them: color depth reduction, palette
-//! remapping, greyscale conversion.
+//! remapping, greyscale conversion, Unicode normalization.
 //!
 //! Both binaries share the `strip_ansi` library crate.
 
@@ -20,6 +20,9 @@ use strip_ansi::{ClassifyingParser, SeqAction, SeqKind, SgrContent};
 
 #[cfg(feature = "color-palette")]
 use strip_ansi::palette::{PROTANOPIA_VIENOT, DEUTERANOPIA_VIENOT};
+
+#[cfg(feature = "unicode-normalize")]
+use strip_ansi::unicode_map::UnicodeMap;
 
 /// Transform ANSI escape sequences in terminal output.
 ///
@@ -53,6 +56,34 @@ struct Args {
 
     /// Input file (default: stdin).
     pub input: Option<String>,
+
+    // ── Unicode normalization ───────────────────────────────────────
+
+    /// Add Unicode mapping sets by @tag, name, or file path.
+    ///
+    /// Additive to the default @ascii-normalize builtins.
+    /// Tags: @security, @ascii-normalize, @narrowing, @widening,
+    /// @canonicalize, @japanese, @korean, @cjk, @math, @arabic, @all.
+    /// Names: math-latin, math-greek, enclosed-alphanumerics, etc.
+    /// Paths: path/to/custom.toml
+    #[cfg(feature = "unicode-normalize")]
+    #[arg(long = "unicode-map", value_name = "SPEC")]
+    unicode_map: Vec<String>,
+
+    /// Remove Unicode mapping sets by @tag or name.
+    ///
+    /// Removing @security-tagged sets requires --unsafe.
+    #[cfg(feature = "unicode-normalize")]
+    #[arg(long = "no-unicode-map", value_name = "SPEC")]
+    no_unicode_map: Vec<String>,
+
+    /// Allow removing security-tagged Unicode mappings.
+    ///
+    /// Required for --no-unicode-map @security or individual
+    /// security builtins (fullwidth-ascii, math-latin-bold,
+    /// latin-ligatures).
+    #[arg(long, hide_short_help = true)]
+    r#unsafe: bool,
 }
 
 fn main() -> ExitCode {
@@ -86,6 +117,14 @@ fn main() -> ExitCode {
     #[cfg(not(feature = "color-palette"))]
     let palette = PaletteTransform::default();
 
+    #[cfg(feature = "unicode-normalize")]
+    let unicode_map = match build_unicode_map(&args) {
+        Ok(m) => m,
+        Err(code) => return code,
+    };
+    #[cfg(not(feature = "unicode-normalize"))]
+    let unicode_map: Option<()> = None;
+
     let reader: Box<dyn BufRead> = match &args.input {
         Some(path) => match std::fs::File::open(path) {
             Ok(f) => Box::new(BufReader::new(f)),
@@ -108,7 +147,7 @@ fn main() -> ExitCode {
         None => Box::new(io::BufWriter::new(io::stdout().lock())),
     };
 
-    if let Err(e) = run_transform(reader, &mut writer, depth, &palette) {
+    if let Err(e) = run_transform(reader, &mut writer, depth, &palette, &unicode_map) {
         if e.kind() != io::ErrorKind::BrokenPipe {
             eprintln!("distill-ansi: {e}");
             return ExitCode::from(1);
@@ -139,14 +178,23 @@ fn parse_palette(s: &str) -> Option<PaletteTransform> {
     }
 }
 
-/// Core transform loop: read input, rewrite SGR sequences, write output.
+/// Core transform loop: read input, rewrite SGR sequences, normalize Unicode, write output.
 fn run_transform(
     mut reader: Box<dyn BufRead>,
     writer: &mut dyn Write,
     depth: ColorDepth,
     _palette: &PaletteTransform,
+    #[cfg(feature = "unicode-normalize")] unicode_map: &Option<UnicodeMap>,
+    #[cfg(not(feature = "unicode-normalize"))] _unicode_map: &Option<()>,
 ) -> io::Result<()> {
-    let no_op = depth == ColorDepth::Truecolor && _palette.is_identity();
+    let color_no_op = depth == ColorDepth::Truecolor && _palette.is_identity();
+
+    #[cfg(feature = "unicode-normalize")]
+    let unicode_active = unicode_map.is_some();
+    #[cfg(not(feature = "unicode-normalize"))]
+    let unicode_active = false;
+
+    let full_no_op = color_no_op && !unicode_active;
 
     let mut buf = Vec::with_capacity(8192);
     loop {
@@ -156,12 +204,22 @@ fn run_transform(
             break;
         }
 
-        if no_op {
+        if full_no_op {
             writer.write_all(&buf)?;
             continue;
         }
 
-        let transformed = transform_line(&buf, depth, _palette);
+        let mut transformed = if color_no_op {
+            buf.clone()
+        } else {
+            transform_line(&buf, depth, _palette)
+        };
+
+        #[cfg(feature = "unicode-normalize")]
+        if let Some(map) = unicode_map {
+            transformed = normalize_content(&transformed, map);
+        }
+
         writer.write_all(&transformed)?;
     }
     writer.flush()
@@ -242,4 +300,324 @@ fn transform_line(input: &[u8], depth: ColorDepth, _palette: &PaletteTransform) 
     }
 
     output
+}
+
+// ── Unicode normalization ───────────────────────────────────────────
+
+#[cfg(feature = "unicode-normalize")]
+fn normalize_content(input: &[u8], map: &UnicodeMap) -> Vec<u8> {
+    use memchr::memchr;
+
+    // Fast path: no bytes >= 0x80 means pure ASCII — nothing to normalize.
+    // (All builtin sources are >= U+00B2, which is 0xC2 0xB2 in UTF-8.)
+    if memchr(0xC2, input).is_none()
+        && memchr(0xC3, input).is_none()
+        && memchr(0xE2, input).is_none()
+        && memchr(0xEF, input).is_none()
+        && memchr(0xF0, input).is_none()
+    {
+        return input.to_vec();
+    }
+
+    let s = match std::str::from_utf8(input) {
+        Ok(s) => s,
+        Err(_) => return input.to_vec(), // not valid UTF-8, pass through
+    };
+
+    let mut output = Vec::with_capacity(input.len());
+    let mut char_buf = Vec::new();
+    let mut modified = false;
+
+    for c in s.chars() {
+        char_buf.clear();
+        if map.lookup_into(c, &mut char_buf) {
+            for &tc in &char_buf {
+                let mut enc = [0u8; 4];
+                let encoded = tc.encode_utf8(&mut enc);
+                output.extend_from_slice(encoded.as_bytes());
+            }
+            modified = true;
+        } else {
+            let mut enc = [0u8; 4];
+            let encoded = c.encode_utf8(&mut enc);
+            output.extend_from_slice(encoded.as_bytes());
+        }
+    }
+
+    if modified {
+        output
+    } else {
+        input.to_vec()
+    }
+}
+
+/// Shipped TOML file names and their tags.
+#[cfg(feature = "unicode-normalize")]
+const SHIPPED_FILES: &[(&str, &[&str])] = &[
+    ("math-latin", &["math", "canonicalize", "ascii-normalize"]),
+    ("math-greek", &["math", "canonicalize"]),
+    ("enclosed-alphanumerics", &["ascii-normalize", "canonicalize"]),
+    ("enclosed-alphanumeric-supplement", &["ascii-normalize", "canonicalize"]),
+    ("enclosed-cjk", &["cjk", "japanese", "korean", "canonicalize"]),
+    ("cjk-compatibility", &["japanese", "cjk", "canonicalize"]),
+    ("halfwidth-katakana", &["japanese", "legacy-encoding", "canonicalize"]),
+    ("halfwidth-hangul", &["korean", "legacy-encoding", "canonicalize"]),
+    ("cjk-compat-ideographs", &["cjk", "japanese", "korean", "canonicalize"]),
+    ("cjk-compat-ideographs-supplement", &["cjk", "canonicalize"]),
+    ("arabic-presentation-forms", &["arabic", "canonicalize"]),
+];
+
+/// Shipped TOML file direction metadata for @narrowing/@widening filtering.
+#[cfg(feature = "unicode-normalize")]
+const SHIPPED_DIRECTIONS: &[(&str, &str)] = &[
+    ("math-latin", "narrowing"),
+    ("math-greek", "neutral"),
+    ("enclosed-alphanumerics", "narrowing"),
+    ("enclosed-alphanumeric-supplement", "narrowing"),
+    ("enclosed-cjk", "neutral"),
+    ("cjk-compatibility", "narrowing"),
+    ("halfwidth-katakana", "widening"),
+    ("halfwidth-hangul", "widening"),
+    ("cjk-compat-ideographs", "neutral"),
+    ("cjk-compat-ideographs-supplement", "neutral"),
+    ("arabic-presentation-forms", "neutral"),
+];
+
+/// Resolve a `@tag` to a list of shipped file names.
+#[cfg(feature = "unicode-normalize")]
+fn resolve_tag(tag: &str) -> Vec<&'static str> {
+    match tag {
+        "@all" => SHIPPED_FILES.iter().map(|(name, _)| *name).collect(),
+        "@canonicalize" => SHIPPED_FILES
+            .iter()
+            .filter(|(_, tags)| tags.contains(&"canonicalize"))
+            .map(|(name, _)| *name)
+            .collect(),
+        "@ascii-normalize" => SHIPPED_FILES
+            .iter()
+            .filter(|(_, tags)| tags.contains(&"ascii-normalize"))
+            .map(|(name, _)| *name)
+            .collect(),
+        "@math" => SHIPPED_FILES
+            .iter()
+            .filter(|(_, tags)| tags.contains(&"math"))
+            .map(|(name, _)| *name)
+            .collect(),
+        "@japanese" => SHIPPED_FILES
+            .iter()
+            .filter(|(_, tags)| tags.contains(&"japanese"))
+            .map(|(name, _)| *name)
+            .collect(),
+        "@korean" => SHIPPED_FILES
+            .iter()
+            .filter(|(_, tags)| tags.contains(&"korean"))
+            .map(|(name, _)| *name)
+            .collect(),
+        "@cjk" => SHIPPED_FILES
+            .iter()
+            .filter(|(_, tags)| tags.contains(&"cjk"))
+            .map(|(name, _)| *name)
+            .collect(),
+        "@arabic" => SHIPPED_FILES
+            .iter()
+            .filter(|(_, tags)| tags.contains(&"arabic"))
+            .map(|(name, _)| *name)
+            .collect(),
+        "@narrowing" => SHIPPED_DIRECTIONS
+            .iter()
+            .filter(|(_, dir)| *dir == "narrowing" || *dir == "neutral")
+            .map(|(name, _)| *name)
+            .collect(),
+        "@widening" => SHIPPED_DIRECTIONS
+            .iter()
+            .filter(|(_, dir)| *dir == "widening")
+            .map(|(name, _)| *name)
+            .collect(),
+        _ => vec![],
+    }
+}
+
+/// Security-tagged builtin set names.
+#[cfg(feature = "unicode-normalize")]
+const SECURITY_BUILTINS: &[&str] = &[
+    "fullwidth_ascii",
+    "math_latin_bold",
+    "latin_ligatures",
+];
+
+/// Resolve a `--no-unicode-map` spec to builtin type_names to remove.
+/// For `@security`, returns the security builtins.
+/// For `@ascii-normalize`, returns all builtin type_names.
+#[cfg(feature = "unicode-normalize")]
+fn resolve_remove_builtins(spec: &str) -> Vec<&'static str> {
+    match spec {
+        "@security" => SECURITY_BUILTINS.to_vec(),
+        "@ascii-normalize" => vec![
+            "fullwidth_ascii",
+            "math_latin_bold",
+            "latin_ligatures",
+            "enclosed_circled_letters",
+            "superscript_subscript",
+        ],
+        _ => {
+            // Normalize CLI name (dashes) to type_name (underscores)
+            let type_name = spec.replace('-', "_");
+            // Check if it's a known builtin
+            let all_builtins = [
+                "fullwidth_ascii",
+                "math_latin_bold",
+                "latin_ligatures",
+                "enclosed_circled_letters",
+                "superscript_subscript",
+            ];
+            if all_builtins.contains(&type_name.as_str()) {
+                vec![match type_name.as_str() {
+                    "fullwidth_ascii" => "fullwidth_ascii",
+                    "math_latin_bold" => "math_latin_bold",
+                    "latin_ligatures" => "latin_ligatures",
+                    "enclosed_circled_letters" => "enclosed_circled_letters",
+                    "superscript_subscript" => "superscript_subscript",
+                    _ => unreachable!(),
+                }]
+            } else {
+                vec![]
+            }
+        }
+    }
+}
+
+/// Check if a `--no-unicode-map` spec targets any security-tagged builtins.
+#[cfg(feature = "unicode-normalize")]
+fn targets_security(spec: &str) -> bool {
+    if spec == "@security" || spec == "@ascii-normalize" {
+        return true;
+    }
+    let type_name = spec.replace('-', "_");
+    SECURITY_BUILTINS.contains(&type_name.as_str())
+}
+
+/// Build the UnicodeMap from CLI args.
+///
+/// Returns `Ok(Some(map))` when normalization is active,
+/// `Ok(None)` when all builtins have been removed and no TOML loaded,
+/// `Err(ExitCode)` on validation errors.
+#[cfg(feature = "unicode-normalize")]
+fn build_unicode_map(args: &Args) -> Result<Option<UnicodeMap>, ExitCode> {
+    // Check --unsafe gate for security removals.
+    for spec in &args.no_unicode_map {
+        if targets_security(spec) && !args.r#unsafe {
+            eprintln!(
+                "distill-ansi: --no-unicode-map {spec} removes security mappings. \
+                 Add --unsafe to acknowledge the risk."
+            );
+            return Err(ExitCode::from(2));
+        }
+    }
+
+    // Start with builtins.
+    let mut map = UnicodeMap::builtin();
+
+    // Apply removals (builtins).
+    for spec in &args.no_unicode_map {
+        // Remove builtins matching this spec.
+        for type_name in resolve_remove_builtins(spec) {
+            map.remove_set(type_name);
+        }
+    }
+
+    // Collect shipped TOML files to load.
+    let mut toml_names: Vec<String> = Vec::new();
+    for spec in &args.unicode_map {
+        if spec.starts_with('@') {
+            let resolved = resolve_tag(spec);
+            if resolved.is_empty() {
+                eprintln!("distill-ansi: unknown tag '{spec}'");
+                return Err(ExitCode::from(2));
+            }
+            for name in resolved {
+                if !toml_names.contains(&name.to_string()) {
+                    toml_names.push(name.to_string());
+                }
+            }
+        } else if spec.contains('/') || spec.contains('.') {
+            // Treat as file path — load directly.
+            #[cfg(feature = "toml-config")]
+            {
+                let path = std::path::Path::new(spec);
+                if let Err(e) = map.load_and_merge(path) {
+                    eprintln!("distill-ansi: {e}");
+                    return Err(ExitCode::from(2));
+                }
+            }
+            #[cfg(not(feature = "toml-config"))]
+            {
+                eprintln!(
+                    "distill-ansi: --unicode-map with file paths requires \
+                     the toml-config feature"
+                );
+                return Err(ExitCode::from(2));
+            }
+        } else {
+            // Treat as shipped file name.
+            if !toml_names.contains(&spec.to_string()) {
+                toml_names.push(spec.clone());
+            }
+        }
+    }
+
+    // Remove TOML names that are in --no-unicode-map.
+    let mut remove_toml: Vec<String> = Vec::new();
+    for spec in &args.no_unicode_map {
+        if spec.starts_with('@') {
+            for name in resolve_tag(spec) {
+                remove_toml.push(name.to_string());
+            }
+        } else if !spec.contains('/') && !spec.contains('.') {
+            remove_toml.push(spec.clone());
+        }
+    }
+    toml_names.retain(|n| !remove_toml.contains(n));
+
+    // Load shipped TOML files.
+    #[cfg(feature = "toml-config")]
+    for name in &toml_names {
+        let path = format!("etc/unicode-mappings/{name}.toml");
+        let text = match std::fs::read_to_string(&path) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("distill-ansi: --unicode-map {name}: {e}");
+                return Err(ExitCode::from(2));
+            }
+        };
+        match strip_ansi::unicode_map::load_str(&text, path.clone()) {
+            Ok(set) => {
+                if let Err(dup) = map.merge_set(set) {
+                    eprintln!(
+                        "distill-ansi: --unicode-map: rejecting duplicate type \
+                         {dup:?} (already loaded)"
+                    );
+                }
+            }
+            Err(e) => {
+                eprintln!("distill-ansi: {e}");
+                return Err(ExitCode::from(2));
+            }
+        }
+    }
+
+    #[cfg(not(feature = "toml-config"))]
+    if !toml_names.is_empty() {
+        eprintln!(
+            "distill-ansi: --unicode-map with shipped files requires \
+             the toml-config feature"
+        );
+        return Err(ExitCode::from(2));
+    }
+
+    // If everything was removed, return None (no normalization).
+    if map.set_count() == 0 {
+        Ok(None)
+    } else {
+        Ok(Some(map))
+    }
 }
