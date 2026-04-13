@@ -269,7 +269,7 @@ jobs:
             container: ubuntu:latest
           - name: macos
             os: macos-latest
-            target: x86_64-apple-darwin
+            target: aarch64-apple-darwin
             container: ''
             skip_local: true
           - name: windows
@@ -281,6 +281,7 @@ jobs:
     steps:
       - name: Container Speed Suite Bootstrap (Pre-Cache Requirement)
         if: ${{ matrix.container != '' && (!matrix.skip_local || env.ACT != 'true') }}
+        shell: bash
         run: |
           if [ -f /etc/alpine-release ]; then
             [ -d /var/lib/apk/repositories ] || apk update
@@ -295,6 +296,7 @@ jobs:
           fi
       - name: Generate Weekly Cache Buster
         id: buster
+        shell: bash
         run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
       - name: Restore Master Environment (Alpine Only)
         if: matrix.container == 'rust:alpine'
@@ -325,7 +327,7 @@ jobs:
         if: matrix.target == 'x86_64-unknown-linux-musl' && matrix.container == 'ubuntu:latest'
         run: sudo apt-get update -qq && sudo apt-get install -y -qq musl-tools
       - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # master
-        if: ${{ matrix.container == 'ubuntu:latest' && (!matrix.skip_local || env.ACT != 'true') }}
+        if: ${{ (matrix.container == '' || matrix.container == 'ubuntu:latest') && (!matrix.skip_local || env.ACT != 'true') }}
         with:
           targets: ${{ matrix.target }}
           profile: minimal
@@ -337,6 +339,7 @@ jobs:
             ~/.rustup
       - name: Run Tests & Cleanup
         if: ${{ !matrix.skip_local || env.ACT != 'true' }}
+        shell: bash
         run: |
           cargo test --quiet --locked --all-features --target ${{ matrix.target }}
           if [ -f /etc/alpine-release ]; then
@@ -431,7 +434,7 @@ jobs:
             os: ubuntu-latest
             container: ubuntu:latest
           - name: macos-x64
-            target: x86_64-apple-darwin
+            target: aarch64-apple-darwin
             os: macos-latest
             container: ''
             skip_local: true
@@ -444,6 +447,7 @@ jobs:
     steps:
       - name: Container Speed Suite Bootstrap (Pre-Cache Requirement)
         if: ${{ matrix.container != '' && (!matrix.skip_local || env.ACT != 'true') }}
+        shell: bash
         run: |
           if [ -f /etc/alpine-release ]; then
             [ -d /var/lib/apk/repositories ] || apk update
@@ -458,6 +462,7 @@ jobs:
           fi
       - name: Generate Weekly Cache Buster
         id: buster
+        shell: bash
         run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
       - name: Restore Master Environment (Alpine Only)
         if: matrix.container == 'rust:alpine'
@@ -495,6 +500,7 @@ jobs:
         with:
           cache-all-crates: true
       - name: Cargo Build Release & Cleanup
+        shell: bash
         run: |
           cargo build --locked --release --all-features --target ${{ matrix.target }}
           if [ -f /etc/alpine-release ]; then
