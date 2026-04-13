@@ -511,7 +511,7 @@ jobs:
           cp target/${{ matrix.target }}/release/strip-ansi${EXT} dist/strip-ansi-${{ matrix.name }}${EXT}
           cp target/${{ matrix.target }}/release/distill-ansi${EXT} dist/distill-ansi-${{ matrix.name }}${EXT}
       - name: Upload Staging Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: distill-strip-ansi-${{ matrix.name }}
           path: dist/*
