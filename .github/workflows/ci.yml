@@ -281,7 +281,6 @@ jobs:
     steps:
       - name: Container Speed Suite Bootstrap (Pre-Cache Requirement)
         if: ${{ matrix.container != '' && (!matrix.skip_local || env.ACT != 'true') }}
-        shell: bash
         run: |
           if [ -f /etc/alpine-release ]; then
             [ -d /var/lib/apk/repositories ] || apk update
@@ -296,7 +295,7 @@ jobs:
           fi
       - name: Generate Weekly Cache Buster
         id: buster
-        shell: bash
+        shell: sh
         run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
       - name: Restore Master Environment (Alpine Only)
         if: matrix.container == 'rust:alpine'
@@ -337,14 +336,13 @@ jobs:
         with:
           cache-directories: |
             ~/.rustup
-      - name: Run Tests & Cleanup
+      - name: Run Tests
         if: ${{ !matrix.skip_local || env.ACT != 'true' }}
-        shell: bash
-        run: |
-          cargo test --quiet --locked --all-features --target ${{ matrix.target }}
-          if [ -f /etc/alpine-release ]; then
-            apk del -q .ci-deps
-          fi
+        shell: sh
+        run: cargo test --quiet --locked --all-features --target ${{ matrix.target }}
+      - name: Alpine Cleanup
+        if: matrix.container == 'rust:alpine'
+        run: apk del -q .ci-deps
 
   # Coverage enforcement
   diff-coverage:
@@ -447,7 +445,6 @@ jobs:
     steps:
       - name: Container Speed Suite Bootstrap (Pre-Cache Requirement)
         if: ${{ matrix.container != '' && (!matrix.skip_local || env.ACT != 'true') }}
-        shell: bash
         run: |
           if [ -f /etc/alpine-release ]; then
             [ -d /var/lib/apk/repositories ] || apk update
@@ -462,7 +459,7 @@ jobs:
           fi
       - name: Generate Weekly Cache Buster
         id: buster
-        shell: bash
+        shell: sh
         run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
       - name: Restore Master Environment (Alpine Only)
         if: matrix.container == 'rust:alpine'
@@ -499,13 +496,12 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84  # v2.7.3
         with:
           cache-all-crates: true
-      - name: Cargo Build Release & Cleanup
-        shell: bash
-        run: |
-          cargo build --locked --release --all-features --target ${{ matrix.target }}
-          if [ -f /etc/alpine-release ]; then
-            apk del -q .ci-deps
-          fi
+      - name: Cargo Build Release
+        shell: sh
+        run: cargo build --locked --release --all-features --target ${{ matrix.target }}
+      - name: Alpine Cleanup
+        if: matrix.container == 'rust:alpine'
+        run: apk del -q .ci-deps
       - name: Stage Artifacts
         shell: bash
         run: |
