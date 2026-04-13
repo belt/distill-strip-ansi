@@ -1,0 +1,9 @@
+{
+  "ref": "refs/tags/v0.5.2",
+  "repository": {
+    "name": "distill-strip-ansi",
+    "owner": {
+      "login": "belt"
+    }
+  }
+}

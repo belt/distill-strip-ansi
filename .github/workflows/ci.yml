@@ -1,117 +1,517 @@
-# CI pipeline — runs fmt, clippy, test, MSRV check, and dependency policy in parallel.
-#
-# Actions pinned to full SHA for supply-chain safety (tags are mutable).
-# To find the SHA for a new tag:  git ls-remote https://github.com/OWNER/REPO TAG
-#
-# Versions:
-#   actions/checkout          https://github.com/actions/checkout/releases
-#   dtolnay/rust-toolchain    https://github.com/dtolnay/rust-toolchain (branch-per-version)
-#   Swatinem/rust-cache       https://github.com/Swatinem/rust-cache/releases
-#   EmbarkStudios/cargo-deny  https://github.com/EmbarkStudios/cargo-deny-action/releases
-#
-# Concurrency: https://docs.github.com/en/actions/using-jobs/using-concurrency
-# Permissions:  https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
 ---
 name: CI
 
-# Least-privilege — only read access; individual jobs don't need more
-permissions:
-  contents: read
+# DRIFT AUDIT:
+#   Every pinned SHA has a comment indicating its known version.
+#   Periodic audit required to align with upstream release cadences.
+#
+# Concurrency: https://docs.github.com/en/actions/using-jobs/using-concurrency
+# Permissions:
+#   https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
 
-on:
+"on":
   push:
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'benches/**'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - '.github/workflows/ci.yml'
   pull_request:
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'benches/**'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - '.github/workflows/ci.yml'
 
-# Cancel stale runs when a new push arrives on the same branch/PR
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: -Dwarnings  # treat warnings as errors in CI
+  CARGO_TERM_COLOR: never    # plain text logs — no ANSI in CI output
+  CARGO_TERM_QUIET: "true"
+  CARGO_TERM_PROGRESS_WHEN: "never"
+  RUSTFLAGS: -Dwarnings      # treat warnings as errors in CI
+  RUSTUP_QUIET: "1"
+  ACT: "false" # Default for GHA; overridden by 'act' locally
+  TAR_OPTIONS: "--use-compress-program=pigz"
 
 jobs:
-  # Formatting — runs on latest stable (not MSRV) because rustfmt
-  # on older toolchains may not support edition 2024 formatting.
+  # =========================================================================
+  # TIER 1: VERIFICATION (ENVIRONMENT WARMING)
+  # =========================================================================
+  bootstrap:
+    name: Environment Bootstrap (Alpine)
+    runs-on: ubuntu-latest
+    container: rust:alpine
+    steps:
+      - name: Alpine Speed Suite Bootstrap (Pre-Cache Requirement)
+        run: |
+          [ -d /var/lib/apk/repositories ] || apk update
+          apk add nodejs tar pigz fd
+          # Prioritize GNU Tar in /usr/local/bin to avoid recursive symlink hell in /bin
+          mkdir -p /usr/local/bin
+          [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+          [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+          tar --version
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Cache Master Environment
+        id: cache-master
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+            /usr/local/rustup
+            /usr/local/cargo/bin
+            .cargo-deny-cache
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+      - name: Warm Environment (Apk + Components)
+        if: ${{ steps.cache-master.outputs.cache-hit != 'true' && env.ACT != 'true' }}
+        run: |
+          apk add -q --virtual .warmup-deps git build-base musl-dev perl \
+            pkgconfig openssl-dev openssl-libs-static
+          rustup component add rustfmt clippy llvm-tools-preview
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Warm Cargo Tools (Deny + Tarpaulin)
+        if: ${{ steps.cache-master.outputs.cache-hit != 'true' && env.ACT != 'true' }}
+        env:
+          CARGO_DENY_DIR: .cargo-deny-cache
+        run: |
+          cargo install cargo-deny cargo-tarpaulin --locked || true
+          cargo tarpaulin --version && cargo deny --version
+          cargo deny fetch
+
+  # =========================================================================
+  # TIER 2: VALIDATION (PARALLEL WORKERS)
+  # =========================================================================
   fmt:
+    name: fmt (Alpine)
+    needs: [bootstrap]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    container: rust:alpine
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd       # v6.0.2
-      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+      - name: Alpine Speed Suite Bootstrap (Pre-Cache Requirement)
+        run: |
+          [ -d /var/lib/apk/repositories ] || apk update
+          apk add nodejs tar pigz fd
+          # Prioritize GNU Tar in /usr/local/bin to avoid recursive symlink hell in /bin
+          mkdir -p /usr/local/bin
+          [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+          [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+          tar --version
+
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Restore Master Environment
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
         with:
-          components: rustfmt
-      - run: cargo fmt --check
-
-  # Linting — runs on latest stable with clippy.toml msrv = "1.85.0"
-  # so clippy won't suggest features unavailable on MSRV.
-  clippy:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd       # v6.0.2
-      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+            /usr/local/rustup
+            /usr/local/cargo/bin
+            .cargo-deny-cache
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+          fail-on-cache-miss: ${{ env.ACT != 'true' }}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
-          components: clippy
-      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc # v2.9.1
-      - run: cargo clippy --all-targets --all-features -- -D warnings
-
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd       # v6.0.2
-      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
-      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc    # v2.9.1
-        # --locked: fail if Cargo.lock is out of date (reproducible builds)
-        # --all-features: exercise feature-gated code (e.g. toml-config, filter)
-      - run: cargo test --locked --all-features
-
-  # Minimum Supported Rust Version — cargo check only (no clippy/fmt).
-  # Keep toolchain version in sync with Cargo.toml rust-version and clippy.toml msrv.
-  msrv:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd       # v6.0.2
-      - uses: dtolnay/rust-toolchain@c56a35af9328d0bc581dc86c05e58f97f7c38a0e # 1.85
-      - uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc    # v2.9.1
-      - run: cargo check --locked
+          fetch-depth: 1
+      - run: cargo fmt --all --quiet -- --check
 
   # License, advisory, ban, and source checks via deny.toml.
-  # Config reference: https://embarkstudios.github.io/cargo-deny/
-  #
-  # Advisories run separately with continue-on-error so a malformed
-  # upstream advisory DB entry doesn't block the entire pipeline.
   deny:
+    name: deny (Alpine)
+    needs: [bootstrap]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      matrix:
-        checks:
-          - advisories
-          - bans licenses sources
-    continue-on-error: ${{ matrix.checks == 'advisories' }}
+    container: rust:alpine
+    env:
+      CARGO_DENY_DIR: .cargo-deny-cache
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: EmbarkStudios/cargo-deny-action@5b143841a37c3f676a9f7c1c8646cf093b04a0a3 # v2.0.16
+      - name: Alpine Speed Suite Bootstrap (Pre-Cache Requirement)
+        run: |
+          [ -d /var/lib/apk/repositories ] || apk update
+          apk add nodejs tar pigz fd
+          # Prioritize GNU Tar in /usr/local/bin to avoid recursive symlink hell in /bin
+          mkdir -p /usr/local/bin
+          [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+          [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+          tar --version
+
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Restore Master Environment
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+            /usr/local/rustup
+            /usr/local/cargo/bin
+            .cargo-deny-cache
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+          fail-on-cache-miss: ${{ env.ACT != 'true' }}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 1
+      - uses: EmbarkStudios/cargo-deny-action@5b143841a37c3f676a9f7c1c8646cf093b04a0a3  # v2.0.16
         with:
           command: check
-          command-arguments: ${{ matrix.checks }}
+          log-level: warn
+
+  # Linting — runs on latest stable
+  # act -s GITHUB_TOKEN="$(gh auth token)" -j clippy
+  clippy:
+    name: clippy (Alpine)
+    needs: [bootstrap]
+    runs-on: ubuntu-latest
+    container: rust:alpine
+    steps:
+      - name: Alpine Speed Suite Bootstrap (Pre-Cache Requirement)
+        run: |
+          [ -d /var/lib/apk/repositories ] || apk update
+          apk add nodejs tar pigz fd
+          # Prioritize GNU Tar in /usr/local/bin to avoid recursive symlink hell in /bin
+          mkdir -p /usr/local/bin
+          [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+          [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+          tar --version
+
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Restore Master Environment
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+            /usr/local/rustup
+            /usr/local/cargo/bin
+            .cargo-deny-cache
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+          fail-on-cache-miss: ${{ env.ACT != 'true' }}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 1
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84  # v2.7.3
+        with:
+          cache-directories: |
+            ~/.rustup
+      - run: cargo clippy --quiet --all-targets --all-features -- -D warnings
+
+  # Minimum Supported Rust Version
+  msrv:
+    name: msrv (Alpine)
+    needs: [bootstrap]
+    runs-on: ubuntu-latest
+    container: rust:1.85-alpine
+    env:
+      RUSTUP_QUIET: 1
+    steps:
+      - name: Alpine Speed Suite Bootstrap (Pre-Cache Requirement)
+        run: |
+          [ -d /var/lib/apk/repositories ] || apk update
+          apk add nodejs tar pigz fd
+          # Prioritize GNU Tar in /usr/local/bin to avoid recursive symlink hell in /bin
+          mkdir -p /usr/local/bin
+          [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+          [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+          tar --version
+
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Restore Master Environment (Apk Only)
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+          restore-keys: |
+            ${{ runner.os }}-master-env-
+      - name: Alpine CI Bootstrap (Speed Suite + Git)
+        run: apk add -q --virtual .ci-deps git build-base musl-dev
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 1
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84  # v2.7.3
+        with:
+          cache-directories: |
+            ~/.rustup
+      - name: Verify MSRV Compilation & Cleanup
+        run: |
+          cargo check --quiet --locked --all-targets --features toml-config,distill-ansi-cli
+          apk del -q .ci-deps
+
+  # Test matrix
+  test:
+    needs: [bootstrap]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      RUSTUP_QUIET: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: alpine (musl)
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            container: rust:alpine
+          - name: debian (glibc)
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            container: rust:latest
+          - name: ubuntu (native)
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            container: ubuntu:latest
+          - name: macos
+            os: macos-latest
+            target: x86_64-apple-darwin
+            container: ''
+            skip_local: true
+          - name: windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            container: ''
+            skip_local: true
+    container: ${{ matrix.container }}
+    steps:
+      - name: Container Speed Suite Bootstrap (Pre-Cache Requirement)
+        if: ${{ matrix.container != '' && (!matrix.skip_local || env.ACT != 'true') }}
+        run: |
+          if [ -f /etc/alpine-release ]; then
+            [ -d /var/lib/apk/repositories ] || apk update
+            apk add nodejs tar pigz fd
+            mkdir -p /usr/local/bin
+            [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+            [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+            tar --version
+          else
+            apt-get update -qq && apt-get install -y -qq curl nodejs tar pigz fd-find
+            ln -sf /usr/bin/fdfind /usr/local/bin/fd
+          fi
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Restore Master Environment (Alpine Only)
+        if: matrix.container == 'rust:alpine'
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+            /usr/local/rustup
+            /usr/local/cargo/bin
+            .cargo-deny-cache
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+          fail-on-cache-miss: ${{ env.ACT != 'true' }}
+      - name: Alpine CI Bootstrap (Speed Suite + Git)
+        if: matrix.container == 'rust:alpine'
+        run: apk add -q --virtual .ci-deps git build-base musl-dev
+      - name: Debian CI Bootstrap (Git + Toolchain)
+        if: matrix.container == 'rust:latest' || matrix.container == 'ubuntu:latest'
+        run: |
+          apt-get update -qq
+          apt-get install -y git gcc g++
+          cc --version
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        if: ${{ !matrix.skip_local || env.ACT != 'true' }}
+        with:
+          fetch-depth: 1
+      - name: Install musl-tools
+        if: matrix.target == 'x86_64-unknown-linux-musl' && matrix.container == 'ubuntu:latest'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq musl-tools
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # master
+        if: ${{ matrix.container == 'ubuntu:latest' && (!matrix.skip_local || env.ACT != 'true') }}
+        with:
+          targets: ${{ matrix.target }}
+          profile: minimal
+        env:
+          RUSTUP_QUIET: "1"
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84  # v2.7.3
+        with:
+          cache-directories: |
+            ~/.rustup
+      - name: Run Tests & Cleanup
+        if: ${{ !matrix.skip_local || env.ACT != 'true' }}
+        run: |
+          cargo test --quiet --locked --all-features --target ${{ matrix.target }}
+          if [ -f /etc/alpine-release ]; then
+            apk del -q .ci-deps
+          fi
+
+  # Coverage enforcement
+  diff-coverage:
+    name: diff-coverage (Alpine)
+    needs: [bootstrap]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: rust:alpine
+    steps:
+      - name: Alpine Speed Suite Bootstrap (Pre-Cache Requirement)
+        run: |
+          [ -d /var/lib/apk/repositories ] || apk update
+          apk add nodejs tar pigz fd
+          # Prioritize GNU Tar in /usr/local/bin to avoid recursive symlink hell in /bin
+          mkdir -p /usr/local/bin
+          [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+          [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+          tar --version
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Restore Master Environment
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+            /usr/local/rustup
+            /usr/local/cargo/bin
+            .cargo-deny-cache
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+          fail-on-cache-miss: ${{ env.ACT != 'true' }}
+      - name: Alpine CI Bootstrap (Speed Suite + Git)
+        run: |
+          apk add -q --virtual .ci-deps git build-base musl-dev perl pkgconfig openssl-dev openssl-libs-static
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84  # v2.7.3
+        with:
+          cache-directories: |
+            ~/.rustup
+      - name: Generate Coverage (XML) & Cleanup
+        if: ${{ !env.ACT }}
+        run: |
+          env RUST_LOG=warn cargo tarpaulin \
+            --quiet \
+            --color never \
+            --skip-clean \
+            --target-dir target/tarpaulin \
+            --engine llvm \
+            --out Xml
+          apk del -q .ci-deps
+      - name: Install uv
+        if: ${{ !env.ACT }}
+        uses: astral-sh/setup-uv@3650047249a008c2901306c4f0393081e7d23d8c  # v5.3.0
+        with:
+          enable-cache: true
+      - name: Enforce Diff Coverage
+        if: ${{ !env.ACT }}
+        run: |
+          uvx diff-cover target/tarpaulin/cobertura.xml \
+            --no-color --compare-branch=origin/main --fail-under=95
+
+  # STAGING LAYER
+  build:
+    needs: [bootstrap, test, clippy, fmt, deny, msrv, diff-coverage]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      RUSTUP_QUIET: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: alpine-x64
+            target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            container: rust:alpine
+          - name: debian-x64
+            target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            container: rust:latest
+          - name: ubuntu-x64
+            target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            container: ubuntu:latest
+          - name: macos-x64
+            target: x86_64-apple-darwin
+            os: macos-latest
+            container: ''
+            skip_local: true
+          - name: windows-x64
+            target: x86_64-pc-windows-msvc
+            os: windows-latest
+            container: ''
+            skip_local: true
+    container: ${{ matrix.container }}
+    steps:
+      - name: Container Speed Suite Bootstrap (Pre-Cache Requirement)
+        if: ${{ matrix.container != '' && (!matrix.skip_local || env.ACT != 'true') }}
+        run: |
+          if [ -f /etc/alpine-release ]; then
+            [ -d /var/lib/apk/repositories ] || apk update
+            apk add nodejs tar pigz fd
+            mkdir -p /usr/local/bin
+            [ -f /usr/bin/tar ] && ln -sf /usr/bin/tar /usr/local/bin/tar
+            [ -f /bin/tar ] && ln -sf /bin/tar /usr/local/bin/tar
+            tar --version
+          else
+            apt-get update -qq && apt-get install -y -qq curl nodejs tar pigz fd-find
+            ln -sf /usr/bin/fdfind /usr/local/bin/fd
+          fi
+      - name: Generate Weekly Cache Buster
+        id: buster
+        run: echo "week=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
+      - name: Restore Master Environment (Alpine Only)
+        if: matrix.container == 'rust:alpine'
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: |
+            /var/lib/apk
+            /var/cache/apk
+            /usr/local/rustup
+            /usr/local/cargo/bin
+            .cargo-deny-cache
+          key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
+          fail-on-cache-miss: ${{ env.ACT != 'true' }}
+      - name: Alpine CI Bootstrap (Speed Suite + Git)
+        if: matrix.container == 'rust:alpine'
+        run: apk add -q --virtual .ci-deps git build-base musl-dev
+      - name: Debian CI Bootstrap (Git + Toolchain)
+        if: matrix.container == 'rust:latest' || matrix.container == 'ubuntu:latest'
+        run: |
+          apt-get update -qq
+          apt-get install -y git gcc g++
+          cc --version
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        if: ${{ !matrix.skip_local || env.ACT != 'true' }}
+        with:
+          fetch-depth: 1
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # master
+        if: ${{ (matrix.container == '' || matrix.container == 'ubuntu:latest') && (!matrix.skip_local || env.ACT != 'true') }}
+        with:
+          targets: ${{ matrix.target }}
+          profile: minimal
+        env:
+          RUSTUP_QUIET: "1"
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84  # v2.7.3
+        with:
+          cache-all-crates: true
+      - name: Cargo Build Release & Cleanup
+        run: |
+          cargo build --locked --release --all-features --target ${{ matrix.target }}
+          if [ -f /etc/alpine-release ]; then
+            apk del -q .ci-deps
+          fi
+      - name: Stage Artifacts
+        shell: bash
+        run: |
+          mkdir -p dist/
+          EXT=""
+          [[ "${{ matrix.target }}" == *"windows"* ]] && EXT=".exe"
+          cp target/${{ matrix.target }}/release/strip-ansi${EXT} dist/strip-ansi-${{ matrix.name }}${EXT}
+          cp target/${{ matrix.target }}/release/distill-ansi${EXT} dist/distill-ansi-${{ matrix.name }}${EXT}
+      - name: Upload Staging Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: distill-strip-ansi-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
