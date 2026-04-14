@@ -18,7 +18,7 @@ Neither implies the other. Both imply `transform` (which implies
 | Feature           | Flag            | Binary         | Purpose              |
 | ----------------- | --------------- | -------------- | -------------------- |
 | `downgrade-color` | `--color-depth` | `distill-ansi` | Reduce color depth   |
-| `color-palette`   | `--palette`     | `distill-ansi` | Remap named palette  |
+| `augment-color`   | `--palette`     | `distill-ansi` | Remap named palette  |
 
 Combined: `--color-depth 256 --palette high-contrast-rg`
 applies palette first, then depth reduction.
@@ -212,11 +212,9 @@ color perception.
 
 ### Design Constraint
 
-Palette names are neutral and functional. They do not reference
-medical conditions. A user selects a palette because it works
-for them, not because they must self-identify. Documentation
-explains what each palette optimizes, but the CLI flag is just
-a name.
+Palette names are neutral and functional. A person selects a
+palette because it works for them, not to self-identify. Documentation
+explains what each palette optimizes, but the CLI flag is just a name.
 
 ### Transform Pipeline
 
@@ -270,7 +268,7 @@ limited by the display.
 
 #### Universal Palettes
 
-Optimized for maximum distinguishability across all vision types.
+Optimized for maximum distinguish-ability across all vision types.
 Based on Color Universal Design (CUD) principles.
 
 Reference palette: Okabe-Ito (Okabe and Ito, 2002). Eight colors
@@ -318,8 +316,8 @@ technical note issue 3.2 (2021-08-18).
 
 #### Axis-Optimized Palettes
 
-Palettes that maximize contrast along specific color confusion
-axes. Named by the axis they optimize, not by condition.
+Palettes that maximize contrast along specific color-confusion
+axes. Named by the axis they optimize.
 
 ```text
 high-contrast-rg   red-green distinction    L/M cone overlap
@@ -518,10 +516,10 @@ src/
                    │
                transform (implies filter)
                ╱           ╲
-     downgrade-color    color-palette
+     downgrade-color    augment-color
                ╲           ╱
               distill-ansi-cli
-              + terminal-detect + clap + sigpipe
+              + unicode-normalize + terminal-detect + clap + sigpipe
 ```
 
 ```toml
@@ -533,14 +531,15 @@ required-features = ["distill-ansi-cli"]
 [features]
 transform = ["filter"]
 downgrade-color = ["transform"]
-color-palette = ["transform"]
-distill-ansi-cli = ["std", "downgrade-color", "color-palette",
-               "terminal-detect", "dep:clap", "dep:sigpipe"]
+augment-color = ["transform"]
+distill-ansi-cli = ["std", "downgrade-color", "augment-color",
+               "unicode-normalize", "terminal-detect",
+               "dep:clap", "dep:sigpipe"]
 ```
 
 `strip-ansi` uses the `cli` feature — zero transform code
 compiled in. `distill-ansi` uses `distill-ansi-cli`. Library
-consumers can pick `downgrade-color` and/or `color-palette`
+consumers can pick `downgrade-color` and/or `augment-color`
 independently without either binary.
 
 ### Existing Infrastructure

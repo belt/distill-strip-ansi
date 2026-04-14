@@ -60,11 +60,13 @@ with parameter-level inspection:
 ClassifyingParser layout (12 bytes):
   parser       : Parser      1B  (1-byte state machine)
   kind         : SeqKind     1B  (sequence sub-kind)
-  in_seq       : bool        1B  (in-sequence flag)
+  flags        : u8          1B  (packed: in_seq, seen_semicolon,
+                                  osc_number_finalized, osc_accumulating,
+                                  dcs_is_query, DCS body phase)
   sgr_content  : SgrContent  1B  (SGR color depth bits)
-  osc_type     : OscType     1B  (OSC sub-classification)
   param_value  : u16         2B  (shared param accumulator)
-  param_state  : ParamState  1B  (SGR FSM + dcs_is_query bit)
+  param_state  : ParamState  1B  (SGR FSM state)
+  osc_type     : OscType     1B  (OSC sub-classification)
   first_param  : u16         2B  (first CSI parameter)
   osc_number   : u16         2B  (raw OSC number)
 ```
@@ -72,6 +74,8 @@ ClassifyingParser layout (12 bytes):
 `param_value` is shared between CSI and OSC states (mutually
 exclusive). `first_param` captures the first finalized CSI
 parameter on `;` or at EndSeq for single-param sequences.
+`flags` packs six booleans and a 2-bit DCS phase counter into
+a single byte — previously these were separate fields.
 
 `ClassifyingParser::detail() -> SeqDetail` bundles all classifier
 outputs at EndSeq:
@@ -124,6 +128,59 @@ No transitive dependencies beyond these. `no_std` compatible
 Benchmarked on Intel Core i7-9750H @ 2.60GHz with
 `cargo bench --all-features`.
 Input: 4.4KB simulated cargo output (~20% escape sequences).
+
+### Two-Binary Model
+
+Transform features live in a separate binary (`distill-ansi`)
+that shares the `strip_ansi` library crate with `strip-ansi`.
+No code duplication, no bloat in the stripping binary.
+
+```text
+strip-ansi       stripping + filtering + security
+distill-ansi     color transforms + unicode normalization
+strip_ansi       shared lib (parser, classifier, filter,
+                 strip, stream, writer, + transform modules)
+```
+
+Source layout for transform modules:
+
+```text
+src/
+  sgr_rewrite.rs        SGR param parser/rewriter (feature: transform)
+  downgrade.rs          color depth reduction     (feature: downgrade-color)
+  palette.rs            palette transforms        (feature: augment-color)
+  transform_stream.rs   streaming transform API   (feature: transform)
+  unicode_map.rs        homograph normalization   (feature: unicode-normalize)
+  distill_ansi_main.rs  distill-ansi entry point
+```
+
+### Transform Pipeline
+
+At `EndSeq` for CsiSgr sequences with color content:
+
+```text
+1. Is palette or depth transform configured?
+   NO  → existing strip/preserve path (unchanged)
+   YES → continue
+2. Re-parse SGR params from seq_buf
+3. For each color param:
+   a. If palette set: apply 3x3 matrix in linear RGB
+   b. If depth reduction needed: downgrade
+4. Emit rewritten sequence to output
+```
+
+When both `--palette` and `--color-depth` are specified:
+
+```text
+Input SGR → extract color → palette transform → depth reduce → emit
+```
+
+`TransformStream` provides the streaming API with
+`TransformSlice` (`Borrowed(&[u8])` / `Owned(SmallVec)`)
+for zero-copy passthrough of non-SGR content.
+
+See [COLOR-TRANSFORMS.md](COLOR-TRANSFORMS.md) for the full
+color science reference (algorithms, CVD matrices, palettes).
 
 ### Classifier Overhead (3B → 12B)
 
