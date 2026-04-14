@@ -312,7 +312,7 @@ dependencies = [
 
 [[package]]
 name = "distill-strip-ansi"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "assert_cmd",
  "clap",
