@@ -1,6 +1,24 @@
 # Rust ANSI Stripping Ecosystem
 
-## Crate Comparison
+## Two Binaries, One Crate
+
+`distill-strip-ansi` ships two binaries from a shared library:
+
+| Binary         | Purpose                                      |
+| -------------- | -------------------------------------------- |
+| `strip-ansi`   | Strip/filter ANSI sequences, threat scanning |
+| `distill-ansi` | Color depth reduction, palette remapping,    |
+|                | Unicode homograph normalization              |
+
+`strip-ansi` removes sequences. `distill-ansi` rewrites them.
+The comparison below focuses on the stripping use case — the
+only one where other crates compete. Color transforms and
+Unicode normalization are unique to this crate; see
+[COLOR-TRANSFORMS.md](COLOR-TRANSFORMS.md),
+[UNICODE-NORMALIZATION.md](UNICODE-NORMALIZATION.md), and
+[ANSI-REFERENCE.md](ANSI-REFERENCE.md) for details.
+
+## Crate Comparison (Stripping)
 
 | Crate          | Parser    | Stream | no_std | Sec | MiB/s |
 | -------------- | --------- | ------ | ------ | --- | ----: |
@@ -56,8 +74,14 @@ detection), `sanitize` preset as auto-detect ceiling, `--unsafe`
 gate for dangerous presets, `--check-threats` echoback scanning
 with structured output, and external threat database support.
 
+Beyond stripping, the `distill-ansi` binary provides color depth
+reduction (truecolor → 256 → 16 → greyscale → mono), palette
+remapping for color vision accessibility, and Unicode homograph
+normalization. These transform features have no equivalent in
+the other crates listed here.
+
 Good choice when: you need streaming, `no_std`, selective filtering,
-zero-alloc clean-input fast paths, or security-aware ANSI processing.
+security-aware ANSI processing, a CLI, custom or color transforms.
 
 ## Sequence Coverage
 
@@ -111,4 +135,4 @@ For new code, prefer `strip()` directly for `Cow` semantics.
 None of the other crates in this space address ANSI
 security concerns. They strip everything or nothing —
 no parameter-level inspection, no echoback awareness,
-no threat detection.
+no threat detection, no transforms.

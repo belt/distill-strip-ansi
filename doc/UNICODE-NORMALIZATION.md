@@ -70,13 +70,13 @@ tagged sets require `--unsafe`).
 Each builtin is the security-relevant subset of a Unicode block.
 The companion TOML file (if any) completes the block.
 
-| Builtin | Chars | Block coverage | TOML companion |
-| ------- | ----- | -------------- | -------------- |
-| fullwidth_ascii | 101 | entire block | — |
-| math_latin_bold | 52 | bold only | math-latin.toml |
-| latin_ligatures | 7 | entire block | — |
-| enclosed_circled_letters | 52 | letters only | enclosed-alphanumerics.toml |
-| superscript_subscript | ~42 | entire block | — |
+| Builtin                | Chars | Coverage     | TOML companion         |
+| ---------------------- | ----: | ------------ | ---------------------- |
+| fullwidth_ascii        |   101 | entire block | —                      |
+| math_latin_bold        |    52 | bold only    | math-latin             |
+| latin_ligatures        |     7 | entire block | —                      |
+| enclosed_circled_ltrs  |    52 | letters only | enclosed-alphanumerics |
+| superscript_subscript  |   ~42 | entire block | —                      |
 
 ### Fullwidth ASCII (101 chars)
 
@@ -93,15 +93,15 @@ Direction: narrowing (2-col to 1-col).
 
 U+FFE0–FFE6 to individual targets.
 
-| Source | Target | Name |
-| ------ | ------ | ---- |
-| ￠ FFE0 | ¢ 00A2 | cent sign |
-| ￡ FFE1 | £ 00A3 | pound sign |
-| ￢ FFE2 | ¬ 00AC | not sign |
-| ￣ FFE3 | ¯ 00AF | macron |
-| ￤ FFE4 | ¦ 00A6 | broken bar |
-| ￥ FFE5 | ¥ 00A5 | yen sign |
-| ￦ FFE6 | ₩ 20A9 | won sign |
+| Source   | Target  | Name       |
+| -------- | ------- | ---------- |
+| ￠ FFE0  | ¢ 00A2  | cent sign  |
+| ￡ FFE1  | £ 00A3  | pound sign |
+| ￢ FFE2  | ¬ 00AC  | not sign   |
+| ￣ FFE3  | ¯ 00AF  | macron     |
+| ￤ FFE4  | ¦ 00A6  | broken bar |
+| ￥ FFE5  | ¥ 00A5  | yen sign   |
+| ￦ FFE6  | ₩ 20A9  | won sign   |
 
 Direction: narrowing.
 
@@ -141,15 +141,15 @@ Direction: neutral (same column width).
 
 U+FB00–FB06 to ASCII letter pairs.
 
-| Source | Target | Name |
-| ------ | ------ | ---- |
-| ﬀ FB00 | ff | Latin small ligature ff |
-| ﬁ FB01 | fi | Latin small ligature fi |
-| ﬂ FB02 | fl | Latin small ligature fl |
-| ﬃ FB03 | ffi | Latin small ligature ffi |
-| ﬄ FB04 | ffl | Latin small ligature ffl |
-| ﬅ FB05 | st | Latin small ligature long s t |
-| ﬆ FB06 | Latin small ligature st |
+| Source   | Target | Name                          |
+| -------- | ------ | ----------------------------- |
+| ﬀ FB00  | ff     | Latin small ligature ff       |
+| ﬁ FB01  | fi     | Latin small ligature fi       |
+| ﬂ FB02  | fl     | Latin small ligature fl       |
+| ﬃ FB03  | ffi    | Latin small ligature ffi      |
+| ﬄ FB04  | ffl    | Latin small ligature ffl      |
+| ﬅ FB05  | st     | Latin small ligature long s t |
+| ﬆ FB06  | st     | Latin small ligature st       |
 
 Common in copy-paste from PDFs. `ﬁle` does not match `file`
 in grep, breaking search and pattern matching. Multi-codepoint
@@ -212,46 +212,54 @@ Exactly one of `to` or `to_seq` must be present.
 
 #### Metadata Fields
 
-| Field | Required | Values |
-| ----- | -------- | ------ |
-| `type` | yes | unique identifier, snake_case |
-| `description` | yes | human-readable purpose |
-| `direction` | yes | `narrowing`, `widening`, `neutral` |
-| `tags` | yes | array of tag strings |
+| Field         | Required | Values                        |
+| ------------- | -------- | ----------------------------- |
+| `type`        | yes      | unique identifier, snake_case |
+| `description` | yes      | human-readable purpose        |
+| `direction`   | yes      | narrowing, widening, neutral  |
+| `tags`        | yes      | array of tag strings          |
 
 ### Shipped Files
 
-| File | Chars | Direction | Tags |
-| ---- | ----- | --------- | ---- |
-| `math-latin.toml` | ~884 | narrowing | math, canonicalize, ascii-normalize |
-| `math-greek.toml` | ~300 | neutral | math, canonicalize |
-| `enclosed-alphanumerics.toml` | ~108 | narrowing | ascii-normalize, canonicalize |
-| `enclosed-alphanumeric-supplement.toml` | ~80 | narrowing | ascii-normalize, canonicalize |
-| `enclosed-cjk.toml` | ~256 | neutral | cjk, japanese, korean, canonicalize |
-| `cjk-compatibility.toml` | ~256 | narrowing | japanese, cjk, canonicalize |
-| `halfwidth-katakana.toml` | ~62 | widening | japanese, legacy-encoding, canonicalize |
-| `halfwidth-hangul.toml` | ~52 | widening | korean, legacy-encoding, canonicalize |
-| `cjk-compat-ideographs.toml` | ~472 | neutral | cjk, japanese, korean, canonicalize |
-| `cjk-compat-ideographs-supplement.toml` | ~542 | neutral | cjk, canonicalize |
-| `arabic-presentation-forms.toml` | ~600 | neutral | arabic, canonicalize |
+| File                         | Chars | Dir       | Tags                    |
+| ---------------------------- | ----: | --------- | ----------------------- |
+| math-latin                   |  ~884 | narrowing | math, canon, ascii-norm |
+| math-greek                   |  ~300 | neutral   | math, canon             |
+| enclosed-alphanumerics       |  ~108 | narrowing | ascii-norm, canon       |
+| enclosed-alphanum-supplement |   ~80 | narrowing | ascii-norm, canon       |
+| enclosed-cjk                 |  ~256 | neutral   | cjk, ja, ko, canon      |
+| cjk-compatibility            |  ~256 | narrowing | ja, cjk, canon          |
+| halfwidth-katakana           |   ~62 | widening  | ja, legacy-enc, canon   |
+| halfwidth-hangul             |   ~52 | widening  | ko, legacy-enc, canon   |
+| cjk-compat-ideographs        |  ~472 | neutral   | cjk, ja, ko, canon      |
+| cjk-compat-ideographs-suppl  |  ~542 | neutral   | cjk, canon              |
+| arabic-presentation-forms    |  ~600 | neutral   | arabic, canon           |
+
+All files are `.toml` in `etc/unicode-mappings/`.
+Abbreviations: canon = canonicalize, ascii-norm = ascii-normalize,
+ja = japanese, ko = korean, legacy-enc = legacy-encoding.
 
 ### Tag Taxonomy
 
 Tags enable semantic selection via `--unicode-map @tag`.
 
-| Tag | Selects | Audience |
-| --- | ------- | -------- |
-| `@security` | builtins: fullwidth-ascii, math-latin-bold, latin-ligatures | homograph defense |
-| `@ascii-normalize` | @security + enclosed-circled-letters, super/sub (builtins) | log normalization, search |
-| `@narrowing` | direction = narrowing or neutral | monospace alignment |
-| `@widening` | direction = widening | CJK canonicalization |
-| `@canonicalize` | all TOML files | text processing |
-| `@japanese` | halfwidth-katakana, cjk-compat-ideographs, enclosed-cjk, cjk-compatibility | Japanese text |
-| `@korean` | halfwidth-hangul, cjk-compat-ideographs, enclosed-cjk | Korean text |
-| `@cjk` | all CJK-relevant files | pan-CJK |
-| `@math` | math-latin, math-greek | scientific text |
-| `@arabic` | arabic-presentation-forms | Arabic text |
-| `@all` | everything | full normalization |
+| Tag              | Selects                          | Audience            |
+| ---------------- | -------------------------------- | ------------------- |
+| `@security`      | builtins: fullwidth-ascii,       | homograph defense   |
+|                  | math-latin-bold, latin-ligatures |                     |
+| `@ascii-normalize` | @security + enclosed-circled,  | log normalization,  |
+|                  | super/sub (builtins)             | search              |
+| `@narrowing`     | direction = narrowing or neutral | monospace alignment |
+| `@widening`      | direction = widening             | CJK canonicalize    |
+| `@canonicalize`  | all TOML files                   | text processing     |
+| `@japanese`      | halfwidth-katakana, cjk-compat,  | Japanese text       |
+|                  | enclosed-cjk, cjk-compatibility  |                     |
+| `@korean`        | halfwidth-hangul, cjk-compat,    | Korean text         |
+|                  | enclosed-cjk                     |                     |
+| `@cjk`           | all CJK-relevant files           | pan-CJK             |
+| `@math`          | math-latin, math-greek           | scientific text     |
+| `@arabic`        | arabic-presentation-forms        | Arabic text         |
+| `@all`           | everything                       | full normalization  |
 
 ### User Extension
 
@@ -410,11 +418,11 @@ are rejected.
 Each mapping has a `direction` that describes its effect on
 terminal column width:
 
-| Direction | Column width change | Example |
-| --------- | ------------------- | ------- |
-| narrowing | 2-col → 1-col | Ａ → A |
-| widening | 1-col → 2-col | ｱ → ア |
-| neutral | same width | ⁿ → n |
+| Direction | Width change  | Example |
+| --------- | ------------- | ------- |
+| narrowing | 2-col → 1-col | Ａ → A  |
+| widening  | 1-col → 2-col | ｱ → ア  |
+| neutral   | same width    | ⁿ → n   |
 
 Direction is metadata for filtering (`@narrowing` tag), not
 enforced by the runtime. A user who loads a widening file
