@@ -33,6 +33,17 @@ pub const DEUTERANOPIA_VIENOT: Matrix3 = [
     [-0.02234, 0.02234, 1.00000],
 ];
 
+/// Tritanopia simulation matrix (Brettel et al. 1997, H1 half-plane, linear RGB).
+///
+/// Models blue-yellow confusion (S cone absence). Uses the H1
+/// half-plane which covers the majority of real-world colors.
+/// Source: DaltonLens project, Brettel 1997 implementation.
+pub const TRITANOPIA_BRETTEL_H1: Matrix3 = [
+    [1.01354, 0.14268, -0.15622],
+    [-0.01181, 0.87561, 0.13619],
+    [0.07707, 0.81208, 0.11085],
+];
+
 // ── sRGB Linearization via Lookup Table ─────────────────────────────
 
 /// Precomputed sRGB byte (0-255) → linear light (0.0-1.0).

@@ -19,7 +19,7 @@ use strip_ansi::sgr_rewrite::rewrite_sgr_params;
 use strip_ansi::{ClassifyingParser, SeqAction, SeqKind, SgrContent};
 
 #[cfg(feature = "augment-color")]
-use strip_ansi::palette::{DEUTERANOPIA_VIENOT, PROTANOPIA_VIENOT};
+use strip_ansi::palette::{DEUTERANOPIA_VIENOT, PROTANOPIA_VIENOT, TRITANOPIA_BRETTEL_H1};
 
 #[cfg(feature = "unicode-normalize")]
 use strip_ansi::unicode_map::UnicodeMap;
@@ -46,6 +46,7 @@ struct Args {
     /// default: no remapping.
     /// high-contrast-rg: optimize red-green distinction.
     /// high-contrast-by: optimize blue-yellow distinction.
+    /// high-contrast-rb: optimize red-blue distinction.
     #[cfg(feature = "augment-color")]
     #[arg(long, value_name = "NAME", default_value = "default")]
     palette: String,
@@ -105,7 +106,7 @@ fn main() -> ExitCode {
         None => {
             eprintln!(
                 "distill-ansi: unknown palette '{}'. \
-                 Expected: default, high-contrast-rg, high-contrast-by",
+                 Expected: default, high-contrast-rg, high-contrast-by, high-contrast-rb",
                 args.palette
             );
             return ExitCode::from(2);
@@ -171,6 +172,7 @@ fn parse_palette(s: &str) -> Option<PaletteTransform> {
         "default" | "none" => Some(PaletteTransform::default()),
         "high-contrast-rg" => Some(PaletteTransform::from_matrix(PROTANOPIA_VIENOT)),
         "high-contrast-by" => Some(PaletteTransform::from_matrix(DEUTERANOPIA_VIENOT)),
+        "high-contrast-rb" => Some(PaletteTransform::from_matrix(TRITANOPIA_BRETTEL_H1)),
         _ => None,
     }
 }
