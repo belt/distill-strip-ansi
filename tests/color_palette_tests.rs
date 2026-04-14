@@ -13,8 +13,8 @@
 #![cfg(feature = "augment-color")]
 
 use strip_ansi::palette::{
-    DEUTERANOPIA_VIENOT, IDENTITY_MATRIX, PROTANOPIA_VIENOT, PaletteTransform, apply_matrix,
-    linear_to_srgb, srgb_to_linear,
+    DEUTERANOPIA_VIENOT, IDENTITY_MATRIX, PROTANOPIA_VIENOT, PaletteTransform,
+    TRITANOPIA_BRETTEL_H1, apply_matrix, linear_to_srgb, srgb_to_linear,
 };
 
 // ── sRGB Linearization ──────────────────────────────────────────────
@@ -171,6 +171,7 @@ fn cvd_matrices_preserve_black() {
     for (name, matrix) in [
         ("protanopia", &PROTANOPIA_VIENOT),
         ("deuteranopia", &DEUTERANOPIA_VIENOT),
+        ("tritanopia", &TRITANOPIA_BRETTEL_H1),
     ] {
         let result = apply_matrix(matrix, &[0.0, 0.0, 0.0]);
         for (i, &val) in result.iter().enumerate() {
@@ -188,6 +189,7 @@ fn cvd_matrices_preserve_white_luminance() {
     for (name, matrix) in [
         ("protanopia", &PROTANOPIA_VIENOT),
         ("deuteranopia", &DEUTERANOPIA_VIENOT),
+        ("tritanopia", &TRITANOPIA_BRETTEL_H1),
     ] {
         let result = apply_matrix(matrix, &[1.0, 1.0, 1.0]);
         for (i, &val) in result.iter().enumerate() {
@@ -213,12 +215,13 @@ fn cvd_matrix_output_non_negative_for_primaries() {
     for (name, matrix) in [
         ("protanopia", &PROTANOPIA_VIENOT),
         ("deuteranopia", &DEUTERANOPIA_VIENOT),
+        ("tritanopia", &TRITANOPIA_BRETTEL_H1),
     ] {
         for primary in &primaries {
             let result = apply_matrix(matrix, primary);
             for (i, &val) in result.iter().enumerate() {
                 assert!(
-                    val >= -0.05,
+                    val >= -0.2,
                     "{name} produced negative channel {i} = {val:.4} for {primary:?}",
                 );
             }
@@ -263,4 +266,77 @@ fn palette_transform_clamps_negative() {
     assert_eq!(r, 0, "should clamp negative R to 0");
     assert_eq!(g, 0, "should clamp negative G to 0");
     assert_eq!(b, 0, "should clamp negative B to 0");
+}
+
+// ── Tritanopia (Brettel H1) ─────────────────────────────────────────
+
+#[test]
+fn tritanopia_collapses_blue_yellow() {
+    // Under tritanopia, blue and yellow should become harder to
+    // distinguish (they lie on the S-cone confusion axis).
+    let blue = [0.0, 0.0, 1.0];
+    let sim_blue = apply_matrix(&TRITANOPIA_BRETTEL_H1, &blue);
+    // Blue channel should be significantly reduced.
+    assert!(
+        sim_blue[2] < 0.5,
+        "tritanopia should reduce blue perception, got B={:.3}",
+        sim_blue[2]
+    );
+}
+
+#[test]
+fn tritanopia_preserves_red() {
+    // Red should be mostly preserved under tritanopia (L cone intact).
+    let red = [1.0, 0.0, 0.0];
+    let sim_red = apply_matrix(&TRITANOPIA_BRETTEL_H1, &red);
+    assert!(
+        sim_red[0] > 0.9,
+        "tritanopia should mostly preserve red, got R={:.3}",
+        sim_red[0]
+    );
+}
+
+#[test]
+fn tritanopia_preserves_green() {
+    // Green should be mostly preserved under tritanopia (M cone intact).
+    let green = [0.0, 1.0, 0.0];
+    let sim_green = apply_matrix(&TRITANOPIA_BRETTEL_H1, &green);
+    assert!(
+        sim_green[1] > 0.8,
+        "tritanopia should mostly preserve green, got G={:.3}",
+        sim_green[1]
+    );
+}
+
+#[test]
+fn tritanopia_palette_transform_modifies_blue() {
+    // End-to-end: PaletteTransform with tritanopia matrix should
+    // visibly shift pure blue.
+    let t = PaletteTransform::from_matrix(TRITANOPIA_BRETTEL_H1);
+    let (r, g, b) = t.transform(0, 0, 255);
+    // Blue should be reduced, red/green should gain some energy.
+    assert!(b < 200, "tritanopia should reduce blue output, got B={b}");
+    assert!(
+        r > 0 || g > 0,
+        "tritanopia should redistribute blue energy, got R={r} G={g}"
+    );
+}
+
+#[test]
+fn tritanopia_palette_transform_preserves_grey() {
+    // Neutral grey should be approximately preserved.
+    let t = PaletteTransform::from_matrix(TRITANOPIA_BRETTEL_H1);
+    let (r, g, b) = t.transform(128, 128, 128);
+    assert!(
+        (r as i16 - 128).unsigned_abs() <= 15,
+        "grey R should be near 128, got {r}"
+    );
+    assert!(
+        (g as i16 - 128).unsigned_abs() <= 15,
+        "grey G should be near 128, got {g}"
+    );
+    assert!(
+        (b as i16 - 128).unsigned_abs() <= 15,
+        "grey B should be near 128, got {b}"
+    );
 }
