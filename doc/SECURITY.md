@@ -85,6 +85,43 @@ ShellInteg.
 | `--unsafe` gate for xterm/full | Accidental echoback exposure |
 | `--check-threats` scan mode    | Undetected echoback in CI    |
 
+## Unicode Homograph Defense
+
+`distill-ansi` normalizes Unicode compatibility forms that
+enable visual deception in terminal output. Built-in mappings
+(~254 chars) are active by default and cover:
+
+- **fullwidth_ascii** — Homograph confusion: `Ａdmin` → `Admin`
+- **math_latin_bold** — Filter evasion: `𝐇𝐞𝐥𝐥𝐨` → `Hello`
+- **latin_ligatures** — Grep breakage: `ﬁle` → `file`
+- **enclosed_circled_letters** — Filter evasion: `Ⓗⓔⓛⓛⓞ` → `Hello`
+- **superscript_subscript** — Spoofed notation: `x²` → `x2`
+
+These characters appear identical or near-identical to their
+ASCII equivalents but have different codepoints, breaking
+`grep`, `diff`, pattern matching, and human visual inspection.
+
+Fullwidth ASCII (U+FF01–FF5E) is the primary vector: an
+attacker can craft filenames, URLs, or log messages using
+`Ａ` (U+FF21) instead of `A` (U+0041). Math bold and circled
+letters serve the same purpose in social media spam and
+phishing.
+
+Latin ligatures (ﬀ, ﬁ, ﬂ, ﬃ, ﬄ, ﬅ, ﬆ) are common in
+copy-paste from PDFs. `ﬁle` does not match `file` in any
+text search tool.
+
+Removing security-tagged builtins requires `--unsafe`:
+
+```sh
+distill-ansi --unsafe --no-unicode-map @security
+```
+
+Additional canonicalization mappings (CJK, Japanese, Korean,
+Arabic, Greek) are available via `--unicode-map` for users
+who need full Unicode normalization. See
+[UNICODE-NORMALIZATION.md](UNICODE-NORMALIZATION.md).
+
 ## Known Limitations
 
 **CsiWindow conflates some query and action.** `CSI 21 t` (title
