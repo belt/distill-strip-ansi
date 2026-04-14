@@ -33,36 +33,48 @@ crate comparison.
 
 ## Performance
 
-464 MiB/s dirty throughput (4 KiB, ~20% ANSI) — 1.1× faster
-than `fast-strip-ansi`, 2.4× faster than `console`, 7.4× faster
-than `strip-ansi-escapes`. Clean input returns `Cow::Borrowed`
-at up to 18 GiB/s — pure `memchr` SIMD scan, zero allocation.
+1.1× faster than `fast-strip-ansi`, 2.4× faster than `console`,
+7.4× faster than `strip-ansi-escapes` on authors hardware.
+Clean input returns `Cow::Borrowed` pure `memchr` SIMD scan, zero allocation.
 O(n) linear scaling across all input sizes.
 
-Why:
+How:
 
 1. Understanding silicon-software boundaries
 2. Approach, discipline, and slop
 3. No regex — `console` pays regex compilation cost
 4. No `vte` — `strip-ansi-escapes` runs Alacritty's
-   full terminal emulator state machine
+   full terminal emulator state machine (as of 10 April 2026)
 
 See [doc/BENCHMARKS.md](doc/BENCHMARKS.md) for full
 Criterion results and reproduction steps.
 
-## Install
+## Install the easy way
+
+### Homebrew (macOS / Linux)
+
+```sh
+brew install belt/distill/distill-strip-ansi
+```
+
+See the [Homebrew tap](https://github.com/belt/homebrew-distill)
+for Brewfile usage and bottle details.
+
+### Cargo (any platform)
 
 ```sh
 cargo install distill-strip-ansi
 ```
 
-## Quick Start
+[crates.io](https://crates.io/crates/distill-strip-ansi)
+
+## Short Short Version
 
 ```sh
-# Strip all ANSI from build output
+# Strip all ANSI from cargo-build output
 cargo build --color=always 2>&1 | strip-ansi
 
-# Save clean log
+# Save clean docker build log
 docker build . 2>&1 | strip-ansi > build.log
 
 # Check for ANSI sequences (exit 1 if found)
@@ -195,11 +207,10 @@ attack vectors emerge before a crate release.
 
 Rust 1.85+ (edition 2024).
 
-## Coming soon
+## Coming Soon
 
 - Criterion 0.7 → 0.8 (MSRV 1.86, breaking API)
 - MSRV 1.86
-- Homebrew tap
 - Better ops
 
 ## Contributing

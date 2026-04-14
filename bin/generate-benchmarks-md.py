@@ -50,8 +50,9 @@ def fmt_ratio(ns: float | None, base: float | None) -> str:
 
 
 def fmt_bytes(b: int | float | None) -> str:
-    if b is None or b == 0: return "—"
+    if b is None: return "—"
     b = int(abs(b))
+    if b == 0: return "0"
     if b >= 1024 * 1024 * 1024: return f"{b / (1024 * 1024 * 1024):.1f} GiB"
     if b >= 1024 * 1024: return f"{b / (1024 * 1024):.1f} MiB"
     if b >= 1024: return f"{b / 1024:.1f}K"
@@ -152,7 +153,7 @@ class BenchPoint:
     ns: float | None = None
     rss_before: int = 0
     rss_after: int = 0
-    rss_delta: int = 0
+    rss_delta: int | None = None
     peak_rss: int = 0
     cpu_user_us: int = 0
     cpu_sys_us: int = 0
@@ -234,7 +235,7 @@ class BenchData:
             ns=ns,
             rss_before=res.get("rss_before", 0),
             rss_after=res.get("rss_after", 0),
-            rss_delta=res.get("rss_delta", 0),
+            rss_delta=res.get("rss_delta"),
             peak_rss=res.get("peak_rss", 0),
             cpu_user_us=res.get("cpu_user_us", 0),
             cpu_sys_us=res.get("cpu_sys_us", 0),
@@ -425,7 +426,7 @@ class BenchmarkReport:
                     cpu = snap.get("cpu_user_us", 0) + snap.get("cpu_sys_us", 0)
                     return (
                         fmt_bytes(snap["peak_rss"]),
-                        fmt_bytes(snap.get("rss_delta", 0)),
+                        fmt_bytes(snap.get("rss_delta")),
                         fmt_cpu_us(cpu),
                     )
             return "—", "—", "—"
@@ -591,7 +592,7 @@ class BenchmarkReport:
 
             largest_pt = self.data.get_point(bench_key, "dirty", largest)
             notes = []
-            if largest_pt.rss_delta:
+            if largest_pt.rss_delta is not None:
                 notes.append(f"RSS Δ {fmt_bytes(largest_pt.rss_delta)}")
             cpu = largest_pt.cpu_user_us + largest_pt.cpu_sys_us
             if cpu:
@@ -760,7 +761,7 @@ class BenchmarkReport:
             res_key = f"{group}/{bench}"
             res_size = str(actual_size) if actual_size else ""
             res = self.data.resources.get(res_key, {}).get(res_size, {})
-            rss_d = fmt_bytes(res.get("rss_delta", 0)) if res.get("rss_delta") else "—"
+            rss_d = fmt_bytes(res.get("rss_delta"))
             cpu_total = res.get("cpu_user_us", 0) + res.get("cpu_sys_us", 0)
             cpu_s = fmt_cpu_us(cpu_total) if cpu_total else "—"
 
@@ -810,7 +811,7 @@ class BenchmarkReport:
             cpu = pt.cpu_user_us + pt.cpu_sys_us
             rows.append([
                 display, t, m, r,
-                fmt_bytes(pt.rss_delta) if pt.rss_delta else "—",
+                fmt_bytes(pt.rss_delta) if pt.rss_delta is not None else "—",
                 fmt_cpu_us(cpu) if cpu else "—",
             ])
         return md_table(
