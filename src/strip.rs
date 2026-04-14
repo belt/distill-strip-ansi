@@ -268,8 +268,7 @@ pub fn contains_ansi_c1(input: &[u8]) -> bool {
     // Check 8-bit C1 control codes using SIMD-accelerated memchr.
     // CSI=0x9B, OSC=0x9D, DCS=0x90, SOS=0x98, PM=0x9E, APC=0x9F
     // Split into two memchr3 calls (6 needles, 3 per call).
-    memchr3(0x9B, 0x9D, 0x90, input).is_some()
-        || memchr3(0x98, 0x9E, 0x9F, input).is_some()
+    memchr3(0x9B, 0x9D, 0x90, input).is_some() || memchr3(0x98, 0x9E, 0x9F, input).is_some()
 }
 
 // --- Drop-in compatibility aliases ---
