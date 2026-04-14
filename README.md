@@ -19,7 +19,10 @@ SS2/SS3, Fe, and CAN/SUB abort.
 - Selective filtering by sequence group, sub-kind,
   SGR color depth, and OSC type
 - Color transforms: truecolor → 256 → 16 → greyscale → mono
-  (accessibility, legacy terminal support, e-ink displays)
+  - tritanopia simulation for dichromats
+  - extended-gamut for tetrachromats
+  - legacy terminal support (without the garbage)
+  - e-ink displays (without the garbage)
 - Unicode homograph normalization (fullwidth, math bold,
   circled letters, superscripts — security hardening)
 - Security-aware: auto-detect caps at `sanitize`,
@@ -30,6 +33,18 @@ SS2/SS3, Fe, and CAN/SUB abort.
 
 See [doc/ECOSYSTEM.md](doc/ECOSYSTEM.md) for a detailed
 crate comparison.
+
+## Transform Reference
+
+Color transforms and Unicode normalization live in the
+`distill-ansi` binary. Architecture and algorithms:
+
+- [doc/COLOR-TRANSFORMS.md](doc/COLOR-TRANSFORMS.md) —
+  depth reduction, palette remapping, CVD simulation
+- [doc/UNICODE-NORMALIZATION.md](doc/UNICODE-NORMALIZATION.md) —
+  homograph defense, CJK canonicalization, TOML mappings
+- [doc/ANSI-REFERENCE.md](doc/ANSI-REFERENCE.md) —
+  ECMA-48 sequence taxonomy (SGR, OSC, CSI, DCS)
 
 ## Performance
 
@@ -168,14 +183,14 @@ See [doc/DESIGN.md](doc/DESIGN.md) for the architecture and
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false, features = ["std"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false, features = ["std"] }
 ```
 
 For `no_std` (requires `alloc`):
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false }
 ```
 
 ## Feature Flags

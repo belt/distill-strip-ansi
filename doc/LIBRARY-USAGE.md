@@ -8,7 +8,7 @@ API examples by feature. Architecture details in
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false, features = ["std"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false, features = ["std"] }
 ```
 
 ```rust
@@ -27,7 +27,7 @@ stream.push(chunk, &mut out);
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false, features = ["filter"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false, features = ["filter"] }
 ```
 
 ```rust
@@ -55,7 +55,7 @@ for slice in stream.filter_slices(chunk, &config) {
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false, features = ["terminal-detect"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false, features = ["terminal-detect"] }
 ```
 
 ```rust
@@ -78,7 +78,7 @@ design (depth reduction, palette remapping, CVD simulation).
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false, features = ["transform"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false, features = ["transform"] }
 ```
 
 ```rust
@@ -98,7 +98,7 @@ See [SECURITY.md](SECURITY.md) for the threat model.
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false, features = ["toml-config"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false, features = ["toml-config"] }
 ```
 
 ```rust
@@ -124,7 +124,7 @@ Requires `alloc`. Omit `std` feature:
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.4", default-features = false }
+strip-ansi = { package = "distill-strip-ansi", version = "0.5", default-features = false }
 ```
 
 All core types (`strip`, `Parser`, `StripStream`,
