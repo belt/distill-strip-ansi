@@ -1,0 +1,11 @@
+---
+extends: default
+
+rules:
+  line-length:
+    max: 150
+    level: warning
+  truthy:
+    level: warning
+    # We avoid forbid-implicit-booleans to maintain compatibility
+    # with older yamllint versions while overriding global configs.

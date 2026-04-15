@@ -1,0 +1,22 @@
+# Project-scoped Cargo configuration
+#
+# [term] quiet = true  silences ALL cargo progress output:
+#   - "Downloading N/M crates..."
+#   - "Unpacking..."
+#   - "Compiling foo v1.0..."
+#   - "Finished release [optimized] target(s)"
+#
+# Contributors: use `cargo build -v` to restore verbose output when needed.
+# This replaces the need for `-q` flags on every individual cargo subcommand.
+
+[term]
+quiet         = true    # suppress download/unpack/compile/link progress lines
+color         = "never" # no ANSI — redundant with CARGO_TERM_COLOR but explicit
+progress.when = "never" # options: "auto" (default), "always", "never" (best for CI/logs)
+
+[net]
+# Sparse registry: HTTP range requests instead of full git clone of the index.
+# Dramatically reduces first-fetch time and "Updating crates.io-index" noise.
+# Requires Rust ≥ 1.70 (stabilized). Already the default since 1.70 but
+# explicit here so older toolchains (MSRV = 1.85) still benefit.
+git-fetch-with-cli = false   # use libgit2 (faster, no git subprocess noise)

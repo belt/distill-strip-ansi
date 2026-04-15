@@ -8,46 +8,77 @@
 
 [env]
 CARGO_INCREMENTAL = "0"
-RUST_BACKTRACE = "1"
+RUST_BACKTRACE = "short"   # concise traces — full backtraces flood agent logs
+NO_COLOR = "1"             # suppress ANSI in any tool that respects this
+CARGO_TERM_COLOR = "never" # cargo: plain text output
 
+# Usage: mise x fmt
+[tasks.fmt]
+description = "Format source code syntax"
+run = """
+cargo fmt --quiet --check
+"""
+
+# Usage: mise x msrv
+[tasks.msrv]
+description = "Verify compilation against minimum supported Rust version"
+run = """
+cargo test --locked
+"""
+
+# Usage: mise x deny
+[tasks.deny]
+description = "Audit dependencies for security and license compliance"
+run = """
+cargo deny check --log-level warn "$@"
+"""
+
+# Usage: mise x clippy
+[tasks.clippy]
+description = "Lint source code and verify test correctness"
+run = """
+env -u RUSTC_WORKSPACE_WRAPPER \
+  cargo clippy --all-targets -- -D warnings
+"""
+
+# Usage: mise x test
 [tasks.test]
-description = "Run cargo nextest"
+description = "Execute fast test suite"
 run = """
 env -u RUSTC_WORKSPACE_WRAPPER \
   cargo nextest run "$@"
 """
 
+# Usage: mise x test-cargo
 [tasks.test-cargo]
-description = "Run cargo test"
+description = "Execute standard test suite"
 run = """
 env -u RUSTC_WORKSPACE_WRAPPER \
   cargo test "$@"
 """
 
+# Usage: mise x coverage
 [tasks.coverage]
-description = "Run cargo tarpaulin coverage"
+description = "Generate test execution metrics"
 run = """
-env -u RUSTC_WRAPPER -u RUSTC_WORKSPACE_WRAPPER \
+env RUST_LOG=warn -u RUSTC_WRAPPER -u RUSTC_WORKSPACE_WRAPPER \
   cargo tarpaulin \
     --skip-clean \
     --target-dir target/tarpaulin \
     --engine llvm \
     --out html \
+    --out Xml \
+    --output-dir target/tarpaulin \
     --post-test-delay 2 \
     -j 4 \
     -- --test-threads=1
 """
 
-[tasks.deny]
-description = "Run cargo-deny supply chain checks"
+# Usage: mise x coverage:diff
+[tasks."coverage:diff"]
+description = "Enforce complete test coverage on new code changes"
+depends = ["coverage"]
 run = """
-cargo deny check "$@"
+# We use uvx to fetch and run diff-cover invisibly
+env uvx diff-cover target/tarpaulin/cobertura.xml --no-color --compare-branch=main --fail-under=95
 """
-
-[tasks.check]
-description = "Run clippy then tests"
-run = """
-env -u RUSTC_WORKSPACE_WRAPPER \
-  cargo clippy --all-targets -- -D warnings
-"""
-depends = ["test"]

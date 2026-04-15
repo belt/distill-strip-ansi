@@ -1,0 +1,6 @@
+# Clippy configuration for distill-strip-ansi
+# Docs: https://doc.rust-lang.org/nightly/clippy/configuration.html
+
+# MSRV — clippy won't suggest features unavailable before this version.
+# Keep in sync with Cargo.toml rust-version.
+msrv = "1.85.0"
