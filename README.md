@@ -230,7 +230,11 @@ Rust 1.85+ (edition 2024).
 
 ## Contributing
 
-See [doc/CONTRIBUTING.md](doc/CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and
+[doc/CONTRIBUTING.md](doc/CONTRIBUTING.md) for the full guide.
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before
+participating.
 
 ## License
 
