@@ -1,0 +1,82 @@
+name: Bug Report
+description: Report a bug in distill-strip-ansi
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug. Please fill out the
+        sections below so we can reproduce and fix the issue.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `strip-ansi --version`
+      placeholder: "distill-strip-ansi 0.5.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - macOS
+        - Linux (glibc)
+        - Linux (musl)
+        - Windows
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation Method
+      options:
+        - "cargo install"
+        - Homebrew
+        - Built from source
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: |
+        Minimal steps to trigger the bug. Include the
+        command you ran and any input data if possible.
+      placeholder: |
+        1. echo '\e[31mhello\e[0m' | strip-ansi
+        2. Expected: hello
+        3. Got: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: input-sample
+    attributes:
+      label: Input Sample
+      description: |
+        If the bug involves specific input, paste a sample
+        here. Use xxd or hexdump output for binary data.
+      render: text
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Anything else that might help: preset used, flags,
+        piped command, terminal emulator, related issues.

@@ -1,0 +1,62 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement. Please
+        describe the use case so we can evaluate the request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: |
+        What are you trying to do? What problem does this
+        solve? Is this related to a frustration with the
+        current behavior?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: |
+        How would you like this to work? Include example
+        commands, flags, or API usage if applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: |
+        Have you considered other approaches or workarounds?
+        What are their drawbacks?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the project does this affect?
+      options:
+        - CLI (strip-ansi)
+        - CLI (distill-ansi)
+        - Library API
+        - Color transforms
+        - Unicode normalization
+        - Security / threat detection
+        - Presets
+        - Documentation
+        - Other
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Links, references, screenshots, or anything else
+        that helps explain the request.
