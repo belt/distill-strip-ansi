@@ -1,0 +1,6 @@
+Admin logged in from 192.168.1.1
+Hello World
+Test passed
+x2 + y2 = z2
+file not found
+price: ¥100
