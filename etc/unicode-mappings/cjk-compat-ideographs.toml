@@ -5,31 +5,20 @@
 # compatibility with legacy East Asian encodings (KS X 1001,
 # JIS X 0213, CNS 11643, etc.).
 #
-# Each entry maps a compatibility ideograph to its canonical
-# unified equivalent as defined by Unicode's canonical
-# decomposition mapping.
-#
-# Source: Unicode block U+F900-U+FAD9
+# Source: Unicode block U+F900-U+FAD9 (460 entries)
 # Reference: https://unicode.org/charts/nameslist/n_F900.html
-# Authoritative source: UnicodeData.txt field 5 (decomposition mapping)
+# Generated from: UnicodeData.txt field 5 (canonical decomposition)
+# Generator: bin/generate-toml.sh
 #
-# ~12 codepoints in this range are actually unified ideographs
-# (no decomposition mapping) and are excluded.
-#
-# NOTE: This file contains a representative subset. The complete
-# mapping (~460 entries) should be generated from the Unicode
-# Character Database (UnicodeData.txt) using the canonical
-# decomposition field for codepoints in F900-FAD9.
-# A generation script is provided at bin/generate-cjk-compat.sh.
+# 12 codepoints in this range are unified ideographs (no
+# decomposition mapping) and are excluded: FA0E, FA0F, FA11,
+# FA13, FA14, FA1F, FA21, FA23, FA24, FA27, FA28, FA29.
 
 [metadata]
 type = "cjk_compat_ideographs"
 description = "CJK Compatibility Ideographs → CJK Unified Ideographs"
 direction = "neutral"
 tags = ["cjk", "japanese", "korean", "canonicalize"]
-
-# ── KS X 1001 source (Korean) ────────────────────────────────────────
-# F900-F91F: sourced from KS X 1001 (Korean standard)
 
 [[pairs]]
 from = "F900"
@@ -158,9 +147,6 @@ to = "721B"
 [[pairs]]
 from = "F91F"
 to = "862D"
-
-
-# ── Additional KS X 1001 entries ─────────────────────────────────────
 
 [[pairs]]
 from = "F920"
@@ -354,20 +340,1523 @@ to = "6F0F"
 from = "F94F"
 to = "7D2F"
 
-# ── Truncated for maintainability ────────────────────────────────────
-#
-# The complete mapping contains ~460 entries covering F900-FAD9.
-# This file includes the first 80 entries (F900-F94F) as a
-# verified reference subset.
-#
-# To generate the complete file from the Unicode Character Database:
-#
-#   curl -sO https://unicode.org/Public/UNIDATA/UnicodeData.txt
-#   awk -F';' '$1 ~ /^F9/ || $1 ~ /^FA[0-9A-D]/ {
-#     if ($6 != "") print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" $6 "\"\n"
-#   }' UnicodeData.txt
-#
-# The awk command extracts canonical decomposition mappings (field 6)
-# for codepoints in the F900-FAD9 range. Entries where field 6 is
-# empty are unified ideographs (not compatibility) and should be
-# excluded.
+[[pairs]]
+from = "F950"
+to = "7E37"
+
+[[pairs]]
+from = "F951"
+to = "964B"
+
+[[pairs]]
+from = "F952"
+to = "52D2"
+
+[[pairs]]
+from = "F953"
+to = "808B"
+
+[[pairs]]
+from = "F954"
+to = "51DC"
+
+[[pairs]]
+from = "F955"
+to = "51CC"
+
+[[pairs]]
+from = "F956"
+to = "7A1C"
+
+[[pairs]]
+from = "F957"
+to = "7DBE"
+
+[[pairs]]
+from = "F958"
+to = "83F1"
+
+[[pairs]]
+from = "F959"
+to = "9675"
+
+[[pairs]]
+from = "F95A"
+to = "8B80"
+
+[[pairs]]
+from = "F95B"
+to = "62CF"
+
+[[pairs]]
+from = "F95C"
+to = "6A02"
+
+[[pairs]]
+from = "F95D"
+to = "8AFE"
+
+[[pairs]]
+from = "F95E"
+to = "4E39"
+
+[[pairs]]
+from = "F95F"
+to = "5BE7"
+
+[[pairs]]
+from = "F960"
+to = "6012"
+
+[[pairs]]
+from = "F961"
+to = "7387"
+
+[[pairs]]
+from = "F962"
+to = "7570"
+
+[[pairs]]
+from = "F963"
+to = "5317"
+
+[[pairs]]
+from = "F964"
+to = "78FB"
+
+[[pairs]]
+from = "F965"
+to = "4FBF"
+
+[[pairs]]
+from = "F966"
+to = "5FA9"
+
+[[pairs]]
+from = "F967"
+to = "4E0D"
+
+[[pairs]]
+from = "F968"
+to = "6CCC"
+
+[[pairs]]
+from = "F969"
+to = "6578"
+
+[[pairs]]
+from = "F96A"
+to = "7D22"
+
+[[pairs]]
+from = "F96B"
+to = "53C3"
+
+[[pairs]]
+from = "F96C"
+to = "585E"
+
+[[pairs]]
+from = "F96D"
+to = "7701"
+
+[[pairs]]
+from = "F96E"
+to = "8449"
+
+[[pairs]]
+from = "F96F"
+to = "8AAA"
+
+[[pairs]]
+from = "F970"
+to = "6BBA"
+
+[[pairs]]
+from = "F971"
+to = "8FB0"
+
+[[pairs]]
+from = "F972"
+to = "6C88"
+
+[[pairs]]
+from = "F973"
+to = "62FE"
+
+[[pairs]]
+from = "F974"
+to = "82E5"
+
+[[pairs]]
+from = "F975"
+to = "63A0"
+
+[[pairs]]
+from = "F976"
+to = "7565"
+
+[[pairs]]
+from = "F977"
+to = "4EAE"
+
+[[pairs]]
+from = "F978"
+to = "5169"
+
+[[pairs]]
+from = "F979"
+to = "51C9"
+
+[[pairs]]
+from = "F97A"
+to = "6881"
+
+[[pairs]]
+from = "F97B"
+to = "7CE7"
+
+[[pairs]]
+from = "F97C"
+to = "826F"
+
+[[pairs]]
+from = "F97D"
+to = "8AD2"
+
+[[pairs]]
+from = "F97E"
+to = "91CF"
+
+[[pairs]]
+from = "F97F"
+to = "52F5"
+
+[[pairs]]
+from = "F980"
+to = "5442"
+
+[[pairs]]
+from = "F981"
+to = "5973"
+
+[[pairs]]
+from = "F982"
+to = "5EEC"
+
+[[pairs]]
+from = "F983"
+to = "65C5"
+
+[[pairs]]
+from = "F984"
+to = "6FFE"
+
+[[pairs]]
+from = "F985"
+to = "792A"
+
+[[pairs]]
+from = "F986"
+to = "95AD"
+
+[[pairs]]
+from = "F987"
+to = "9A6A"
+
+[[pairs]]
+from = "F988"
+to = "9E97"
+
+[[pairs]]
+from = "F989"
+to = "9ECE"
+
+[[pairs]]
+from = "F98A"
+to = "529B"
+
+[[pairs]]
+from = "F98B"
+to = "66C6"
+
+[[pairs]]
+from = "F98C"
+to = "6B77"
+
+[[pairs]]
+from = "F98D"
+to = "8F62"
+
+[[pairs]]
+from = "F98E"
+to = "5E74"
+
+[[pairs]]
+from = "F98F"
+to = "6190"
+
+[[pairs]]
+from = "F990"
+to = "6200"
+
+[[pairs]]
+from = "F991"
+to = "649A"
+
+[[pairs]]
+from = "F992"
+to = "6F23"
+
+[[pairs]]
+from = "F993"
+to = "7149"
+
+[[pairs]]
+from = "F994"
+to = "7489"
+
+[[pairs]]
+from = "F995"
+to = "79CA"
+
+[[pairs]]
+from = "F996"
+to = "7DF4"
+
+[[pairs]]
+from = "F997"
+to = "806F"
+
+[[pairs]]
+from = "F998"
+to = "8F26"
+
+[[pairs]]
+from = "F999"
+to = "84EE"
+
+[[pairs]]
+from = "F99A"
+to = "9023"
+
+[[pairs]]
+from = "F99B"
+to = "934A"
+
+[[pairs]]
+from = "F99C"
+to = "5217"
+
+[[pairs]]
+from = "F99D"
+to = "52A3"
+
+[[pairs]]
+from = "F99E"
+to = "54BD"
+
+[[pairs]]
+from = "F99F"
+to = "70C8"
+
+[[pairs]]
+from = "F9A0"
+to = "88C2"
+
+[[pairs]]
+from = "F9A1"
+to = "8AAA"
+
+[[pairs]]
+from = "F9A2"
+to = "5EC9"
+
+[[pairs]]
+from = "F9A3"
+to = "5FF5"
+
+[[pairs]]
+from = "F9A4"
+to = "637B"
+
+[[pairs]]
+from = "F9A5"
+to = "6BAE"
+
+[[pairs]]
+from = "F9A6"
+to = "7C3E"
+
+[[pairs]]
+from = "F9A7"
+to = "7375"
+
+[[pairs]]
+from = "F9A8"
+to = "4EE4"
+
+[[pairs]]
+from = "F9A9"
+to = "56F9"
+
+[[pairs]]
+from = "F9AA"
+to = "5BE7"
+
+[[pairs]]
+from = "F9AB"
+to = "5DBA"
+
+[[pairs]]
+from = "F9AC"
+to = "601C"
+
+[[pairs]]
+from = "F9AD"
+to = "73B2"
+
+[[pairs]]
+from = "F9AE"
+to = "7469"
+
+[[pairs]]
+from = "F9AF"
+to = "7F9A"
+
+[[pairs]]
+from = "F9B0"
+to = "8046"
+
+[[pairs]]
+from = "F9B1"
+to = "9234"
+
+[[pairs]]
+from = "F9B2"
+to = "96F6"
+
+[[pairs]]
+from = "F9B3"
+to = "9748"
+
+[[pairs]]
+from = "F9B4"
+to = "9818"
+
+[[pairs]]
+from = "F9B5"
+to = "4F8B"
+
+[[pairs]]
+from = "F9B6"
+to = "79AE"
+
+[[pairs]]
+from = "F9B7"
+to = "91B4"
+
+[[pairs]]
+from = "F9B8"
+to = "96B8"
+
+[[pairs]]
+from = "F9B9"
+to = "60E1"
+
+[[pairs]]
+from = "F9BA"
+to = "4E86"
+
+[[pairs]]
+from = "F9BB"
+to = "50DA"
+
+[[pairs]]
+from = "F9BC"
+to = "5BEE"
+
+[[pairs]]
+from = "F9BD"
+to = "5C3F"
+
+[[pairs]]
+from = "F9BE"
+to = "6599"
+
+[[pairs]]
+from = "F9BF"
+to = "6A02"
+
+[[pairs]]
+from = "F9C0"
+to = "71CE"
+
+[[pairs]]
+from = "F9C1"
+to = "7642"
+
+[[pairs]]
+from = "F9C2"
+to = "84FC"
+
+[[pairs]]
+from = "F9C3"
+to = "907C"
+
+[[pairs]]
+from = "F9C4"
+to = "9F8D"
+
+[[pairs]]
+from = "F9C5"
+to = "6688"
+
+[[pairs]]
+from = "F9C6"
+to = "962E"
+
+[[pairs]]
+from = "F9C7"
+to = "5289"
+
+[[pairs]]
+from = "F9C8"
+to = "677B"
+
+[[pairs]]
+from = "F9C9"
+to = "67F3"
+
+[[pairs]]
+from = "F9CA"
+to = "6D41"
+
+[[pairs]]
+from = "F9CB"
+to = "6E9C"
+
+[[pairs]]
+from = "F9CC"
+to = "7409"
+
+[[pairs]]
+from = "F9CD"
+to = "7559"
+
+[[pairs]]
+from = "F9CE"
+to = "786B"
+
+[[pairs]]
+from = "F9CF"
+to = "7D10"
+
+[[pairs]]
+from = "F9D0"
+to = "985E"
+
+[[pairs]]
+from = "F9D1"
+to = "516D"
+
+[[pairs]]
+from = "F9D2"
+to = "622E"
+
+[[pairs]]
+from = "F9D3"
+to = "9678"
+
+[[pairs]]
+from = "F9D4"
+to = "502B"
+
+[[pairs]]
+from = "F9D5"
+to = "5D19"
+
+[[pairs]]
+from = "F9D6"
+to = "6DEA"
+
+[[pairs]]
+from = "F9D7"
+to = "8F2A"
+
+[[pairs]]
+from = "F9D8"
+to = "5F8B"
+
+[[pairs]]
+from = "F9D9"
+to = "6144"
+
+[[pairs]]
+from = "F9DA"
+to = "6817"
+
+[[pairs]]
+from = "F9DB"
+to = "7387"
+
+[[pairs]]
+from = "F9DC"
+to = "9686"
+
+[[pairs]]
+from = "F9DD"
+to = "5229"
+
+[[pairs]]
+from = "F9DE"
+to = "540F"
+
+[[pairs]]
+from = "F9DF"
+to = "5C65"
+
+[[pairs]]
+from = "F9E0"
+to = "6613"
+
+[[pairs]]
+from = "F9E1"
+to = "674E"
+
+[[pairs]]
+from = "F9E2"
+to = "68A8"
+
+[[pairs]]
+from = "F9E3"
+to = "6CE5"
+
+[[pairs]]
+from = "F9E4"
+to = "7406"
+
+[[pairs]]
+from = "F9E5"
+to = "75E2"
+
+[[pairs]]
+from = "F9E6"
+to = "7F79"
+
+[[pairs]]
+from = "F9E7"
+to = "88CF"
+
+[[pairs]]
+from = "F9E8"
+to = "88E1"
+
+[[pairs]]
+from = "F9E9"
+to = "91CC"
+
+[[pairs]]
+from = "F9EA"
+to = "96E2"
+
+[[pairs]]
+from = "F9EB"
+to = "533F"
+
+[[pairs]]
+from = "F9EC"
+to = "6EBA"
+
+[[pairs]]
+from = "F9ED"
+to = "541D"
+
+[[pairs]]
+from = "F9EE"
+to = "71D0"
+
+[[pairs]]
+from = "F9EF"
+to = "7498"
+
+[[pairs]]
+from = "F9F0"
+to = "85FA"
+
+[[pairs]]
+from = "F9F1"
+to = "96A3"
+
+[[pairs]]
+from = "F9F2"
+to = "9C57"
+
+[[pairs]]
+from = "F9F3"
+to = "9E9F"
+
+[[pairs]]
+from = "F9F4"
+to = "6797"
+
+[[pairs]]
+from = "F9F5"
+to = "6DCB"
+
+[[pairs]]
+from = "F9F6"
+to = "81E8"
+
+[[pairs]]
+from = "F9F7"
+to = "7ACB"
+
+[[pairs]]
+from = "F9F8"
+to = "7B20"
+
+[[pairs]]
+from = "F9F9"
+to = "7C92"
+
+[[pairs]]
+from = "F9FA"
+to = "72C0"
+
+[[pairs]]
+from = "F9FB"
+to = "7099"
+
+[[pairs]]
+from = "F9FC"
+to = "8B58"
+
+[[pairs]]
+from = "F9FD"
+to = "4EC0"
+
+[[pairs]]
+from = "F9FE"
+to = "8336"
+
+[[pairs]]
+from = "F9FF"
+to = "523A"
+
+[[pairs]]
+from = "FA00"
+to = "5207"
+
+[[pairs]]
+from = "FA01"
+to = "5EA6"
+
+[[pairs]]
+from = "FA02"
+to = "62D3"
+
+[[pairs]]
+from = "FA03"
+to = "7CD6"
+
+[[pairs]]
+from = "FA04"
+to = "5B85"
+
+[[pairs]]
+from = "FA05"
+to = "6D1E"
+
+[[pairs]]
+from = "FA06"
+to = "66B4"
+
+[[pairs]]
+from = "FA07"
+to = "8F3B"
+
+[[pairs]]
+from = "FA08"
+to = "884C"
+
+[[pairs]]
+from = "FA09"
+to = "964D"
+
+[[pairs]]
+from = "FA0A"
+to = "898B"
+
+[[pairs]]
+from = "FA0B"
+to = "5ED3"
+
+[[pairs]]
+from = "FA0C"
+to = "5140"
+
+[[pairs]]
+from = "FA0D"
+to = "55C0"
+
+[[pairs]]
+from = "FA10"
+to = "585A"
+
+[[pairs]]
+from = "FA12"
+to = "6674"
+
+[[pairs]]
+from = "FA15"
+to = "51DE"
+
+[[pairs]]
+from = "FA16"
+to = "732A"
+
+[[pairs]]
+from = "FA17"
+to = "76CA"
+
+[[pairs]]
+from = "FA18"
+to = "793C"
+
+[[pairs]]
+from = "FA19"
+to = "795E"
+
+[[pairs]]
+from = "FA1A"
+to = "7965"
+
+[[pairs]]
+from = "FA1B"
+to = "798F"
+
+[[pairs]]
+from = "FA1C"
+to = "9756"
+
+[[pairs]]
+from = "FA1D"
+to = "7CBE"
+
+[[pairs]]
+from = "FA1E"
+to = "7FBD"
+
+[[pairs]]
+from = "FA20"
+to = "8612"
+
+[[pairs]]
+from = "FA22"
+to = "8AF8"
+
+[[pairs]]
+from = "FA25"
+to = "9038"
+
+[[pairs]]
+from = "FA26"
+to = "90FD"
+
+[[pairs]]
+from = "FA2A"
+to = "98EF"
+
+[[pairs]]
+from = "FA2B"
+to = "98FC"
+
+[[pairs]]
+from = "FA2C"
+to = "9928"
+
+[[pairs]]
+from = "FA2D"
+to = "9DB4"
+
+[[pairs]]
+from = "FA2E"
+to = "90DE"
+
+[[pairs]]
+from = "FA2F"
+to = "96B7"
+
+[[pairs]]
+from = "FA30"
+to = "4FAE"
+
+[[pairs]]
+from = "FA31"
+to = "50E7"
+
+[[pairs]]
+from = "FA32"
+to = "514D"
+
+[[pairs]]
+from = "FA33"
+to = "52C9"
+
+[[pairs]]
+from = "FA34"
+to = "52E4"
+
+[[pairs]]
+from = "FA35"
+to = "5351"
+
+[[pairs]]
+from = "FA36"
+to = "559D"
+
+[[pairs]]
+from = "FA37"
+to = "5606"
+
+[[pairs]]
+from = "FA38"
+to = "5668"
+
+[[pairs]]
+from = "FA39"
+to = "5840"
+
+[[pairs]]
+from = "FA3A"
+to = "58A8"
+
+[[pairs]]
+from = "FA3B"
+to = "5C64"
+
+[[pairs]]
+from = "FA3C"
+to = "5C6E"
+
+[[pairs]]
+from = "FA3D"
+to = "6094"
+
+[[pairs]]
+from = "FA3E"
+to = "6168"
+
+[[pairs]]
+from = "FA3F"
+to = "618E"
+
+[[pairs]]
+from = "FA40"
+to = "61F2"
+
+[[pairs]]
+from = "FA41"
+to = "654F"
+
+[[pairs]]
+from = "FA42"
+to = "65E2"
+
+[[pairs]]
+from = "FA43"
+to = "6691"
+
+[[pairs]]
+from = "FA44"
+to = "6885"
+
+[[pairs]]
+from = "FA45"
+to = "6D77"
+
+[[pairs]]
+from = "FA46"
+to = "6E1A"
+
+[[pairs]]
+from = "FA47"
+to = "6F22"
+
+[[pairs]]
+from = "FA48"
+to = "716E"
+
+[[pairs]]
+from = "FA49"
+to = "722B"
+
+[[pairs]]
+from = "FA4A"
+to = "7422"
+
+[[pairs]]
+from = "FA4B"
+to = "7891"
+
+[[pairs]]
+from = "FA4C"
+to = "793E"
+
+[[pairs]]
+from = "FA4D"
+to = "7949"
+
+[[pairs]]
+from = "FA4E"
+to = "7948"
+
+[[pairs]]
+from = "FA4F"
+to = "7950"
+
+[[pairs]]
+from = "FA50"
+to = "7956"
+
+[[pairs]]
+from = "FA51"
+to = "795D"
+
+[[pairs]]
+from = "FA52"
+to = "798D"
+
+[[pairs]]
+from = "FA53"
+to = "798E"
+
+[[pairs]]
+from = "FA54"
+to = "7A40"
+
+[[pairs]]
+from = "FA55"
+to = "7A81"
+
+[[pairs]]
+from = "FA56"
+to = "7BC0"
+
+[[pairs]]
+from = "FA57"
+to = "7DF4"
+
+[[pairs]]
+from = "FA58"
+to = "7E09"
+
+[[pairs]]
+from = "FA59"
+to = "7E41"
+
+[[pairs]]
+from = "FA5A"
+to = "7F72"
+
+[[pairs]]
+from = "FA5B"
+to = "8005"
+
+[[pairs]]
+from = "FA5C"
+to = "81ED"
+
+[[pairs]]
+from = "FA5D"
+to = "8279"
+
+[[pairs]]
+from = "FA5E"
+to = "8279"
+
+[[pairs]]
+from = "FA5F"
+to = "8457"
+
+[[pairs]]
+from = "FA60"
+to = "8910"
+
+[[pairs]]
+from = "FA61"
+to = "8996"
+
+[[pairs]]
+from = "FA62"
+to = "8B01"
+
+[[pairs]]
+from = "FA63"
+to = "8B39"
+
+[[pairs]]
+from = "FA64"
+to = "8CD3"
+
+[[pairs]]
+from = "FA65"
+to = "8D08"
+
+[[pairs]]
+from = "FA66"
+to = "8FB6"
+
+[[pairs]]
+from = "FA67"
+to = "9038"
+
+[[pairs]]
+from = "FA68"
+to = "96E3"
+
+[[pairs]]
+from = "FA69"
+to = "97FF"
+
+[[pairs]]
+from = "FA6A"
+to = "983B"
+
+[[pairs]]
+from = "FA6B"
+to = "6075"
+
+[[pairs]]
+from = "FA6C"
+to = "242EE"
+
+[[pairs]]
+from = "FA6D"
+to = "8218"
+
+[[pairs]]
+from = "FA70"
+to = "4E26"
+
+[[pairs]]
+from = "FA71"
+to = "51B5"
+
+[[pairs]]
+from = "FA72"
+to = "5168"
+
+[[pairs]]
+from = "FA73"
+to = "4F80"
+
+[[pairs]]
+from = "FA74"
+to = "5145"
+
+[[pairs]]
+from = "FA75"
+to = "5180"
+
+[[pairs]]
+from = "FA76"
+to = "52C7"
+
+[[pairs]]
+from = "FA77"
+to = "52FA"
+
+[[pairs]]
+from = "FA78"
+to = "559D"
+
+[[pairs]]
+from = "FA79"
+to = "5555"
+
+[[pairs]]
+from = "FA7A"
+to = "5599"
+
+[[pairs]]
+from = "FA7B"
+to = "55E2"
+
+[[pairs]]
+from = "FA7C"
+to = "585A"
+
+[[pairs]]
+from = "FA7D"
+to = "58B3"
+
+[[pairs]]
+from = "FA7E"
+to = "5944"
+
+[[pairs]]
+from = "FA7F"
+to = "5954"
+
+[[pairs]]
+from = "FA80"
+to = "5A62"
+
+[[pairs]]
+from = "FA81"
+to = "5B28"
+
+[[pairs]]
+from = "FA82"
+to = "5ED2"
+
+[[pairs]]
+from = "FA83"
+to = "5ED9"
+
+[[pairs]]
+from = "FA84"
+to = "5F69"
+
+[[pairs]]
+from = "FA85"
+to = "5FAD"
+
+[[pairs]]
+from = "FA86"
+to = "60D8"
+
+[[pairs]]
+from = "FA87"
+to = "614E"
+
+[[pairs]]
+from = "FA88"
+to = "6108"
+
+[[pairs]]
+from = "FA89"
+to = "618E"
+
+[[pairs]]
+from = "FA8A"
+to = "6160"
+
+[[pairs]]
+from = "FA8B"
+to = "61F2"
+
+[[pairs]]
+from = "FA8C"
+to = "6234"
+
+[[pairs]]
+from = "FA8D"
+to = "63C4"
+
+[[pairs]]
+from = "FA8E"
+to = "641C"
+
+[[pairs]]
+from = "FA8F"
+to = "6452"
+
+[[pairs]]
+from = "FA90"
+to = "6556"
+
+[[pairs]]
+from = "FA91"
+to = "6674"
+
+[[pairs]]
+from = "FA92"
+to = "6717"
+
+[[pairs]]
+from = "FA93"
+to = "671B"
+
+[[pairs]]
+from = "FA94"
+to = "6756"
+
+[[pairs]]
+from = "FA95"
+to = "6B79"
+
+[[pairs]]
+from = "FA96"
+to = "6BBA"
+
+[[pairs]]
+from = "FA97"
+to = "6D41"
+
+[[pairs]]
+from = "FA98"
+to = "6EDB"
+
+[[pairs]]
+from = "FA99"
+to = "6ECB"
+
+[[pairs]]
+from = "FA9A"
+to = "6F22"
+
+[[pairs]]
+from = "FA9B"
+to = "701E"
+
+[[pairs]]
+from = "FA9C"
+to = "716E"
+
+[[pairs]]
+from = "FA9D"
+to = "77A7"
+
+[[pairs]]
+from = "FA9E"
+to = "7235"
+
+[[pairs]]
+from = "FA9F"
+to = "72AF"
+
+[[pairs]]
+from = "FAA0"
+to = "732A"
+
+[[pairs]]
+from = "FAA1"
+to = "7471"
+
+[[pairs]]
+from = "FAA2"
+to = "7506"
+
+[[pairs]]
+from = "FAA3"
+to = "753B"
+
+[[pairs]]
+from = "FAA4"
+to = "761D"
+
+[[pairs]]
+from = "FAA5"
+to = "761F"
+
+[[pairs]]
+from = "FAA6"
+to = "76CA"
+
+[[pairs]]
+from = "FAA7"
+to = "76DB"
+
+[[pairs]]
+from = "FAA8"
+to = "76F4"
+
+[[pairs]]
+from = "FAA9"
+to = "774A"
+
+[[pairs]]
+from = "FAAA"
+to = "7740"
+
+[[pairs]]
+from = "FAAB"
+to = "78CC"
+
+[[pairs]]
+from = "FAAC"
+to = "7AB1"
+
+[[pairs]]
+from = "FAAD"
+to = "7BC0"
+
+[[pairs]]
+from = "FAAE"
+to = "7C7B"
+
+[[pairs]]
+from = "FAAF"
+to = "7D5B"
+
+[[pairs]]
+from = "FAB0"
+to = "7DF4"
+
+[[pairs]]
+from = "FAB1"
+to = "7F3E"
+
+[[pairs]]
+from = "FAB2"
+to = "8005"
+
+[[pairs]]
+from = "FAB3"
+to = "8352"
+
+[[pairs]]
+from = "FAB4"
+to = "83EF"
+
+[[pairs]]
+from = "FAB5"
+to = "8779"
+
+[[pairs]]
+from = "FAB6"
+to = "8941"
+
+[[pairs]]
+from = "FAB7"
+to = "8986"
+
+[[pairs]]
+from = "FAB8"
+to = "8996"
+
+[[pairs]]
+from = "FAB9"
+to = "8ABF"
+
+[[pairs]]
+from = "FABA"
+to = "8AF8"
+
+[[pairs]]
+from = "FABB"
+to = "8ACB"
+
+[[pairs]]
+from = "FABC"
+to = "8B01"
+
+[[pairs]]
+from = "FABD"
+to = "8AFE"
+
+[[pairs]]
+from = "FABE"
+to = "8AED"
+
+[[pairs]]
+from = "FABF"
+to = "8B39"
+
+[[pairs]]
+from = "FAC0"
+to = "8B8A"
+
+[[pairs]]
+from = "FAC1"
+to = "8D08"
+
+[[pairs]]
+from = "FAC2"
+to = "8F38"
+
+[[pairs]]
+from = "FAC3"
+to = "9072"
+
+[[pairs]]
+from = "FAC4"
+to = "9199"
+
+[[pairs]]
+from = "FAC5"
+to = "9276"
+
+[[pairs]]
+from = "FAC6"
+to = "967C"
+
+[[pairs]]
+from = "FAC7"
+to = "96E3"
+
+[[pairs]]
+from = "FAC8"
+to = "9756"
+
+[[pairs]]
+from = "FAC9"
+to = "97DB"
+
+[[pairs]]
+from = "FACA"
+to = "97FF"
+
+[[pairs]]
+from = "FACB"
+to = "980B"
+
+[[pairs]]
+from = "FACC"
+to = "983B"
+
+[[pairs]]
+from = "FACD"
+to = "9B12"
+
+[[pairs]]
+from = "FACE"
+to = "9F9C"
+
+[[pairs]]
+from = "FACF"
+to = "2284A"
+
+[[pairs]]
+from = "FAD0"
+to = "22844"
+
+[[pairs]]
+from = "FAD1"
+to = "233D5"
+
+[[pairs]]
+from = "FAD2"
+to = "3B9D"
+
+[[pairs]]
+from = "FAD3"
+to = "4018"
+
+[[pairs]]
+from = "FAD4"
+to = "4039"
+
+[[pairs]]
+from = "FAD5"
+to = "25249"
+
+[[pairs]]
+from = "FAD6"
+to = "25CD0"
+
+[[pairs]]
+from = "FAD7"
+to = "27ED3"
+
+[[pairs]]
+from = "FAD8"
+to = "9F43"
+
+[[pairs]]
+from = "FAD9"
+to = "9F8E"
+

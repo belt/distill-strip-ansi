@@ -3,34 +3,10 @@
 # Parenthesized and circled forms of Hangul, Katakana, and CJK
 # ideographs. Maps to their compatibility decompositions.
 #
-# Source: Unicode block U+3200-U+32FF
+# Source: Unicode block U+3200-U+32FF (246 entries)
 # Reference: https://en.wikipedia.org/wiki/Enclosed_CJK_Letters_and_Months
-#
-# Subranges:
-#   3200-321E  Parenthesized Hangul → compatibility jamo sequences
-#   3220-3247  Parenthesized CJK ideographs → single ideographs
-#   3248-324F  Circled numbers 10-80 (CJK) → digit sequences
-#   3250       Partnership sign → special
-#   3251-325F  Circled numbers 21-35 → digit sequences
-#   3260-327E  Circled Hangul → compatibility jamo
-#   3280-32B0  Circled CJK ideographs → single ideographs
-#   32B1-32BF  Circled numbers 36-50 → digit sequences
-#   32C0-32CB  Ideographic telegraph months → digit + 月
-#   32D0-32FE  Circled Katakana → standard katakana
-#   32FF       Square era name Reiwa → 令和
-#
-# NOTE: This file contains a representative subset. The complete
-# mapping (~255 entries) should be generated from UnicodeData.txt.
-#
-#   awk -F';' '$1 ~ /^32[0-9A-F]/ && $6 != "" {
-#     split($6, a, " "); target="";
-#     for (i in a) { if (a[i] !~ /^</) target = target " " a[i] }
-#     gsub(/^ /, "", target);
-#     if (target ~ / /)
-#       print "[[pairs]]\nfrom = \"" $1 "\"\nto_seq = \"" target "\"\n"
-#     else if (target != "")
-#       print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" target "\"\n"
-#   }' UnicodeData.txt
+# Generated from: UnicodeData.txt field 5 (compatibility decomposition)
+# Generator: bin/generate-toml.sh
 
 [metadata]
 type = "enclosed_cjk"
@@ -38,138 +14,477 @@ description = "Enclosed CJK Letters and Months → base forms"
 direction = "neutral"
 tags = ["cjk", "japanese", "korean", "canonicalize"]
 
-# ── Parenthesized CJK ideographs (3220-3243) ────────────────────────
-# These decompose to (ideograph) sequences. We map to the ideograph only.
+[[pairs]]
+from = "3200"
+to_seq = "0028 1100 0029"
+
+[[pairs]]
+from = "3201"
+to_seq = "0028 1102 0029"
+
+[[pairs]]
+from = "3202"
+to_seq = "0028 1103 0029"
+
+[[pairs]]
+from = "3203"
+to_seq = "0028 1105 0029"
+
+[[pairs]]
+from = "3204"
+to_seq = "0028 1106 0029"
+
+[[pairs]]
+from = "3205"
+to_seq = "0028 1107 0029"
+
+[[pairs]]
+from = "3206"
+to_seq = "0028 1109 0029"
+
+[[pairs]]
+from = "3207"
+to_seq = "0028 110B 0029"
+
+[[pairs]]
+from = "3208"
+to_seq = "0028 110C 0029"
+
+[[pairs]]
+from = "3209"
+to_seq = "0028 110E 0029"
+
+[[pairs]]
+from = "320A"
+to_seq = "0028 110F 0029"
+
+[[pairs]]
+from = "320B"
+to_seq = "0028 1110 0029"
+
+[[pairs]]
+from = "320C"
+to_seq = "0028 1111 0029"
+
+[[pairs]]
+from = "320D"
+to_seq = "0028 1112 0029"
+
+[[pairs]]
+from = "320E"
+to_seq = "0028 1100 1161 0029"
+
+[[pairs]]
+from = "320F"
+to_seq = "0028 1102 1161 0029"
+
+[[pairs]]
+from = "3210"
+to_seq = "0028 1103 1161 0029"
+
+[[pairs]]
+from = "3211"
+to_seq = "0028 1105 1161 0029"
+
+[[pairs]]
+from = "3212"
+to_seq = "0028 1106 1161 0029"
+
+[[pairs]]
+from = "3213"
+to_seq = "0028 1107 1161 0029"
+
+[[pairs]]
+from = "3214"
+to_seq = "0028 1109 1161 0029"
+
+[[pairs]]
+from = "3215"
+to_seq = "0028 110B 1161 0029"
+
+[[pairs]]
+from = "3216"
+to_seq = "0028 110C 1161 0029"
+
+[[pairs]]
+from = "3217"
+to_seq = "0028 110E 1161 0029"
+
+[[pairs]]
+from = "3218"
+to_seq = "0028 110F 1161 0029"
+
+[[pairs]]
+from = "3219"
+to_seq = "0028 1110 1161 0029"
+
+[[pairs]]
+from = "321A"
+to_seq = "0028 1111 1161 0029"
+
+[[pairs]]
+from = "321B"
+to_seq = "0028 1112 1161 0029"
+
+[[pairs]]
+from = "321C"
+to_seq = "0028 110C 116E 0029"
+
+[[pairs]]
+from = "321D"
+to_seq = "0028 110B 1169 110C 1165 11AB 0029"
+
+[[pairs]]
+from = "321E"
+to_seq = "0028 110B 1169 1112 116E 0029"
 
 [[pairs]]
 from = "3220"
-to = "4E00"
+to_seq = "0028 4E00 0029"
 
 [[pairs]]
 from = "3221"
-to = "4E8C"
+to_seq = "0028 4E8C 0029"
 
 [[pairs]]
 from = "3222"
-to = "4E09"
+to_seq = "0028 4E09 0029"
 
 [[pairs]]
 from = "3223"
-to = "56DB"
+to_seq = "0028 56DB 0029"
 
 [[pairs]]
 from = "3224"
-to = "4E94"
+to_seq = "0028 4E94 0029"
 
 [[pairs]]
 from = "3225"
-to = "516D"
+to_seq = "0028 516D 0029"
 
 [[pairs]]
 from = "3226"
-to = "4E03"
+to_seq = "0028 4E03 0029"
 
 [[pairs]]
 from = "3227"
-to = "516B"
+to_seq = "0028 516B 0029"
 
 [[pairs]]
 from = "3228"
-to = "4E5D"
+to_seq = "0028 4E5D 0029"
 
 [[pairs]]
 from = "3229"
-to = "5341"
+to_seq = "0028 5341 0029"
 
 [[pairs]]
 from = "322A"
-to = "6708"
+to_seq = "0028 6708 0029"
 
 [[pairs]]
 from = "322B"
-to = "706B"
+to_seq = "0028 706B 0029"
 
 [[pairs]]
 from = "322C"
-to = "6C34"
+to_seq = "0028 6C34 0029"
 
 [[pairs]]
 from = "322D"
-to = "6728"
+to_seq = "0028 6728 0029"
 
 [[pairs]]
 from = "322E"
-to = "91D1"
+to_seq = "0028 91D1 0029"
 
 [[pairs]]
 from = "322F"
-to = "571F"
+to_seq = "0028 571F 0029"
 
 [[pairs]]
 from = "3230"
-to = "65E5"
+to_seq = "0028 65E5 0029"
 
 [[pairs]]
 from = "3231"
-to = "682A"
+to_seq = "0028 682A 0029"
 
 [[pairs]]
 from = "3232"
-to = "6709"
+to_seq = "0028 6709 0029"
 
 [[pairs]]
 from = "3233"
-to = "793E"
+to_seq = "0028 793E 0029"
 
 [[pairs]]
 from = "3234"
-to = "540D"
+to_seq = "0028 540D 0029"
 
 [[pairs]]
 from = "3235"
-to = "7279"
+to_seq = "0028 7279 0029"
 
 [[pairs]]
 from = "3236"
-to = "8CA1"
+to_seq = "0028 8CA1 0029"
 
 [[pairs]]
 from = "3237"
-to = "795D"
+to_seq = "0028 795D 0029"
 
 [[pairs]]
 from = "3238"
-to = "52B4"
+to_seq = "0028 52B4 0029"
 
 [[pairs]]
 from = "3239"
-to = "4EE3"
+to_seq = "0028 4EE3 0029"
 
 [[pairs]]
 from = "323A"
-to = "547C"
+to_seq = "0028 547C 0029"
 
 [[pairs]]
 from = "323B"
-to = "5B66"
+to_seq = "0028 5B66 0029"
 
 [[pairs]]
 from = "323C"
-to = "76E3"
+to_seq = "0028 76E3 0029"
 
 [[pairs]]
 from = "323D"
-to = "4F01"
+to_seq = "0028 4F01 0029"
 
 [[pairs]]
 from = "323E"
-to = "8CC7"
+to_seq = "0028 8CC7 0029"
 
 [[pairs]]
 from = "323F"
-to = "5354"
+to_seq = "0028 5354 0029"
 
-# ── Circled CJK ideographs (3280-329D) ──────────────────────────────
+[[pairs]]
+from = "3240"
+to_seq = "0028 796D 0029"
+
+[[pairs]]
+from = "3241"
+to_seq = "0028 4F11 0029"
+
+[[pairs]]
+from = "3242"
+to_seq = "0028 81EA 0029"
+
+[[pairs]]
+from = "3243"
+to_seq = "0028 81F3 0029"
+
+[[pairs]]
+from = "3244"
+to = "554F"
+
+[[pairs]]
+from = "3245"
+to = "5E7C"
+
+[[pairs]]
+from = "3246"
+to = "6587"
+
+[[pairs]]
+from = "3247"
+to = "7B8F"
+
+[[pairs]]
+from = "3250"
+to_seq = "0050 0054 0045"
+
+[[pairs]]
+from = "3251"
+to_seq = "0032 0031"
+
+[[pairs]]
+from = "3252"
+to_seq = "0032 0032"
+
+[[pairs]]
+from = "3253"
+to_seq = "0032 0033"
+
+[[pairs]]
+from = "3254"
+to_seq = "0032 0034"
+
+[[pairs]]
+from = "3255"
+to_seq = "0032 0035"
+
+[[pairs]]
+from = "3256"
+to_seq = "0032 0036"
+
+[[pairs]]
+from = "3257"
+to_seq = "0032 0037"
+
+[[pairs]]
+from = "3258"
+to_seq = "0032 0038"
+
+[[pairs]]
+from = "3259"
+to_seq = "0032 0039"
+
+[[pairs]]
+from = "325A"
+to_seq = "0033 0030"
+
+[[pairs]]
+from = "325B"
+to_seq = "0033 0031"
+
+[[pairs]]
+from = "325C"
+to_seq = "0033 0032"
+
+[[pairs]]
+from = "325D"
+to_seq = "0033 0033"
+
+[[pairs]]
+from = "325E"
+to_seq = "0033 0034"
+
+[[pairs]]
+from = "325F"
+to_seq = "0033 0035"
+
+[[pairs]]
+from = "3260"
+to = "1100"
+
+[[pairs]]
+from = "3261"
+to = "1102"
+
+[[pairs]]
+from = "3262"
+to = "1103"
+
+[[pairs]]
+from = "3263"
+to = "1105"
+
+[[pairs]]
+from = "3264"
+to = "1106"
+
+[[pairs]]
+from = "3265"
+to = "1107"
+
+[[pairs]]
+from = "3266"
+to = "1109"
+
+[[pairs]]
+from = "3267"
+to = "110B"
+
+[[pairs]]
+from = "3268"
+to = "110C"
+
+[[pairs]]
+from = "3269"
+to = "110E"
+
+[[pairs]]
+from = "326A"
+to = "110F"
+
+[[pairs]]
+from = "326B"
+to = "1110"
+
+[[pairs]]
+from = "326C"
+to = "1111"
+
+[[pairs]]
+from = "326D"
+to = "1112"
+
+[[pairs]]
+from = "326E"
+to_seq = "1100 1161"
+
+[[pairs]]
+from = "326F"
+to_seq = "1102 1161"
+
+[[pairs]]
+from = "3270"
+to_seq = "1103 1161"
+
+[[pairs]]
+from = "3271"
+to_seq = "1105 1161"
+
+[[pairs]]
+from = "3272"
+to_seq = "1106 1161"
+
+[[pairs]]
+from = "3273"
+to_seq = "1107 1161"
+
+[[pairs]]
+from = "3274"
+to_seq = "1109 1161"
+
+[[pairs]]
+from = "3275"
+to_seq = "110B 1161"
+
+[[pairs]]
+from = "3276"
+to_seq = "110C 1161"
+
+[[pairs]]
+from = "3277"
+to_seq = "110E 1161"
+
+[[pairs]]
+from = "3278"
+to_seq = "110F 1161"
+
+[[pairs]]
+from = "3279"
+to_seq = "1110 1161"
+
+[[pairs]]
+from = "327A"
+to_seq = "1111 1161"
+
+[[pairs]]
+from = "327B"
+to_seq = "1112 1161"
+
+[[pairs]]
+from = "327C"
+to_seq = "110E 1161 11B7 1100 1169"
+
+[[pairs]]
+from = "327D"
+to_seq = "110C 116E 110B 1174"
+
+[[pairs]]
+from = "327E"
+to_seq = "110B 116E"
 
 [[pairs]]
 from = "3280"
@@ -211,7 +526,285 @@ to = "4E5D"
 from = "3289"
 to = "5341"
 
-# ── Circled Katakana (32D0-32FE) → standard Katakana ────────────────
+[[pairs]]
+from = "328A"
+to = "6708"
+
+[[pairs]]
+from = "328B"
+to = "706B"
+
+[[pairs]]
+from = "328C"
+to = "6C34"
+
+[[pairs]]
+from = "328D"
+to = "6728"
+
+[[pairs]]
+from = "328E"
+to = "91D1"
+
+[[pairs]]
+from = "328F"
+to = "571F"
+
+[[pairs]]
+from = "3290"
+to = "65E5"
+
+[[pairs]]
+from = "3291"
+to = "682A"
+
+[[pairs]]
+from = "3292"
+to = "6709"
+
+[[pairs]]
+from = "3293"
+to = "793E"
+
+[[pairs]]
+from = "3294"
+to = "540D"
+
+[[pairs]]
+from = "3295"
+to = "7279"
+
+[[pairs]]
+from = "3296"
+to = "8CA1"
+
+[[pairs]]
+from = "3297"
+to = "795D"
+
+[[pairs]]
+from = "3298"
+to = "52B4"
+
+[[pairs]]
+from = "3299"
+to = "79D8"
+
+[[pairs]]
+from = "329A"
+to = "7537"
+
+[[pairs]]
+from = "329B"
+to = "5973"
+
+[[pairs]]
+from = "329C"
+to = "9069"
+
+[[pairs]]
+from = "329D"
+to = "512A"
+
+[[pairs]]
+from = "329E"
+to = "5370"
+
+[[pairs]]
+from = "329F"
+to = "6CE8"
+
+[[pairs]]
+from = "32A0"
+to = "9805"
+
+[[pairs]]
+from = "32A1"
+to = "4F11"
+
+[[pairs]]
+from = "32A2"
+to = "5199"
+
+[[pairs]]
+from = "32A3"
+to = "6B63"
+
+[[pairs]]
+from = "32A4"
+to = "4E0A"
+
+[[pairs]]
+from = "32A5"
+to = "4E2D"
+
+[[pairs]]
+from = "32A6"
+to = "4E0B"
+
+[[pairs]]
+from = "32A7"
+to = "5DE6"
+
+[[pairs]]
+from = "32A8"
+to = "53F3"
+
+[[pairs]]
+from = "32A9"
+to = "533B"
+
+[[pairs]]
+from = "32AA"
+to = "5B97"
+
+[[pairs]]
+from = "32AB"
+to = "5B66"
+
+[[pairs]]
+from = "32AC"
+to = "76E3"
+
+[[pairs]]
+from = "32AD"
+to = "4F01"
+
+[[pairs]]
+from = "32AE"
+to = "8CC7"
+
+[[pairs]]
+from = "32AF"
+to = "5354"
+
+[[pairs]]
+from = "32B0"
+to = "591C"
+
+[[pairs]]
+from = "32B1"
+to_seq = "0033 0036"
+
+[[pairs]]
+from = "32B2"
+to_seq = "0033 0037"
+
+[[pairs]]
+from = "32B3"
+to_seq = "0033 0038"
+
+[[pairs]]
+from = "32B4"
+to_seq = "0033 0039"
+
+[[pairs]]
+from = "32B5"
+to_seq = "0034 0030"
+
+[[pairs]]
+from = "32B6"
+to_seq = "0034 0031"
+
+[[pairs]]
+from = "32B7"
+to_seq = "0034 0032"
+
+[[pairs]]
+from = "32B8"
+to_seq = "0034 0033"
+
+[[pairs]]
+from = "32B9"
+to_seq = "0034 0034"
+
+[[pairs]]
+from = "32BA"
+to_seq = "0034 0035"
+
+[[pairs]]
+from = "32BB"
+to_seq = "0034 0036"
+
+[[pairs]]
+from = "32BC"
+to_seq = "0034 0037"
+
+[[pairs]]
+from = "32BD"
+to_seq = "0034 0038"
+
+[[pairs]]
+from = "32BE"
+to_seq = "0034 0039"
+
+[[pairs]]
+from = "32BF"
+to_seq = "0035 0030"
+
+[[pairs]]
+from = "32C0"
+to_seq = "0031 6708"
+
+[[pairs]]
+from = "32C1"
+to_seq = "0032 6708"
+
+[[pairs]]
+from = "32C2"
+to_seq = "0033 6708"
+
+[[pairs]]
+from = "32C3"
+to_seq = "0034 6708"
+
+[[pairs]]
+from = "32C4"
+to_seq = "0035 6708"
+
+[[pairs]]
+from = "32C5"
+to_seq = "0036 6708"
+
+[[pairs]]
+from = "32C6"
+to_seq = "0037 6708"
+
+[[pairs]]
+from = "32C7"
+to_seq = "0038 6708"
+
+[[pairs]]
+from = "32C8"
+to_seq = "0039 6708"
+
+[[pairs]]
+from = "32C9"
+to_seq = "0031 0030 6708"
+
+[[pairs]]
+from = "32CA"
+to_seq = "0031 0031 6708"
+
+[[pairs]]
+from = "32CB"
+to_seq = "0031 0032 6708"
+
+[[pairs]]
+from = "32CC"
+to_seq = "0048 0067"
+
+[[pairs]]
+from = "32CD"
+to_seq = "0065 0072 0067"
+
+[[pairs]]
+from = "32CE"
+to_seq = "0065 0056"
+
+[[pairs]]
+from = "32CF"
+to_seq = "004C 0054 0044"
 
 [[pairs]]
 from = "32D0"
@@ -277,8 +870,131 @@ to = "30BD"
 from = "32DF"
 to = "30BF"
 
-# ── Square era name Reiwa ────────────────────────────────────────────
+[[pairs]]
+from = "32E0"
+to = "30C1"
+
+[[pairs]]
+from = "32E1"
+to = "30C4"
+
+[[pairs]]
+from = "32E2"
+to = "30C6"
+
+[[pairs]]
+from = "32E3"
+to = "30C8"
+
+[[pairs]]
+from = "32E4"
+to = "30CA"
+
+[[pairs]]
+from = "32E5"
+to = "30CB"
+
+[[pairs]]
+from = "32E6"
+to = "30CC"
+
+[[pairs]]
+from = "32E7"
+to = "30CD"
+
+[[pairs]]
+from = "32E8"
+to = "30CE"
+
+[[pairs]]
+from = "32E9"
+to = "30CF"
+
+[[pairs]]
+from = "32EA"
+to = "30D2"
+
+[[pairs]]
+from = "32EB"
+to = "30D5"
+
+[[pairs]]
+from = "32EC"
+to = "30D8"
+
+[[pairs]]
+from = "32ED"
+to = "30DB"
+
+[[pairs]]
+from = "32EE"
+to = "30DE"
+
+[[pairs]]
+from = "32EF"
+to = "30DF"
+
+[[pairs]]
+from = "32F0"
+to = "30E0"
+
+[[pairs]]
+from = "32F1"
+to = "30E1"
+
+[[pairs]]
+from = "32F2"
+to = "30E2"
+
+[[pairs]]
+from = "32F3"
+to = "30E4"
+
+[[pairs]]
+from = "32F4"
+to = "30E6"
+
+[[pairs]]
+from = "32F5"
+to = "30E8"
+
+[[pairs]]
+from = "32F6"
+to = "30E9"
+
+[[pairs]]
+from = "32F7"
+to = "30EA"
+
+[[pairs]]
+from = "32F8"
+to = "30EB"
+
+[[pairs]]
+from = "32F9"
+to = "30EC"
+
+[[pairs]]
+from = "32FA"
+to = "30ED"
+
+[[pairs]]
+from = "32FB"
+to = "30EF"
+
+[[pairs]]
+from = "32FC"
+to = "30F0"
+
+[[pairs]]
+from = "32FD"
+to = "30F1"
+
+[[pairs]]
+from = "32FE"
+to = "30F2"
 
 [[pairs]]
 from = "32FF"
 to_seq = "4EE4 548C"
+

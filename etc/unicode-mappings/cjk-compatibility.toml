@@ -4,20 +4,10 @@
 # and Latin/CJK abbreviations (U+3380-33FF). Each decomposes to
 # a multi-codepoint Katakana or Latin sequence.
 #
-# Source: Unicode block U+3300-U+33FF
+# Source: Unicode block U+3300-U+33FF (256 entries)
 # Reference: https://en.wikipedia.org/wiki/CJK_Compatibility
-#
-# NOTE: All entries have multi-codepoint targets (to_seq).
-# This file contains a representative subset. The complete
-# mapping (~256 entries) should be generated from UnicodeData.txt.
-#
-#   awk -F';' '$1 ~ /^33[0-9A-F]/ && $6 != "" {
-#     split($6, a, " "); target="";
-#     for (i in a) { if (a[i] !~ /^</) target = target " " a[i] }
-#     gsub(/^ /, "", target);
-#     if (target != "")
-#       print "[[pairs]]\nfrom = \"" $1 "\"\nto_seq = \"" target "\"\n"
-#   }' UnicodeData.txt
+# Generated from: UnicodeData.txt field 5 (compatibility decomposition)
+# Generator: bin/generate-toml.sh
 
 [metadata]
 type = "cjk_compatibility"
@@ -25,224 +15,1027 @@ description = "CJK Compatibility square forms → Katakana/Latin sequences"
 direction = "narrowing"
 tags = ["japanese", "cjk", "canonicalize"]
 
-# ── Square Katakana words (3300-337F) ────────────────────────────────
-# Each decomposes to a sequence of standard Katakana characters.
-
-# ㌀ SQUARE APAATO → アパート
 [[pairs]]
 from = "3300"
 to_seq = "30A2 30D1 30FC 30C8"
 
-# ㌁ SQUARE ARUHUA → アルファ
 [[pairs]]
 from = "3301"
 to_seq = "30A2 30EB 30D5 30A1"
 
-# ㌂ SQUARE ANPEA → アンペア
 [[pairs]]
 from = "3302"
 to_seq = "30A2 30F3 30DA 30A2"
 
-# ㌃ SQUARE AARU → アール
 [[pairs]]
 from = "3303"
 to_seq = "30A2 30FC 30EB"
 
-# ㌄ SQUARE ININGU → イニング
 [[pairs]]
 from = "3304"
 to_seq = "30A4 30CB 30F3 30B0"
 
-# ㌅ SQUARE INTI → インチ
 [[pairs]]
 from = "3305"
 to_seq = "30A4 30F3 30C1"
 
-# ㌆ SQUARE UON → ウォン
 [[pairs]]
 from = "3306"
 to_seq = "30A6 30A9 30F3"
 
-# ㌇ SQUARE ESUKUUDO → エスクード
 [[pairs]]
 from = "3307"
 to_seq = "30A8 30B9 30AF 30FC 30C9"
 
-# ㌔ SQUARE KIRO → キロ
+[[pairs]]
+from = "3308"
+to_seq = "30A8 30FC 30AB 30FC"
+
+[[pairs]]
+from = "3309"
+to_seq = "30AA 30F3 30B9"
+
+[[pairs]]
+from = "330A"
+to_seq = "30AA 30FC 30E0"
+
+[[pairs]]
+from = "330B"
+to_seq = "30AB 30A4 30EA"
+
+[[pairs]]
+from = "330C"
+to_seq = "30AB 30E9 30C3 30C8"
+
+[[pairs]]
+from = "330D"
+to_seq = "30AB 30ED 30EA 30FC"
+
+[[pairs]]
+from = "330E"
+to_seq = "30AC 30ED 30F3"
+
+[[pairs]]
+from = "330F"
+to_seq = "30AC 30F3 30DE"
+
+[[pairs]]
+from = "3310"
+to_seq = "30AE 30AC"
+
+[[pairs]]
+from = "3311"
+to_seq = "30AE 30CB 30FC"
+
+[[pairs]]
+from = "3312"
+to_seq = "30AD 30E5 30EA 30FC"
+
+[[pairs]]
+from = "3313"
+to_seq = "30AE 30EB 30C0 30FC"
+
 [[pairs]]
 from = "3314"
 to_seq = "30AD 30ED"
 
-# ㌘ SQUARE GURAMU → グラム
+[[pairs]]
+from = "3315"
+to_seq = "30AD 30ED 30B0 30E9 30E0"
+
+[[pairs]]
+from = "3316"
+to_seq = "30AD 30ED 30E1 30FC 30C8 30EB"
+
+[[pairs]]
+from = "3317"
+to_seq = "30AD 30ED 30EF 30C3 30C8"
+
 [[pairs]]
 from = "3318"
 to_seq = "30B0 30E9 30E0"
 
-# ㌢ SQUARE SENTI → センチ
+[[pairs]]
+from = "3319"
+to_seq = "30B0 30E9 30E0 30C8 30F3"
+
+[[pairs]]
+from = "331A"
+to_seq = "30AF 30EB 30BC 30A4 30ED"
+
+[[pairs]]
+from = "331B"
+to_seq = "30AF 30ED 30FC 30CD"
+
+[[pairs]]
+from = "331C"
+to_seq = "30B1 30FC 30B9"
+
+[[pairs]]
+from = "331D"
+to_seq = "30B3 30EB 30CA"
+
+[[pairs]]
+from = "331E"
+to_seq = "30B3 30FC 30DD"
+
+[[pairs]]
+from = "331F"
+to_seq = "30B5 30A4 30AF 30EB"
+
+[[pairs]]
+from = "3320"
+to_seq = "30B5 30F3 30C1 30FC 30E0"
+
+[[pairs]]
+from = "3321"
+to_seq = "30B7 30EA 30F3 30B0"
+
 [[pairs]]
 from = "3322"
 to_seq = "30BB 30F3 30C1"
 
-# ㌧ SQUARE TON → トン
+[[pairs]]
+from = "3323"
+to_seq = "30BB 30F3 30C8"
+
+[[pairs]]
+from = "3324"
+to_seq = "30C0 30FC 30B9"
+
+[[pairs]]
+from = "3325"
+to_seq = "30C7 30B7"
+
+[[pairs]]
+from = "3326"
+to_seq = "30C9 30EB"
+
 [[pairs]]
 from = "3327"
 to_seq = "30C8 30F3"
 
-# ㌫ SQUARE PAASENTO → パーセント
+[[pairs]]
+from = "3328"
+to_seq = "30CA 30CE"
+
+[[pairs]]
+from = "3329"
+to_seq = "30CE 30C3 30C8"
+
+[[pairs]]
+from = "332A"
+to_seq = "30CF 30A4 30C4"
+
 [[pairs]]
 from = "332B"
 to_seq = "30D1 30FC 30BB 30F3 30C8"
 
-# ㌶ SQUARE HEKUTAARU → ヘクタール
+[[pairs]]
+from = "332C"
+to_seq = "30D1 30FC 30C4"
+
+[[pairs]]
+from = "332D"
+to_seq = "30D0 30FC 30EC 30EB"
+
+[[pairs]]
+from = "332E"
+to_seq = "30D4 30A2 30B9 30C8 30EB"
+
+[[pairs]]
+from = "332F"
+to_seq = "30D4 30AF 30EB"
+
+[[pairs]]
+from = "3330"
+to_seq = "30D4 30B3"
+
+[[pairs]]
+from = "3331"
+to_seq = "30D3 30EB"
+
+[[pairs]]
+from = "3332"
+to_seq = "30D5 30A1 30E9 30C3 30C9"
+
+[[pairs]]
+from = "3333"
+to_seq = "30D5 30A3 30FC 30C8"
+
+[[pairs]]
+from = "3334"
+to_seq = "30D6 30C3 30B7 30A7 30EB"
+
+[[pairs]]
+from = "3335"
+to_seq = "30D5 30E9 30F3"
+
 [[pairs]]
 from = "3336"
 to_seq = "30D8 30AF 30BF 30FC 30EB"
 
-# ㌻ SQUARE PEEZI → ページ
+[[pairs]]
+from = "3337"
+to_seq = "30DA 30BD"
+
+[[pairs]]
+from = "3338"
+to_seq = "30DA 30CB 30D2"
+
+[[pairs]]
+from = "3339"
+to_seq = "30D8 30EB 30C4"
+
+[[pairs]]
+from = "333A"
+to_seq = "30DA 30F3 30B9"
+
 [[pairs]]
 from = "333B"
 to_seq = "30DA 30FC 30B8"
 
-# ㍉ SQUARE MIRI → ミリ
+[[pairs]]
+from = "333C"
+to_seq = "30D9 30FC 30BF"
+
+[[pairs]]
+from = "333D"
+to_seq = "30DD 30A4 30F3 30C8"
+
+[[pairs]]
+from = "333E"
+to_seq = "30DC 30EB 30C8"
+
+[[pairs]]
+from = "333F"
+to_seq = "30DB 30F3"
+
+[[pairs]]
+from = "3340"
+to_seq = "30DD 30F3 30C9"
+
+[[pairs]]
+from = "3341"
+to_seq = "30DB 30FC 30EB"
+
+[[pairs]]
+from = "3342"
+to_seq = "30DB 30FC 30F3"
+
+[[pairs]]
+from = "3343"
+to_seq = "30DE 30A4 30AF 30ED"
+
+[[pairs]]
+from = "3344"
+to_seq = "30DE 30A4 30EB"
+
+[[pairs]]
+from = "3345"
+to_seq = "30DE 30C3 30CF"
+
+[[pairs]]
+from = "3346"
+to_seq = "30DE 30EB 30AF"
+
+[[pairs]]
+from = "3347"
+to_seq = "30DE 30F3 30B7 30E7 30F3"
+
+[[pairs]]
+from = "3348"
+to_seq = "30DF 30AF 30ED 30F3"
+
 [[pairs]]
 from = "3349"
 to_seq = "30DF 30EA"
 
-# ㍊ SQUARE MIRIBAARU → ミリバール
 [[pairs]]
 from = "334A"
 to_seq = "30DF 30EA 30D0 30FC 30EB"
 
-# ㍍ SQUARE MEETORU → メートル
+[[pairs]]
+from = "334B"
+to_seq = "30E1 30AC"
+
+[[pairs]]
+from = "334C"
+to_seq = "30E1 30AC 30C8 30F3"
+
 [[pairs]]
 from = "334D"
 to_seq = "30E1 30FC 30C8 30EB"
 
-# ㍑ SQUARE RITTORU → リットル
+[[pairs]]
+from = "334E"
+to_seq = "30E4 30FC 30C9"
+
+[[pairs]]
+from = "334F"
+to_seq = "30E4 30FC 30EB"
+
+[[pairs]]
+from = "3350"
+to_seq = "30E6 30A2 30F3"
+
 [[pairs]]
 from = "3351"
 to_seq = "30EA 30C3 30C8 30EB"
 
-# ㍗ SQUARE WATTO → ワット
+[[pairs]]
+from = "3352"
+to_seq = "30EA 30E9"
+
+[[pairs]]
+from = "3353"
+to_seq = "30EB 30D4 30FC"
+
+[[pairs]]
+from = "3354"
+to_seq = "30EB 30FC 30D6 30EB"
+
+[[pairs]]
+from = "3355"
+to_seq = "30EC 30E0"
+
+[[pairs]]
+from = "3356"
+to_seq = "30EC 30F3 30C8 30B2 30F3"
+
 [[pairs]]
 from = "3357"
 to_seq = "30EF 30C3 30C8"
 
-# ── Square Latin abbreviations (3380-33FF) ───────────────────────────
-
-# ㎐ SQUARE HZ → Hz
 [[pairs]]
-from = "3390"
-to_seq = "0048 007A"
+from = "3358"
+to_seq = "0030 70B9"
 
-# ㎑ SQUARE KHZ → kHz
 [[pairs]]
-from = "3391"
-to_seq = "006B 0048 007A"
+from = "3359"
+to_seq = "0031 70B9"
 
-# ㎒ SQUARE MHZ → MHz
 [[pairs]]
-from = "3392"
-to_seq = "004D 0048 007A"
+from = "335A"
+to_seq = "0032 70B9"
 
-# ㎓ SQUARE GHZ → GHz
 [[pairs]]
-from = "3393"
-to_seq = "0047 0048 007A"
+from = "335B"
+to_seq = "0033 70B9"
 
-# ㎔ SQUARE THZ → THz
 [[pairs]]
-from = "3394"
-to_seq = "0054 0048 007A"
+from = "335C"
+to_seq = "0034 70B9"
 
-# ㎕ SQUARE MICRO LITRE → μl
 [[pairs]]
-from = "3395"
-to_seq = "03BC 006C"
+from = "335D"
+to_seq = "0035 70B9"
 
-# ㎖ SQUARE MILLI LITRE → ml
 [[pairs]]
-from = "3396"
-to_seq = "006D 006C"
+from = "335E"
+to_seq = "0036 70B9"
 
-# ㎗ SQUARE DECI LITRE → dl
 [[pairs]]
-from = "3397"
-to_seq = "0064 006C"
+from = "335F"
+to_seq = "0037 70B9"
 
-# ㎘ SQUARE KILO LITRE → kl
 [[pairs]]
-from = "3398"
-to_seq = "006B 006C"
+from = "3360"
+to_seq = "0038 70B9"
 
-# ㎙ SQUARE FM → fm
 [[pairs]]
-from = "3399"
-to_seq = "0066 006D"
+from = "3361"
+to_seq = "0039 70B9"
 
-# ㎚ SQUARE NM → nm
 [[pairs]]
-from = "339A"
-to_seq = "006E 006D"
+from = "3362"
+to_seq = "0031 0030 70B9"
 
-# ㎛ SQUARE MICRO METRE → μm
 [[pairs]]
-from = "339B"
-to_seq = "03BC 006D"
+from = "3363"
+to_seq = "0031 0031 70B9"
 
-# ㎜ SQUARE MM → mm
 [[pairs]]
-from = "339C"
-to_seq = "006D 006D"
+from = "3364"
+to_seq = "0031 0032 70B9"
 
-# ㎝ SQUARE CM → cm
 [[pairs]]
-from = "339D"
-to_seq = "0063 006D"
+from = "3365"
+to_seq = "0031 0033 70B9"
 
-# ㎞ SQUARE KM → km
 [[pairs]]
-from = "339E"
-to_seq = "006B 006D"
+from = "3366"
+to_seq = "0031 0034 70B9"
 
-# ㎟ SQUARE MM SQUARED → mm²
 [[pairs]]
-from = "339F"
-to_seq = "006D 006D 00B2"
+from = "3367"
+to_seq = "0031 0035 70B9"
 
-# ㎠ SQUARE CM SQUARED → cm²
 [[pairs]]
-from = "33A0"
-to_seq = "0063 006D 00B2"
+from = "3368"
+to_seq = "0031 0036 70B9"
 
-# ㎡ SQUARE M SQUARED → m²
 [[pairs]]
-from = "33A1"
-to_seq = "006D 00B2"
+from = "3369"
+to_seq = "0031 0037 70B9"
 
-# ㎢ SQUARE KM SQUARED → km²
 [[pairs]]
-from = "33A2"
-to_seq = "006B 006D 00B2"
+from = "336A"
+to_seq = "0031 0038 70B9"
 
-# ── Japanese era names (337B-337E) ───────────────────────────────────
+[[pairs]]
+from = "336B"
+to_seq = "0031 0039 70B9"
 
-# ㍻ SQUARE ERA NAME HEISEI → 平成
+[[pairs]]
+from = "336C"
+to_seq = "0032 0030 70B9"
+
+[[pairs]]
+from = "336D"
+to_seq = "0032 0031 70B9"
+
+[[pairs]]
+from = "336E"
+to_seq = "0032 0032 70B9"
+
+[[pairs]]
+from = "336F"
+to_seq = "0032 0033 70B9"
+
+[[pairs]]
+from = "3370"
+to_seq = "0032 0034 70B9"
+
+[[pairs]]
+from = "3371"
+to_seq = "0068 0050 0061"
+
+[[pairs]]
+from = "3372"
+to_seq = "0064 0061"
+
+[[pairs]]
+from = "3373"
+to_seq = "0041 0055"
+
+[[pairs]]
+from = "3374"
+to_seq = "0062 0061 0072"
+
+[[pairs]]
+from = "3375"
+to_seq = "006F 0056"
+
+[[pairs]]
+from = "3376"
+to_seq = "0070 0063"
+
+[[pairs]]
+from = "3377"
+to_seq = "0064 006D"
+
+[[pairs]]
+from = "3378"
+to_seq = "0064 006D 00B2"
+
+[[pairs]]
+from = "3379"
+to_seq = "0064 006D 00B3"
+
+[[pairs]]
+from = "337A"
+to_seq = "0049 0055"
+
 [[pairs]]
 from = "337B"
 to_seq = "5E73 6210"
 
-# ㍼ SQUARE ERA NAME SYOUWA → 昭和
 [[pairs]]
 from = "337C"
 to_seq = "662D 548C"
 
-# ㍽ SQUARE ERA NAME TAISYOU → 大正
 [[pairs]]
 from = "337D"
 to_seq = "5927 6B63"
 
-# ㍾ SQUARE ERA NAME MEIZI → 明治
 [[pairs]]
 from = "337E"
 to_seq = "660E 6CBB"
+
+[[pairs]]
+from = "337F"
+to_seq = "682A 5F0F 4F1A 793E"
+
+[[pairs]]
+from = "3380"
+to_seq = "0070 0041"
+
+[[pairs]]
+from = "3381"
+to_seq = "006E 0041"
+
+[[pairs]]
+from = "3382"
+to_seq = "03BC 0041"
+
+[[pairs]]
+from = "3383"
+to_seq = "006D 0041"
+
+[[pairs]]
+from = "3384"
+to_seq = "006B 0041"
+
+[[pairs]]
+from = "3385"
+to_seq = "004B 0042"
+
+[[pairs]]
+from = "3386"
+to_seq = "004D 0042"
+
+[[pairs]]
+from = "3387"
+to_seq = "0047 0042"
+
+[[pairs]]
+from = "3388"
+to_seq = "0063 0061 006C"
+
+[[pairs]]
+from = "3389"
+to_seq = "006B 0063 0061 006C"
+
+[[pairs]]
+from = "338A"
+to_seq = "0070 0046"
+
+[[pairs]]
+from = "338B"
+to_seq = "006E 0046"
+
+[[pairs]]
+from = "338C"
+to_seq = "03BC 0046"
+
+[[pairs]]
+from = "338D"
+to_seq = "03BC 0067"
+
+[[pairs]]
+from = "338E"
+to_seq = "006D 0067"
+
+[[pairs]]
+from = "338F"
+to_seq = "006B 0067"
+
+[[pairs]]
+from = "3390"
+to_seq = "0048 007A"
+
+[[pairs]]
+from = "3391"
+to_seq = "006B 0048 007A"
+
+[[pairs]]
+from = "3392"
+to_seq = "004D 0048 007A"
+
+[[pairs]]
+from = "3393"
+to_seq = "0047 0048 007A"
+
+[[pairs]]
+from = "3394"
+to_seq = "0054 0048 007A"
+
+[[pairs]]
+from = "3395"
+to_seq = "03BC 2113"
+
+[[pairs]]
+from = "3396"
+to_seq = "006D 2113"
+
+[[pairs]]
+from = "3397"
+to_seq = "0064 2113"
+
+[[pairs]]
+from = "3398"
+to_seq = "006B 2113"
+
+[[pairs]]
+from = "3399"
+to_seq = "0066 006D"
+
+[[pairs]]
+from = "339A"
+to_seq = "006E 006D"
+
+[[pairs]]
+from = "339B"
+to_seq = "03BC 006D"
+
+[[pairs]]
+from = "339C"
+to_seq = "006D 006D"
+
+[[pairs]]
+from = "339D"
+to_seq = "0063 006D"
+
+[[pairs]]
+from = "339E"
+to_seq = "006B 006D"
+
+[[pairs]]
+from = "339F"
+to_seq = "006D 006D 00B2"
+
+[[pairs]]
+from = "33A0"
+to_seq = "0063 006D 00B2"
+
+[[pairs]]
+from = "33A1"
+to_seq = "006D 00B2"
+
+[[pairs]]
+from = "33A2"
+to_seq = "006B 006D 00B2"
+
+[[pairs]]
+from = "33A3"
+to_seq = "006D 006D 00B3"
+
+[[pairs]]
+from = "33A4"
+to_seq = "0063 006D 00B3"
+
+[[pairs]]
+from = "33A5"
+to_seq = "006D 00B3"
+
+[[pairs]]
+from = "33A6"
+to_seq = "006B 006D 00B3"
+
+[[pairs]]
+from = "33A7"
+to_seq = "006D 2215 0073"
+
+[[pairs]]
+from = "33A8"
+to_seq = "006D 2215 0073 00B2"
+
+[[pairs]]
+from = "33A9"
+to_seq = "0050 0061"
+
+[[pairs]]
+from = "33AA"
+to_seq = "006B 0050 0061"
+
+[[pairs]]
+from = "33AB"
+to_seq = "004D 0050 0061"
+
+[[pairs]]
+from = "33AC"
+to_seq = "0047 0050 0061"
+
+[[pairs]]
+from = "33AD"
+to_seq = "0072 0061 0064"
+
+[[pairs]]
+from = "33AE"
+to_seq = "0072 0061 0064 2215 0073"
+
+[[pairs]]
+from = "33AF"
+to_seq = "0072 0061 0064 2215 0073 00B2"
+
+[[pairs]]
+from = "33B0"
+to_seq = "0070 0073"
+
+[[pairs]]
+from = "33B1"
+to_seq = "006E 0073"
+
+[[pairs]]
+from = "33B2"
+to_seq = "03BC 0073"
+
+[[pairs]]
+from = "33B3"
+to_seq = "006D 0073"
+
+[[pairs]]
+from = "33B4"
+to_seq = "0070 0056"
+
+[[pairs]]
+from = "33B5"
+to_seq = "006E 0056"
+
+[[pairs]]
+from = "33B6"
+to_seq = "03BC 0056"
+
+[[pairs]]
+from = "33B7"
+to_seq = "006D 0056"
+
+[[pairs]]
+from = "33B8"
+to_seq = "006B 0056"
+
+[[pairs]]
+from = "33B9"
+to_seq = "004D 0056"
+
+[[pairs]]
+from = "33BA"
+to_seq = "0070 0057"
+
+[[pairs]]
+from = "33BB"
+to_seq = "006E 0057"
+
+[[pairs]]
+from = "33BC"
+to_seq = "03BC 0057"
+
+[[pairs]]
+from = "33BD"
+to_seq = "006D 0057"
+
+[[pairs]]
+from = "33BE"
+to_seq = "006B 0057"
+
+[[pairs]]
+from = "33BF"
+to_seq = "004D 0057"
+
+[[pairs]]
+from = "33C0"
+to_seq = "006B 03A9"
+
+[[pairs]]
+from = "33C1"
+to_seq = "004D 03A9"
+
+[[pairs]]
+from = "33C2"
+to_seq = "0061 002E 006D 002E"
+
+[[pairs]]
+from = "33C3"
+to_seq = "0042 0071"
+
+[[pairs]]
+from = "33C4"
+to_seq = "0063 0063"
+
+[[pairs]]
+from = "33C5"
+to_seq = "0063 0064"
+
+[[pairs]]
+from = "33C6"
+to_seq = "0043 2215 006B 0067"
+
+[[pairs]]
+from = "33C7"
+to_seq = "0043 006F 002E"
+
+[[pairs]]
+from = "33C8"
+to_seq = "0064 0042"
+
+[[pairs]]
+from = "33C9"
+to_seq = "0047 0079"
+
+[[pairs]]
+from = "33CA"
+to_seq = "0068 0061"
+
+[[pairs]]
+from = "33CB"
+to_seq = "0048 0050"
+
+[[pairs]]
+from = "33CC"
+to_seq = "0069 006E"
+
+[[pairs]]
+from = "33CD"
+to_seq = "004B 004B"
+
+[[pairs]]
+from = "33CE"
+to_seq = "004B 004D"
+
+[[pairs]]
+from = "33CF"
+to_seq = "006B 0074"
+
+[[pairs]]
+from = "33D0"
+to_seq = "006C 006D"
+
+[[pairs]]
+from = "33D1"
+to_seq = "006C 006E"
+
+[[pairs]]
+from = "33D2"
+to_seq = "006C 006F 0067"
+
+[[pairs]]
+from = "33D3"
+to_seq = "006C 0078"
+
+[[pairs]]
+from = "33D4"
+to_seq = "006D 0062"
+
+[[pairs]]
+from = "33D5"
+to_seq = "006D 0069 006C"
+
+[[pairs]]
+from = "33D6"
+to_seq = "006D 006F 006C"
+
+[[pairs]]
+from = "33D7"
+to_seq = "0050 0048"
+
+[[pairs]]
+from = "33D8"
+to_seq = "0070 002E 006D 002E"
+
+[[pairs]]
+from = "33D9"
+to_seq = "0050 0050 004D"
+
+[[pairs]]
+from = "33DA"
+to_seq = "0050 0052"
+
+[[pairs]]
+from = "33DB"
+to_seq = "0073 0072"
+
+[[pairs]]
+from = "33DC"
+to_seq = "0053 0076"
+
+[[pairs]]
+from = "33DD"
+to_seq = "0057 0062"
+
+[[pairs]]
+from = "33DE"
+to_seq = "0056 2215 006D"
+
+[[pairs]]
+from = "33DF"
+to_seq = "0041 2215 006D"
+
+[[pairs]]
+from = "33E0"
+to_seq = "0031 65E5"
+
+[[pairs]]
+from = "33E1"
+to_seq = "0032 65E5"
+
+[[pairs]]
+from = "33E2"
+to_seq = "0033 65E5"
+
+[[pairs]]
+from = "33E3"
+to_seq = "0034 65E5"
+
+[[pairs]]
+from = "33E4"
+to_seq = "0035 65E5"
+
+[[pairs]]
+from = "33E5"
+to_seq = "0036 65E5"
+
+[[pairs]]
+from = "33E6"
+to_seq = "0037 65E5"
+
+[[pairs]]
+from = "33E7"
+to_seq = "0038 65E5"
+
+[[pairs]]
+from = "33E8"
+to_seq = "0039 65E5"
+
+[[pairs]]
+from = "33E9"
+to_seq = "0031 0030 65E5"
+
+[[pairs]]
+from = "33EA"
+to_seq = "0031 0031 65E5"
+
+[[pairs]]
+from = "33EB"
+to_seq = "0031 0032 65E5"
+
+[[pairs]]
+from = "33EC"
+to_seq = "0031 0033 65E5"
+
+[[pairs]]
+from = "33ED"
+to_seq = "0031 0034 65E5"
+
+[[pairs]]
+from = "33EE"
+to_seq = "0031 0035 65E5"
+
+[[pairs]]
+from = "33EF"
+to_seq = "0031 0036 65E5"
+
+[[pairs]]
+from = "33F0"
+to_seq = "0031 0037 65E5"
+
+[[pairs]]
+from = "33F1"
+to_seq = "0031 0038 65E5"
+
+[[pairs]]
+from = "33F2"
+to_seq = "0031 0039 65E5"
+
+[[pairs]]
+from = "33F3"
+to_seq = "0032 0030 65E5"
+
+[[pairs]]
+from = "33F4"
+to_seq = "0032 0031 65E5"
+
+[[pairs]]
+from = "33F5"
+to_seq = "0032 0032 65E5"
+
+[[pairs]]
+from = "33F6"
+to_seq = "0032 0033 65E5"
+
+[[pairs]]
+from = "33F7"
+to_seq = "0032 0034 65E5"
+
+[[pairs]]
+from = "33F8"
+to_seq = "0032 0035 65E5"
+
+[[pairs]]
+from = "33F9"
+to_seq = "0032 0036 65E5"
+
+[[pairs]]
+from = "33FA"
+to_seq = "0032 0037 65E5"
+
+[[pairs]]
+from = "33FB"
+to_seq = "0032 0038 65E5"
+
+[[pairs]]
+from = "33FC"
+to_seq = "0032 0039 65E5"
+
+[[pairs]]
+from = "33FD"
+to_seq = "0033 0030 65E5"
+
+[[pairs]]
+from = "33FE"
+to_seq = "0033 0031 65E5"
+
+[[pairs]]
+from = "33FF"
+to_seq = "0067 0061 006C"
+

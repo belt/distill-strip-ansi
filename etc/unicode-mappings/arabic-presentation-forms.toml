@@ -3,29 +3,15 @@
 # Contextual forms (isolated, initial, medial, final) and ligatures
 # of Arabic letters. Maps to base Arabic characters.
 #
-# Source: Unicode blocks U+FB50-U+FDFF (Forms-A) and U+FE70-U+FEFF (Forms-B)
+# Forms-A (FB50-FDFF): contextual forms + ligatures for Persian,
+#   Urdu, Sindhi, Central Asian languages.
+# Forms-B (FE70-FEFF): spacing forms of Arabic diacritics and
+#   contextual letter forms.
+#
+# Source: Unicode blocks U+FB50-U+FDFF and U+FE70-U+FEFF (731 entries)
 # Reference: https://en.wikipedia.org/wiki/Arabic_Presentation_Forms-A
-#            https://en.wikipedia.org/wiki/Arabic_Presentation_Forms-B
-#
-# Forms-A (FB50-FDFF): 631 assigned, contextual forms + ligatures
-#   for Persian, Urdu, Sindhi, Central Asian languages.
-# Forms-B (FE70-FEFF): 141 assigned, spacing forms of Arabic
-#   diacritics and contextual letter forms.
-#
-# NOTE: This file contains a representative subset of Forms-B
-# (the most commonly encountered block). The complete mapping
-# (~770 entries across both blocks) should be generated from
-# UnicodeData.txt:
-#
-#   awk -F';' '($1 ~ /^FB[5-9A-F]/ || $1 ~ /^F[CD]/ || $1 ~ /^FE[7-F]/) && $6 != "" {
-#     split($6, a, " "); target="";
-#     for (i in a) { if (a[i] !~ /^</) target = target " " a[i] }
-#     gsub(/^ /, "", target);
-#     if (target ~ / /)
-#       print "[[pairs]]\nfrom = \"" $1 "\"\nto_seq = \"" target "\"\n"
-#     else if (target != "")
-#       print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" target "\"\n"
-#   }' UnicodeData.txt
+# Generated from: UnicodeData.txt field 5 (compatibility decomposition)
+# Generator: bin/generate-toml.sh
 
 [metadata]
 type = "arabic_presentation_forms"
@@ -33,10 +19,2374 @@ description = "Arabic Presentation Forms → base Arabic characters"
 direction = "neutral"
 tags = ["arabic", "canonicalize"]
 
-# ── Arabic Presentation Forms-B (FE70-FEFF) ─────────────────────────
-# Contextual forms of basic Arabic letters.
+[[pairs]]
+from = "FB50"
+to = "0671"
 
-# Isolated forms
+[[pairs]]
+from = "FB51"
+to = "0671"
+
+[[pairs]]
+from = "FB52"
+to = "067B"
+
+[[pairs]]
+from = "FB53"
+to = "067B"
+
+[[pairs]]
+from = "FB54"
+to = "067B"
+
+[[pairs]]
+from = "FB55"
+to = "067B"
+
+[[pairs]]
+from = "FB56"
+to = "067E"
+
+[[pairs]]
+from = "FB57"
+to = "067E"
+
+[[pairs]]
+from = "FB58"
+to = "067E"
+
+[[pairs]]
+from = "FB59"
+to = "067E"
+
+[[pairs]]
+from = "FB5A"
+to = "0680"
+
+[[pairs]]
+from = "FB5B"
+to = "0680"
+
+[[pairs]]
+from = "FB5C"
+to = "0680"
+
+[[pairs]]
+from = "FB5D"
+to = "0680"
+
+[[pairs]]
+from = "FB5E"
+to = "067A"
+
+[[pairs]]
+from = "FB5F"
+to = "067A"
+
+[[pairs]]
+from = "FB60"
+to = "067A"
+
+[[pairs]]
+from = "FB61"
+to = "067A"
+
+[[pairs]]
+from = "FB62"
+to = "067F"
+
+[[pairs]]
+from = "FB63"
+to = "067F"
+
+[[pairs]]
+from = "FB64"
+to = "067F"
+
+[[pairs]]
+from = "FB65"
+to = "067F"
+
+[[pairs]]
+from = "FB66"
+to = "0679"
+
+[[pairs]]
+from = "FB67"
+to = "0679"
+
+[[pairs]]
+from = "FB68"
+to = "0679"
+
+[[pairs]]
+from = "FB69"
+to = "0679"
+
+[[pairs]]
+from = "FB6A"
+to = "06A4"
+
+[[pairs]]
+from = "FB6B"
+to = "06A4"
+
+[[pairs]]
+from = "FB6C"
+to = "06A4"
+
+[[pairs]]
+from = "FB6D"
+to = "06A4"
+
+[[pairs]]
+from = "FB6E"
+to = "06A6"
+
+[[pairs]]
+from = "FB6F"
+to = "06A6"
+
+[[pairs]]
+from = "FB70"
+to = "06A6"
+
+[[pairs]]
+from = "FB71"
+to = "06A6"
+
+[[pairs]]
+from = "FB72"
+to = "0684"
+
+[[pairs]]
+from = "FB73"
+to = "0684"
+
+[[pairs]]
+from = "FB74"
+to = "0684"
+
+[[pairs]]
+from = "FB75"
+to = "0684"
+
+[[pairs]]
+from = "FB76"
+to = "0683"
+
+[[pairs]]
+from = "FB77"
+to = "0683"
+
+[[pairs]]
+from = "FB78"
+to = "0683"
+
+[[pairs]]
+from = "FB79"
+to = "0683"
+
+[[pairs]]
+from = "FB7A"
+to = "0686"
+
+[[pairs]]
+from = "FB7B"
+to = "0686"
+
+[[pairs]]
+from = "FB7C"
+to = "0686"
+
+[[pairs]]
+from = "FB7D"
+to = "0686"
+
+[[pairs]]
+from = "FB7E"
+to = "0687"
+
+[[pairs]]
+from = "FB7F"
+to = "0687"
+
+[[pairs]]
+from = "FB80"
+to = "0687"
+
+[[pairs]]
+from = "FB81"
+to = "0687"
+
+[[pairs]]
+from = "FB82"
+to = "068D"
+
+[[pairs]]
+from = "FB83"
+to = "068D"
+
+[[pairs]]
+from = "FB84"
+to = "068C"
+
+[[pairs]]
+from = "FB85"
+to = "068C"
+
+[[pairs]]
+from = "FB86"
+to = "068E"
+
+[[pairs]]
+from = "FB87"
+to = "068E"
+
+[[pairs]]
+from = "FB88"
+to = "0688"
+
+[[pairs]]
+from = "FB89"
+to = "0688"
+
+[[pairs]]
+from = "FB8A"
+to = "0698"
+
+[[pairs]]
+from = "FB8B"
+to = "0698"
+
+[[pairs]]
+from = "FB8C"
+to = "0691"
+
+[[pairs]]
+from = "FB8D"
+to = "0691"
+
+[[pairs]]
+from = "FB8E"
+to = "06A9"
+
+[[pairs]]
+from = "FB8F"
+to = "06A9"
+
+[[pairs]]
+from = "FB90"
+to = "06A9"
+
+[[pairs]]
+from = "FB91"
+to = "06A9"
+
+[[pairs]]
+from = "FB92"
+to = "06AF"
+
+[[pairs]]
+from = "FB93"
+to = "06AF"
+
+[[pairs]]
+from = "FB94"
+to = "06AF"
+
+[[pairs]]
+from = "FB95"
+to = "06AF"
+
+[[pairs]]
+from = "FB96"
+to = "06B3"
+
+[[pairs]]
+from = "FB97"
+to = "06B3"
+
+[[pairs]]
+from = "FB98"
+to = "06B3"
+
+[[pairs]]
+from = "FB99"
+to = "06B3"
+
+[[pairs]]
+from = "FB9A"
+to = "06B1"
+
+[[pairs]]
+from = "FB9B"
+to = "06B1"
+
+[[pairs]]
+from = "FB9C"
+to = "06B1"
+
+[[pairs]]
+from = "FB9D"
+to = "06B1"
+
+[[pairs]]
+from = "FB9E"
+to = "06BA"
+
+[[pairs]]
+from = "FB9F"
+to = "06BA"
+
+[[pairs]]
+from = "FBA0"
+to = "06BB"
+
+[[pairs]]
+from = "FBA1"
+to = "06BB"
+
+[[pairs]]
+from = "FBA2"
+to = "06BB"
+
+[[pairs]]
+from = "FBA3"
+to = "06BB"
+
+[[pairs]]
+from = "FBA4"
+to = "06C0"
+
+[[pairs]]
+from = "FBA5"
+to = "06C0"
+
+[[pairs]]
+from = "FBA6"
+to = "06C1"
+
+[[pairs]]
+from = "FBA7"
+to = "06C1"
+
+[[pairs]]
+from = "FBA8"
+to = "06C1"
+
+[[pairs]]
+from = "FBA9"
+to = "06C1"
+
+[[pairs]]
+from = "FBAA"
+to = "06BE"
+
+[[pairs]]
+from = "FBAB"
+to = "06BE"
+
+[[pairs]]
+from = "FBAC"
+to = "06BE"
+
+[[pairs]]
+from = "FBAD"
+to = "06BE"
+
+[[pairs]]
+from = "FBAE"
+to = "06D2"
+
+[[pairs]]
+from = "FBAF"
+to = "06D2"
+
+[[pairs]]
+from = "FBB0"
+to = "06D3"
+
+[[pairs]]
+from = "FBB1"
+to = "06D3"
+
+[[pairs]]
+from = "FBD3"
+to = "06AD"
+
+[[pairs]]
+from = "FBD4"
+to = "06AD"
+
+[[pairs]]
+from = "FBD5"
+to = "06AD"
+
+[[pairs]]
+from = "FBD6"
+to = "06AD"
+
+[[pairs]]
+from = "FBD7"
+to = "06C7"
+
+[[pairs]]
+from = "FBD8"
+to = "06C7"
+
+[[pairs]]
+from = "FBD9"
+to = "06C6"
+
+[[pairs]]
+from = "FBDA"
+to = "06C6"
+
+[[pairs]]
+from = "FBDB"
+to = "06C8"
+
+[[pairs]]
+from = "FBDC"
+to = "06C8"
+
+[[pairs]]
+from = "FBDD"
+to = "0677"
+
+[[pairs]]
+from = "FBDE"
+to = "06CB"
+
+[[pairs]]
+from = "FBDF"
+to = "06CB"
+
+[[pairs]]
+from = "FBE0"
+to = "06C5"
+
+[[pairs]]
+from = "FBE1"
+to = "06C5"
+
+[[pairs]]
+from = "FBE2"
+to = "06C9"
+
+[[pairs]]
+from = "FBE3"
+to = "06C9"
+
+[[pairs]]
+from = "FBE4"
+to = "06D0"
+
+[[pairs]]
+from = "FBE5"
+to = "06D0"
+
+[[pairs]]
+from = "FBE6"
+to = "06D0"
+
+[[pairs]]
+from = "FBE7"
+to = "06D0"
+
+[[pairs]]
+from = "FBE8"
+to = "0649"
+
+[[pairs]]
+from = "FBE9"
+to = "0649"
+
+[[pairs]]
+from = "FBEA"
+to_seq = "0626 0627"
+
+[[pairs]]
+from = "FBEB"
+to_seq = "0626 0627"
+
+[[pairs]]
+from = "FBEC"
+to_seq = "0626 06D5"
+
+[[pairs]]
+from = "FBED"
+to_seq = "0626 06D5"
+
+[[pairs]]
+from = "FBEE"
+to_seq = "0626 0648"
+
+[[pairs]]
+from = "FBEF"
+to_seq = "0626 0648"
+
+[[pairs]]
+from = "FBF0"
+to_seq = "0626 06C7"
+
+[[pairs]]
+from = "FBF1"
+to_seq = "0626 06C7"
+
+[[pairs]]
+from = "FBF2"
+to_seq = "0626 06C6"
+
+[[pairs]]
+from = "FBF3"
+to_seq = "0626 06C6"
+
+[[pairs]]
+from = "FBF4"
+to_seq = "0626 06C8"
+
+[[pairs]]
+from = "FBF5"
+to_seq = "0626 06C8"
+
+[[pairs]]
+from = "FBF6"
+to_seq = "0626 06D0"
+
+[[pairs]]
+from = "FBF7"
+to_seq = "0626 06D0"
+
+[[pairs]]
+from = "FBF8"
+to_seq = "0626 06D0"
+
+[[pairs]]
+from = "FBF9"
+to_seq = "0626 0649"
+
+[[pairs]]
+from = "FBFA"
+to_seq = "0626 0649"
+
+[[pairs]]
+from = "FBFB"
+to_seq = "0626 0649"
+
+[[pairs]]
+from = "FBFC"
+to = "06CC"
+
+[[pairs]]
+from = "FBFD"
+to = "06CC"
+
+[[pairs]]
+from = "FBFE"
+to = "06CC"
+
+[[pairs]]
+from = "FBFF"
+to = "06CC"
+
+[[pairs]]
+from = "FC00"
+to_seq = "0626 062C"
+
+[[pairs]]
+from = "FC01"
+to_seq = "0626 062D"
+
+[[pairs]]
+from = "FC02"
+to_seq = "0626 0645"
+
+[[pairs]]
+from = "FC03"
+to_seq = "0626 0649"
+
+[[pairs]]
+from = "FC04"
+to_seq = "0626 064A"
+
+[[pairs]]
+from = "FC05"
+to_seq = "0628 062C"
+
+[[pairs]]
+from = "FC06"
+to_seq = "0628 062D"
+
+[[pairs]]
+from = "FC07"
+to_seq = "0628 062E"
+
+[[pairs]]
+from = "FC08"
+to_seq = "0628 0645"
+
+[[pairs]]
+from = "FC09"
+to_seq = "0628 0649"
+
+[[pairs]]
+from = "FC0A"
+to_seq = "0628 064A"
+
+[[pairs]]
+from = "FC0B"
+to_seq = "062A 062C"
+
+[[pairs]]
+from = "FC0C"
+to_seq = "062A 062D"
+
+[[pairs]]
+from = "FC0D"
+to_seq = "062A 062E"
+
+[[pairs]]
+from = "FC0E"
+to_seq = "062A 0645"
+
+[[pairs]]
+from = "FC0F"
+to_seq = "062A 0649"
+
+[[pairs]]
+from = "FC10"
+to_seq = "062A 064A"
+
+[[pairs]]
+from = "FC11"
+to_seq = "062B 062C"
+
+[[pairs]]
+from = "FC12"
+to_seq = "062B 0645"
+
+[[pairs]]
+from = "FC13"
+to_seq = "062B 0649"
+
+[[pairs]]
+from = "FC14"
+to_seq = "062B 064A"
+
+[[pairs]]
+from = "FC15"
+to_seq = "062C 062D"
+
+[[pairs]]
+from = "FC16"
+to_seq = "062C 0645"
+
+[[pairs]]
+from = "FC17"
+to_seq = "062D 062C"
+
+[[pairs]]
+from = "FC18"
+to_seq = "062D 0645"
+
+[[pairs]]
+from = "FC19"
+to_seq = "062E 062C"
+
+[[pairs]]
+from = "FC1A"
+to_seq = "062E 062D"
+
+[[pairs]]
+from = "FC1B"
+to_seq = "062E 0645"
+
+[[pairs]]
+from = "FC1C"
+to_seq = "0633 062C"
+
+[[pairs]]
+from = "FC1D"
+to_seq = "0633 062D"
+
+[[pairs]]
+from = "FC1E"
+to_seq = "0633 062E"
+
+[[pairs]]
+from = "FC1F"
+to_seq = "0633 0645"
+
+[[pairs]]
+from = "FC20"
+to_seq = "0635 062D"
+
+[[pairs]]
+from = "FC21"
+to_seq = "0635 0645"
+
+[[pairs]]
+from = "FC22"
+to_seq = "0636 062C"
+
+[[pairs]]
+from = "FC23"
+to_seq = "0636 062D"
+
+[[pairs]]
+from = "FC24"
+to_seq = "0636 062E"
+
+[[pairs]]
+from = "FC25"
+to_seq = "0636 0645"
+
+[[pairs]]
+from = "FC26"
+to_seq = "0637 062D"
+
+[[pairs]]
+from = "FC27"
+to_seq = "0637 0645"
+
+[[pairs]]
+from = "FC28"
+to_seq = "0638 0645"
+
+[[pairs]]
+from = "FC29"
+to_seq = "0639 062C"
+
+[[pairs]]
+from = "FC2A"
+to_seq = "0639 0645"
+
+[[pairs]]
+from = "FC2B"
+to_seq = "063A 062C"
+
+[[pairs]]
+from = "FC2C"
+to_seq = "063A 0645"
+
+[[pairs]]
+from = "FC2D"
+to_seq = "0641 062C"
+
+[[pairs]]
+from = "FC2E"
+to_seq = "0641 062D"
+
+[[pairs]]
+from = "FC2F"
+to_seq = "0641 062E"
+
+[[pairs]]
+from = "FC30"
+to_seq = "0641 0645"
+
+[[pairs]]
+from = "FC31"
+to_seq = "0641 0649"
+
+[[pairs]]
+from = "FC32"
+to_seq = "0641 064A"
+
+[[pairs]]
+from = "FC33"
+to_seq = "0642 062D"
+
+[[pairs]]
+from = "FC34"
+to_seq = "0642 0645"
+
+[[pairs]]
+from = "FC35"
+to_seq = "0642 0649"
+
+[[pairs]]
+from = "FC36"
+to_seq = "0642 064A"
+
+[[pairs]]
+from = "FC37"
+to_seq = "0643 0627"
+
+[[pairs]]
+from = "FC38"
+to_seq = "0643 062C"
+
+[[pairs]]
+from = "FC39"
+to_seq = "0643 062D"
+
+[[pairs]]
+from = "FC3A"
+to_seq = "0643 062E"
+
+[[pairs]]
+from = "FC3B"
+to_seq = "0643 0644"
+
+[[pairs]]
+from = "FC3C"
+to_seq = "0643 0645"
+
+[[pairs]]
+from = "FC3D"
+to_seq = "0643 0649"
+
+[[pairs]]
+from = "FC3E"
+to_seq = "0643 064A"
+
+[[pairs]]
+from = "FC3F"
+to_seq = "0644 062C"
+
+[[pairs]]
+from = "FC40"
+to_seq = "0644 062D"
+
+[[pairs]]
+from = "FC41"
+to_seq = "0644 062E"
+
+[[pairs]]
+from = "FC42"
+to_seq = "0644 0645"
+
+[[pairs]]
+from = "FC43"
+to_seq = "0644 0649"
+
+[[pairs]]
+from = "FC44"
+to_seq = "0644 064A"
+
+[[pairs]]
+from = "FC45"
+to_seq = "0645 062C"
+
+[[pairs]]
+from = "FC46"
+to_seq = "0645 062D"
+
+[[pairs]]
+from = "FC47"
+to_seq = "0645 062E"
+
+[[pairs]]
+from = "FC48"
+to_seq = "0645 0645"
+
+[[pairs]]
+from = "FC49"
+to_seq = "0645 0649"
+
+[[pairs]]
+from = "FC4A"
+to_seq = "0645 064A"
+
+[[pairs]]
+from = "FC4B"
+to_seq = "0646 062C"
+
+[[pairs]]
+from = "FC4C"
+to_seq = "0646 062D"
+
+[[pairs]]
+from = "FC4D"
+to_seq = "0646 062E"
+
+[[pairs]]
+from = "FC4E"
+to_seq = "0646 0645"
+
+[[pairs]]
+from = "FC4F"
+to_seq = "0646 0649"
+
+[[pairs]]
+from = "FC50"
+to_seq = "0646 064A"
+
+[[pairs]]
+from = "FC51"
+to_seq = "0647 062C"
+
+[[pairs]]
+from = "FC52"
+to_seq = "0647 0645"
+
+[[pairs]]
+from = "FC53"
+to_seq = "0647 0649"
+
+[[pairs]]
+from = "FC54"
+to_seq = "0647 064A"
+
+[[pairs]]
+from = "FC55"
+to_seq = "064A 062C"
+
+[[pairs]]
+from = "FC56"
+to_seq = "064A 062D"
+
+[[pairs]]
+from = "FC57"
+to_seq = "064A 062E"
+
+[[pairs]]
+from = "FC58"
+to_seq = "064A 0645"
+
+[[pairs]]
+from = "FC59"
+to_seq = "064A 0649"
+
+[[pairs]]
+from = "FC5A"
+to_seq = "064A 064A"
+
+[[pairs]]
+from = "FC5B"
+to_seq = "0630 0670"
+
+[[pairs]]
+from = "FC5C"
+to_seq = "0631 0670"
+
+[[pairs]]
+from = "FC5D"
+to_seq = "0649 0670"
+
+[[pairs]]
+from = "FC5E"
+to_seq = "0020 064C 0651"
+
+[[pairs]]
+from = "FC5F"
+to_seq = "0020 064D 0651"
+
+[[pairs]]
+from = "FC60"
+to_seq = "0020 064E 0651"
+
+[[pairs]]
+from = "FC61"
+to_seq = "0020 064F 0651"
+
+[[pairs]]
+from = "FC62"
+to_seq = "0020 0650 0651"
+
+[[pairs]]
+from = "FC63"
+to_seq = "0020 0651 0670"
+
+[[pairs]]
+from = "FC64"
+to_seq = "0626 0631"
+
+[[pairs]]
+from = "FC65"
+to_seq = "0626 0632"
+
+[[pairs]]
+from = "FC66"
+to_seq = "0626 0645"
+
+[[pairs]]
+from = "FC67"
+to_seq = "0626 0646"
+
+[[pairs]]
+from = "FC68"
+to_seq = "0626 0649"
+
+[[pairs]]
+from = "FC69"
+to_seq = "0626 064A"
+
+[[pairs]]
+from = "FC6A"
+to_seq = "0628 0631"
+
+[[pairs]]
+from = "FC6B"
+to_seq = "0628 0632"
+
+[[pairs]]
+from = "FC6C"
+to_seq = "0628 0645"
+
+[[pairs]]
+from = "FC6D"
+to_seq = "0628 0646"
+
+[[pairs]]
+from = "FC6E"
+to_seq = "0628 0649"
+
+[[pairs]]
+from = "FC6F"
+to_seq = "0628 064A"
+
+[[pairs]]
+from = "FC70"
+to_seq = "062A 0631"
+
+[[pairs]]
+from = "FC71"
+to_seq = "062A 0632"
+
+[[pairs]]
+from = "FC72"
+to_seq = "062A 0645"
+
+[[pairs]]
+from = "FC73"
+to_seq = "062A 0646"
+
+[[pairs]]
+from = "FC74"
+to_seq = "062A 0649"
+
+[[pairs]]
+from = "FC75"
+to_seq = "062A 064A"
+
+[[pairs]]
+from = "FC76"
+to_seq = "062B 0631"
+
+[[pairs]]
+from = "FC77"
+to_seq = "062B 0632"
+
+[[pairs]]
+from = "FC78"
+to_seq = "062B 0645"
+
+[[pairs]]
+from = "FC79"
+to_seq = "062B 0646"
+
+[[pairs]]
+from = "FC7A"
+to_seq = "062B 0649"
+
+[[pairs]]
+from = "FC7B"
+to_seq = "062B 064A"
+
+[[pairs]]
+from = "FC7C"
+to_seq = "0641 0649"
+
+[[pairs]]
+from = "FC7D"
+to_seq = "0641 064A"
+
+[[pairs]]
+from = "FC7E"
+to_seq = "0642 0649"
+
+[[pairs]]
+from = "FC7F"
+to_seq = "0642 064A"
+
+[[pairs]]
+from = "FC80"
+to_seq = "0643 0627"
+
+[[pairs]]
+from = "FC81"
+to_seq = "0643 0644"
+
+[[pairs]]
+from = "FC82"
+to_seq = "0643 0645"
+
+[[pairs]]
+from = "FC83"
+to_seq = "0643 0649"
+
+[[pairs]]
+from = "FC84"
+to_seq = "0643 064A"
+
+[[pairs]]
+from = "FC85"
+to_seq = "0644 0645"
+
+[[pairs]]
+from = "FC86"
+to_seq = "0644 0649"
+
+[[pairs]]
+from = "FC87"
+to_seq = "0644 064A"
+
+[[pairs]]
+from = "FC88"
+to_seq = "0645 0627"
+
+[[pairs]]
+from = "FC89"
+to_seq = "0645 0645"
+
+[[pairs]]
+from = "FC8A"
+to_seq = "0646 0631"
+
+[[pairs]]
+from = "FC8B"
+to_seq = "0646 0632"
+
+[[pairs]]
+from = "FC8C"
+to_seq = "0646 0645"
+
+[[pairs]]
+from = "FC8D"
+to_seq = "0646 0646"
+
+[[pairs]]
+from = "FC8E"
+to_seq = "0646 0649"
+
+[[pairs]]
+from = "FC8F"
+to_seq = "0646 064A"
+
+[[pairs]]
+from = "FC90"
+to_seq = "0649 0670"
+
+[[pairs]]
+from = "FC91"
+to_seq = "064A 0631"
+
+[[pairs]]
+from = "FC92"
+to_seq = "064A 0632"
+
+[[pairs]]
+from = "FC93"
+to_seq = "064A 0645"
+
+[[pairs]]
+from = "FC94"
+to_seq = "064A 0646"
+
+[[pairs]]
+from = "FC95"
+to_seq = "064A 0649"
+
+[[pairs]]
+from = "FC96"
+to_seq = "064A 064A"
+
+[[pairs]]
+from = "FC97"
+to_seq = "0626 062C"
+
+[[pairs]]
+from = "FC98"
+to_seq = "0626 062D"
+
+[[pairs]]
+from = "FC99"
+to_seq = "0626 062E"
+
+[[pairs]]
+from = "FC9A"
+to_seq = "0626 0645"
+
+[[pairs]]
+from = "FC9B"
+to_seq = "0626 0647"
+
+[[pairs]]
+from = "FC9C"
+to_seq = "0628 062C"
+
+[[pairs]]
+from = "FC9D"
+to_seq = "0628 062D"
+
+[[pairs]]
+from = "FC9E"
+to_seq = "0628 062E"
+
+[[pairs]]
+from = "FC9F"
+to_seq = "0628 0645"
+
+[[pairs]]
+from = "FCA0"
+to_seq = "0628 0647"
+
+[[pairs]]
+from = "FCA1"
+to_seq = "062A 062C"
+
+[[pairs]]
+from = "FCA2"
+to_seq = "062A 062D"
+
+[[pairs]]
+from = "FCA3"
+to_seq = "062A 062E"
+
+[[pairs]]
+from = "FCA4"
+to_seq = "062A 0645"
+
+[[pairs]]
+from = "FCA5"
+to_seq = "062A 0647"
+
+[[pairs]]
+from = "FCA6"
+to_seq = "062B 0645"
+
+[[pairs]]
+from = "FCA7"
+to_seq = "062C 062D"
+
+[[pairs]]
+from = "FCA8"
+to_seq = "062C 0645"
+
+[[pairs]]
+from = "FCA9"
+to_seq = "062D 062C"
+
+[[pairs]]
+from = "FCAA"
+to_seq = "062D 0645"
+
+[[pairs]]
+from = "FCAB"
+to_seq = "062E 062C"
+
+[[pairs]]
+from = "FCAC"
+to_seq = "062E 0645"
+
+[[pairs]]
+from = "FCAD"
+to_seq = "0633 062C"
+
+[[pairs]]
+from = "FCAE"
+to_seq = "0633 062D"
+
+[[pairs]]
+from = "FCAF"
+to_seq = "0633 062E"
+
+[[pairs]]
+from = "FCB0"
+to_seq = "0633 0645"
+
+[[pairs]]
+from = "FCB1"
+to_seq = "0635 062D"
+
+[[pairs]]
+from = "FCB2"
+to_seq = "0635 062E"
+
+[[pairs]]
+from = "FCB3"
+to_seq = "0635 0645"
+
+[[pairs]]
+from = "FCB4"
+to_seq = "0636 062C"
+
+[[pairs]]
+from = "FCB5"
+to_seq = "0636 062D"
+
+[[pairs]]
+from = "FCB6"
+to_seq = "0636 062E"
+
+[[pairs]]
+from = "FCB7"
+to_seq = "0636 0645"
+
+[[pairs]]
+from = "FCB8"
+to_seq = "0637 062D"
+
+[[pairs]]
+from = "FCB9"
+to_seq = "0638 0645"
+
+[[pairs]]
+from = "FCBA"
+to_seq = "0639 062C"
+
+[[pairs]]
+from = "FCBB"
+to_seq = "0639 0645"
+
+[[pairs]]
+from = "FCBC"
+to_seq = "063A 062C"
+
+[[pairs]]
+from = "FCBD"
+to_seq = "063A 0645"
+
+[[pairs]]
+from = "FCBE"
+to_seq = "0641 062C"
+
+[[pairs]]
+from = "FCBF"
+to_seq = "0641 062D"
+
+[[pairs]]
+from = "FCC0"
+to_seq = "0641 062E"
+
+[[pairs]]
+from = "FCC1"
+to_seq = "0641 0645"
+
+[[pairs]]
+from = "FCC2"
+to_seq = "0642 062D"
+
+[[pairs]]
+from = "FCC3"
+to_seq = "0642 0645"
+
+[[pairs]]
+from = "FCC4"
+to_seq = "0643 062C"
+
+[[pairs]]
+from = "FCC5"
+to_seq = "0643 062D"
+
+[[pairs]]
+from = "FCC6"
+to_seq = "0643 062E"
+
+[[pairs]]
+from = "FCC7"
+to_seq = "0643 0644"
+
+[[pairs]]
+from = "FCC8"
+to_seq = "0643 0645"
+
+[[pairs]]
+from = "FCC9"
+to_seq = "0644 062C"
+
+[[pairs]]
+from = "FCCA"
+to_seq = "0644 062D"
+
+[[pairs]]
+from = "FCCB"
+to_seq = "0644 062E"
+
+[[pairs]]
+from = "FCCC"
+to_seq = "0644 0645"
+
+[[pairs]]
+from = "FCCD"
+to_seq = "0644 0647"
+
+[[pairs]]
+from = "FCCE"
+to_seq = "0645 062C"
+
+[[pairs]]
+from = "FCCF"
+to_seq = "0645 062D"
+
+[[pairs]]
+from = "FCD0"
+to_seq = "0645 062E"
+
+[[pairs]]
+from = "FCD1"
+to_seq = "0645 0645"
+
+[[pairs]]
+from = "FCD2"
+to_seq = "0646 062C"
+
+[[pairs]]
+from = "FCD3"
+to_seq = "0646 062D"
+
+[[pairs]]
+from = "FCD4"
+to_seq = "0646 062E"
+
+[[pairs]]
+from = "FCD5"
+to_seq = "0646 0645"
+
+[[pairs]]
+from = "FCD6"
+to_seq = "0646 0647"
+
+[[pairs]]
+from = "FCD7"
+to_seq = "0647 062C"
+
+[[pairs]]
+from = "FCD8"
+to_seq = "0647 0645"
+
+[[pairs]]
+from = "FCD9"
+to_seq = "0647 0670"
+
+[[pairs]]
+from = "FCDA"
+to_seq = "064A 062C"
+
+[[pairs]]
+from = "FCDB"
+to_seq = "064A 062D"
+
+[[pairs]]
+from = "FCDC"
+to_seq = "064A 062E"
+
+[[pairs]]
+from = "FCDD"
+to_seq = "064A 0645"
+
+[[pairs]]
+from = "FCDE"
+to_seq = "064A 0647"
+
+[[pairs]]
+from = "FCDF"
+to_seq = "0626 0645"
+
+[[pairs]]
+from = "FCE0"
+to_seq = "0626 0647"
+
+[[pairs]]
+from = "FCE1"
+to_seq = "0628 0645"
+
+[[pairs]]
+from = "FCE2"
+to_seq = "0628 0647"
+
+[[pairs]]
+from = "FCE3"
+to_seq = "062A 0645"
+
+[[pairs]]
+from = "FCE4"
+to_seq = "062A 0647"
+
+[[pairs]]
+from = "FCE5"
+to_seq = "062B 0645"
+
+[[pairs]]
+from = "FCE6"
+to_seq = "062B 0647"
+
+[[pairs]]
+from = "FCE7"
+to_seq = "0633 0645"
+
+[[pairs]]
+from = "FCE8"
+to_seq = "0633 0647"
+
+[[pairs]]
+from = "FCE9"
+to_seq = "0634 0645"
+
+[[pairs]]
+from = "FCEA"
+to_seq = "0634 0647"
+
+[[pairs]]
+from = "FCEB"
+to_seq = "0643 0644"
+
+[[pairs]]
+from = "FCEC"
+to_seq = "0643 0645"
+
+[[pairs]]
+from = "FCED"
+to_seq = "0644 0645"
+
+[[pairs]]
+from = "FCEE"
+to_seq = "0646 0645"
+
+[[pairs]]
+from = "FCEF"
+to_seq = "0646 0647"
+
+[[pairs]]
+from = "FCF0"
+to_seq = "064A 0645"
+
+[[pairs]]
+from = "FCF1"
+to_seq = "064A 0647"
+
+[[pairs]]
+from = "FCF2"
+to_seq = "0640 064E 0651"
+
+[[pairs]]
+from = "FCF3"
+to_seq = "0640 064F 0651"
+
+[[pairs]]
+from = "FCF4"
+to_seq = "0640 0650 0651"
+
+[[pairs]]
+from = "FCF5"
+to_seq = "0637 0649"
+
+[[pairs]]
+from = "FCF6"
+to_seq = "0637 064A"
+
+[[pairs]]
+from = "FCF7"
+to_seq = "0639 0649"
+
+[[pairs]]
+from = "FCF8"
+to_seq = "0639 064A"
+
+[[pairs]]
+from = "FCF9"
+to_seq = "063A 0649"
+
+[[pairs]]
+from = "FCFA"
+to_seq = "063A 064A"
+
+[[pairs]]
+from = "FCFB"
+to_seq = "0633 0649"
+
+[[pairs]]
+from = "FCFC"
+to_seq = "0633 064A"
+
+[[pairs]]
+from = "FCFD"
+to_seq = "0634 0649"
+
+[[pairs]]
+from = "FCFE"
+to_seq = "0634 064A"
+
+[[pairs]]
+from = "FCFF"
+to_seq = "062D 0649"
+
+[[pairs]]
+from = "FD00"
+to_seq = "062D 064A"
+
+[[pairs]]
+from = "FD01"
+to_seq = "062C 0649"
+
+[[pairs]]
+from = "FD02"
+to_seq = "062C 064A"
+
+[[pairs]]
+from = "FD03"
+to_seq = "062E 0649"
+
+[[pairs]]
+from = "FD04"
+to_seq = "062E 064A"
+
+[[pairs]]
+from = "FD05"
+to_seq = "0635 0649"
+
+[[pairs]]
+from = "FD06"
+to_seq = "0635 064A"
+
+[[pairs]]
+from = "FD07"
+to_seq = "0636 0649"
+
+[[pairs]]
+from = "FD08"
+to_seq = "0636 064A"
+
+[[pairs]]
+from = "FD09"
+to_seq = "0634 062C"
+
+[[pairs]]
+from = "FD0A"
+to_seq = "0634 062D"
+
+[[pairs]]
+from = "FD0B"
+to_seq = "0634 062E"
+
+[[pairs]]
+from = "FD0C"
+to_seq = "0634 0645"
+
+[[pairs]]
+from = "FD0D"
+to_seq = "0634 0631"
+
+[[pairs]]
+from = "FD0E"
+to_seq = "0633 0631"
+
+[[pairs]]
+from = "FD0F"
+to_seq = "0635 0631"
+
+[[pairs]]
+from = "FD10"
+to_seq = "0636 0631"
+
+[[pairs]]
+from = "FD11"
+to_seq = "0637 0649"
+
+[[pairs]]
+from = "FD12"
+to_seq = "0637 064A"
+
+[[pairs]]
+from = "FD13"
+to_seq = "0639 0649"
+
+[[pairs]]
+from = "FD14"
+to_seq = "0639 064A"
+
+[[pairs]]
+from = "FD15"
+to_seq = "063A 0649"
+
+[[pairs]]
+from = "FD16"
+to_seq = "063A 064A"
+
+[[pairs]]
+from = "FD17"
+to_seq = "0633 0649"
+
+[[pairs]]
+from = "FD18"
+to_seq = "0633 064A"
+
+[[pairs]]
+from = "FD19"
+to_seq = "0634 0649"
+
+[[pairs]]
+from = "FD1A"
+to_seq = "0634 064A"
+
+[[pairs]]
+from = "FD1B"
+to_seq = "062D 0649"
+
+[[pairs]]
+from = "FD1C"
+to_seq = "062D 064A"
+
+[[pairs]]
+from = "FD1D"
+to_seq = "062C 0649"
+
+[[pairs]]
+from = "FD1E"
+to_seq = "062C 064A"
+
+[[pairs]]
+from = "FD1F"
+to_seq = "062E 0649"
+
+[[pairs]]
+from = "FD20"
+to_seq = "062E 064A"
+
+[[pairs]]
+from = "FD21"
+to_seq = "0635 0649"
+
+[[pairs]]
+from = "FD22"
+to_seq = "0635 064A"
+
+[[pairs]]
+from = "FD23"
+to_seq = "0636 0649"
+
+[[pairs]]
+from = "FD24"
+to_seq = "0636 064A"
+
+[[pairs]]
+from = "FD25"
+to_seq = "0634 062C"
+
+[[pairs]]
+from = "FD26"
+to_seq = "0634 062D"
+
+[[pairs]]
+from = "FD27"
+to_seq = "0634 062E"
+
+[[pairs]]
+from = "FD28"
+to_seq = "0634 0645"
+
+[[pairs]]
+from = "FD29"
+to_seq = "0634 0631"
+
+[[pairs]]
+from = "FD2A"
+to_seq = "0633 0631"
+
+[[pairs]]
+from = "FD2B"
+to_seq = "0635 0631"
+
+[[pairs]]
+from = "FD2C"
+to_seq = "0636 0631"
+
+[[pairs]]
+from = "FD2D"
+to_seq = "0634 062C"
+
+[[pairs]]
+from = "FD2E"
+to_seq = "0634 062D"
+
+[[pairs]]
+from = "FD2F"
+to_seq = "0634 062E"
+
+[[pairs]]
+from = "FD30"
+to_seq = "0634 0645"
+
+[[pairs]]
+from = "FD31"
+to_seq = "0633 0647"
+
+[[pairs]]
+from = "FD32"
+to_seq = "0634 0647"
+
+[[pairs]]
+from = "FD33"
+to_seq = "0637 0645"
+
+[[pairs]]
+from = "FD34"
+to_seq = "0633 062C"
+
+[[pairs]]
+from = "FD35"
+to_seq = "0633 062D"
+
+[[pairs]]
+from = "FD36"
+to_seq = "0633 062E"
+
+[[pairs]]
+from = "FD37"
+to_seq = "0634 062C"
+
+[[pairs]]
+from = "FD38"
+to_seq = "0634 062D"
+
+[[pairs]]
+from = "FD39"
+to_seq = "0634 062E"
+
+[[pairs]]
+from = "FD3A"
+to_seq = "0637 0645"
+
+[[pairs]]
+from = "FD3B"
+to_seq = "0638 0645"
+
+[[pairs]]
+from = "FD3C"
+to_seq = "0627 064B"
+
+[[pairs]]
+from = "FD3D"
+to_seq = "0627 064B"
+
+[[pairs]]
+from = "FD50"
+to_seq = "062A 062C 0645"
+
+[[pairs]]
+from = "FD51"
+to_seq = "062A 062D 062C"
+
+[[pairs]]
+from = "FD52"
+to_seq = "062A 062D 062C"
+
+[[pairs]]
+from = "FD53"
+to_seq = "062A 062D 0645"
+
+[[pairs]]
+from = "FD54"
+to_seq = "062A 062E 0645"
+
+[[pairs]]
+from = "FD55"
+to_seq = "062A 0645 062C"
+
+[[pairs]]
+from = "FD56"
+to_seq = "062A 0645 062D"
+
+[[pairs]]
+from = "FD57"
+to_seq = "062A 0645 062E"
+
+[[pairs]]
+from = "FD58"
+to_seq = "062C 0645 062D"
+
+[[pairs]]
+from = "FD59"
+to_seq = "062C 0645 062D"
+
+[[pairs]]
+from = "FD5A"
+to_seq = "062D 0645 064A"
+
+[[pairs]]
+from = "FD5B"
+to_seq = "062D 0645 0649"
+
+[[pairs]]
+from = "FD5C"
+to_seq = "0633 062D 062C"
+
+[[pairs]]
+from = "FD5D"
+to_seq = "0633 062C 062D"
+
+[[pairs]]
+from = "FD5E"
+to_seq = "0633 062C 0649"
+
+[[pairs]]
+from = "FD5F"
+to_seq = "0633 0645 062D"
+
+[[pairs]]
+from = "FD60"
+to_seq = "0633 0645 062D"
+
+[[pairs]]
+from = "FD61"
+to_seq = "0633 0645 062C"
+
+[[pairs]]
+from = "FD62"
+to_seq = "0633 0645 0645"
+
+[[pairs]]
+from = "FD63"
+to_seq = "0633 0645 0645"
+
+[[pairs]]
+from = "FD64"
+to_seq = "0635 062D 062D"
+
+[[pairs]]
+from = "FD65"
+to_seq = "0635 062D 062D"
+
+[[pairs]]
+from = "FD66"
+to_seq = "0635 0645 0645"
+
+[[pairs]]
+from = "FD67"
+to_seq = "0634 062D 0645"
+
+[[pairs]]
+from = "FD68"
+to_seq = "0634 062D 0645"
+
+[[pairs]]
+from = "FD69"
+to_seq = "0634 062C 064A"
+
+[[pairs]]
+from = "FD6A"
+to_seq = "0634 0645 062E"
+
+[[pairs]]
+from = "FD6B"
+to_seq = "0634 0645 062E"
+
+[[pairs]]
+from = "FD6C"
+to_seq = "0634 0645 0645"
+
+[[pairs]]
+from = "FD6D"
+to_seq = "0634 0645 0645"
+
+[[pairs]]
+from = "FD6E"
+to_seq = "0636 062D 0649"
+
+[[pairs]]
+from = "FD6F"
+to_seq = "0636 062E 0645"
+
+[[pairs]]
+from = "FD70"
+to_seq = "0636 062E 0645"
+
+[[pairs]]
+from = "FD71"
+to_seq = "0637 0645 062D"
+
+[[pairs]]
+from = "FD72"
+to_seq = "0637 0645 062D"
+
+[[pairs]]
+from = "FD73"
+to_seq = "0637 0645 0645"
+
+[[pairs]]
+from = "FD74"
+to_seq = "0637 0645 064A"
+
+[[pairs]]
+from = "FD75"
+to_seq = "0639 062C 0645"
+
+[[pairs]]
+from = "FD76"
+to_seq = "0639 0645 0645"
+
+[[pairs]]
+from = "FD77"
+to_seq = "0639 0645 0645"
+
+[[pairs]]
+from = "FD78"
+to_seq = "0639 0645 0649"
+
+[[pairs]]
+from = "FD79"
+to_seq = "063A 0645 0645"
+
+[[pairs]]
+from = "FD7A"
+to_seq = "063A 0645 064A"
+
+[[pairs]]
+from = "FD7B"
+to_seq = "063A 0645 0649"
+
+[[pairs]]
+from = "FD7C"
+to_seq = "0641 062E 0645"
+
+[[pairs]]
+from = "FD7D"
+to_seq = "0641 062E 0645"
+
+[[pairs]]
+from = "FD7E"
+to_seq = "0642 0645 062D"
+
+[[pairs]]
+from = "FD7F"
+to_seq = "0642 0645 0645"
+
+[[pairs]]
+from = "FD80"
+to_seq = "0644 062D 0645"
+
+[[pairs]]
+from = "FD81"
+to_seq = "0644 062D 064A"
+
+[[pairs]]
+from = "FD82"
+to_seq = "0644 062D 0649"
+
+[[pairs]]
+from = "FD83"
+to_seq = "0644 062C 062C"
+
+[[pairs]]
+from = "FD84"
+to_seq = "0644 062C 062C"
+
+[[pairs]]
+from = "FD85"
+to_seq = "0644 062E 0645"
+
+[[pairs]]
+from = "FD86"
+to_seq = "0644 062E 0645"
+
+[[pairs]]
+from = "FD87"
+to_seq = "0644 0645 062D"
+
+[[pairs]]
+from = "FD88"
+to_seq = "0644 0645 062D"
+
+[[pairs]]
+from = "FD89"
+to_seq = "0645 062D 062C"
+
+[[pairs]]
+from = "FD8A"
+to_seq = "0645 062D 0645"
+
+[[pairs]]
+from = "FD8B"
+to_seq = "0645 062D 064A"
+
+[[pairs]]
+from = "FD8C"
+to_seq = "0645 062C 062D"
+
+[[pairs]]
+from = "FD8D"
+to_seq = "0645 062C 0645"
+
+[[pairs]]
+from = "FD8E"
+to_seq = "0645 062E 062C"
+
+[[pairs]]
+from = "FD8F"
+to_seq = "0645 062E 0645"
+
+[[pairs]]
+from = "FD92"
+to_seq = "0645 062C 062E"
+
+[[pairs]]
+from = "FD93"
+to_seq = "0647 0645 062C"
+
+[[pairs]]
+from = "FD94"
+to_seq = "0647 0645 0645"
+
+[[pairs]]
+from = "FD95"
+to_seq = "0646 062D 0645"
+
+[[pairs]]
+from = "FD96"
+to_seq = "0646 062D 0649"
+
+[[pairs]]
+from = "FD97"
+to_seq = "0646 062C 0645"
+
+[[pairs]]
+from = "FD98"
+to_seq = "0646 062C 0645"
+
+[[pairs]]
+from = "FD99"
+to_seq = "0646 062C 0649"
+
+[[pairs]]
+from = "FD9A"
+to_seq = "0646 0645 064A"
+
+[[pairs]]
+from = "FD9B"
+to_seq = "0646 0645 0649"
+
+[[pairs]]
+from = "FD9C"
+to_seq = "064A 0645 0645"
+
+[[pairs]]
+from = "FD9D"
+to_seq = "064A 0645 0645"
+
+[[pairs]]
+from = "FD9E"
+to_seq = "0628 062E 064A"
+
+[[pairs]]
+from = "FD9F"
+to_seq = "062A 062C 064A"
+
+[[pairs]]
+from = "FDA0"
+to_seq = "062A 062C 0649"
+
+[[pairs]]
+from = "FDA1"
+to_seq = "062A 062E 064A"
+
+[[pairs]]
+from = "FDA2"
+to_seq = "062A 062E 0649"
+
+[[pairs]]
+from = "FDA3"
+to_seq = "062A 0645 064A"
+
+[[pairs]]
+from = "FDA4"
+to_seq = "062A 0645 0649"
+
+[[pairs]]
+from = "FDA5"
+to_seq = "062C 0645 064A"
+
+[[pairs]]
+from = "FDA6"
+to_seq = "062C 062D 0649"
+
+[[pairs]]
+from = "FDA7"
+to_seq = "062C 0645 0649"
+
+[[pairs]]
+from = "FDA8"
+to_seq = "0633 062E 0649"
+
+[[pairs]]
+from = "FDA9"
+to_seq = "0635 062D 064A"
+
+[[pairs]]
+from = "FDAA"
+to_seq = "0634 062D 064A"
+
+[[pairs]]
+from = "FDAB"
+to_seq = "0636 062D 064A"
+
+[[pairs]]
+from = "FDAC"
+to_seq = "0644 062C 064A"
+
+[[pairs]]
+from = "FDAD"
+to_seq = "0644 0645 064A"
+
+[[pairs]]
+from = "FDAE"
+to_seq = "064A 062D 064A"
+
+[[pairs]]
+from = "FDAF"
+to_seq = "064A 062C 064A"
+
+[[pairs]]
+from = "FDB0"
+to_seq = "064A 0645 064A"
+
+[[pairs]]
+from = "FDB1"
+to_seq = "0645 0645 064A"
+
+[[pairs]]
+from = "FDB2"
+to_seq = "0642 0645 064A"
+
+[[pairs]]
+from = "FDB3"
+to_seq = "0646 062D 064A"
+
+[[pairs]]
+from = "FDB4"
+to_seq = "0642 0645 062D"
+
+[[pairs]]
+from = "FDB5"
+to_seq = "0644 062D 0645"
+
+[[pairs]]
+from = "FDB6"
+to_seq = "0639 0645 064A"
+
+[[pairs]]
+from = "FDB7"
+to_seq = "0643 0645 064A"
+
+[[pairs]]
+from = "FDB8"
+to_seq = "0646 062C 062D"
+
+[[pairs]]
+from = "FDB9"
+to_seq = "0645 062E 064A"
+
+[[pairs]]
+from = "FDBA"
+to_seq = "0644 062C 0645"
+
+[[pairs]]
+from = "FDBB"
+to_seq = "0643 0645 0645"
+
+[[pairs]]
+from = "FDBC"
+to_seq = "0644 062C 0645"
+
+[[pairs]]
+from = "FDBD"
+to_seq = "0646 062C 062D"
+
+[[pairs]]
+from = "FDBE"
+to_seq = "062C 062D 064A"
+
+[[pairs]]
+from = "FDBF"
+to_seq = "062D 062C 064A"
+
+[[pairs]]
+from = "FDC0"
+to_seq = "0645 062C 064A"
+
+[[pairs]]
+from = "FDC1"
+to_seq = "0641 0645 064A"
+
+[[pairs]]
+from = "FDC2"
+to_seq = "0628 062D 064A"
+
+[[pairs]]
+from = "FDC3"
+to_seq = "0643 0645 0645"
+
+[[pairs]]
+from = "FDC4"
+to_seq = "0639 062C 0645"
+
+[[pairs]]
+from = "FDC5"
+to_seq = "0635 0645 0645"
+
+[[pairs]]
+from = "FDC6"
+to_seq = "0633 062E 064A"
+
+[[pairs]]
+from = "FDC7"
+to_seq = "0646 062C 064A"
+
+[[pairs]]
+from = "FDF0"
+to_seq = "0635 0644 06D2"
+
+[[pairs]]
+from = "FDF1"
+to_seq = "0642 0644 06D2"
+
+[[pairs]]
+from = "FDF2"
+to_seq = "0627 0644 0644 0647"
+
+[[pairs]]
+from = "FDF3"
+to_seq = "0627 0643 0628 0631"
+
+[[pairs]]
+from = "FDF4"
+to_seq = "0645 062D 0645 062F"
+
+[[pairs]]
+from = "FDF5"
+to_seq = "0635 0644 0639 0645"
+
+[[pairs]]
+from = "FDF6"
+to_seq = "0631 0633 0648 0644"
+
+[[pairs]]
+from = "FDF7"
+to_seq = "0639 0644 064A 0647"
+
+[[pairs]]
+from = "FDF8"
+to_seq = "0648 0633 0644 0645"
+
+[[pairs]]
+from = "FDF9"
+to_seq = "0635 0644 0649"
+
+[[pairs]]
+from = "FDFA"
+to_seq = "0635 0644 0649 0020 0627 0644 0644 0647 0020 0639 0644 064A 0647 0020 0648 0633 0644 0645"
+
+[[pairs]]
+from = "FDFB"
+to_seq = "062C 0644 0020 062C 0644 0627 0644 0647"
+
+[[pairs]]
+from = "FDFC"
+to_seq = "0631 06CC 0627 0644"
+
 [[pairs]]
 from = "FE70"
 to_seq = "0020 064B"
@@ -93,12 +2443,10 @@ to_seq = "0020 0652"
 from = "FE7F"
 to_seq = "0640 0652"
 
-# Hamza forms
 [[pairs]]
 from = "FE80"
 to = "0621"
 
-# Alef with madda above
 [[pairs]]
 from = "FE81"
 to = "0622"
@@ -107,7 +2455,6 @@ to = "0622"
 from = "FE82"
 to = "0622"
 
-# Alef with hamza above
 [[pairs]]
 from = "FE83"
 to = "0623"
@@ -116,7 +2463,6 @@ to = "0623"
 from = "FE84"
 to = "0623"
 
-# Waw with hamza above
 [[pairs]]
 from = "FE85"
 to = "0624"
@@ -125,7 +2471,6 @@ to = "0624"
 from = "FE86"
 to = "0624"
 
-# Alef with hamza below
 [[pairs]]
 from = "FE87"
 to = "0625"
@@ -134,7 +2479,6 @@ to = "0625"
 from = "FE88"
 to = "0625"
 
-# Yeh with hamza above
 [[pairs]]
 from = "FE89"
 to = "0626"
@@ -151,7 +2495,6 @@ to = "0626"
 from = "FE8C"
 to = "0626"
 
-# Alef
 [[pairs]]
 from = "FE8D"
 to = "0627"
@@ -160,7 +2503,6 @@ to = "0627"
 from = "FE8E"
 to = "0627"
 
-# Beh
 [[pairs]]
 from = "FE8F"
 to = "0628"
@@ -177,7 +2519,6 @@ to = "0628"
 from = "FE92"
 to = "0628"
 
-# Teh marbuta
 [[pairs]]
 from = "FE93"
 to = "0629"
@@ -186,7 +2527,6 @@ to = "0629"
 from = "FE94"
 to = "0629"
 
-# Teh
 [[pairs]]
 from = "FE95"
 to = "062A"
@@ -203,7 +2543,6 @@ to = "062A"
 from = "FE98"
 to = "062A"
 
-# Theh
 [[pairs]]
 from = "FE99"
 to = "062B"
@@ -220,7 +2559,6 @@ to = "062B"
 from = "FE9C"
 to = "062B"
 
-# Jeem
 [[pairs]]
 from = "FE9D"
 to = "062C"
@@ -237,7 +2575,6 @@ to = "062C"
 from = "FEA0"
 to = "062C"
 
-# Hah
 [[pairs]]
 from = "FEA1"
 to = "062D"
@@ -254,7 +2591,6 @@ to = "062D"
 from = "FEA4"
 to = "062D"
 
-# Khah
 [[pairs]]
 from = "FEA5"
 to = "062E"
@@ -271,7 +2607,6 @@ to = "062E"
 from = "FEA8"
 to = "062E"
 
-# Dal
 [[pairs]]
 from = "FEA9"
 to = "062F"
@@ -280,7 +2615,6 @@ to = "062F"
 from = "FEAA"
 to = "062F"
 
-# Thal
 [[pairs]]
 from = "FEAB"
 to = "0630"
@@ -289,7 +2623,6 @@ to = "0630"
 from = "FEAC"
 to = "0630"
 
-# Reh
 [[pairs]]
 from = "FEAD"
 to = "0631"
@@ -298,7 +2631,6 @@ to = "0631"
 from = "FEAE"
 to = "0631"
 
-# Zain
 [[pairs]]
 from = "FEAF"
 to = "0632"
@@ -307,7 +2639,6 @@ to = "0632"
 from = "FEB0"
 to = "0632"
 
-# Seen
 [[pairs]]
 from = "FEB1"
 to = "0633"
@@ -324,7 +2655,6 @@ to = "0633"
 from = "FEB4"
 to = "0633"
 
-# Sheen
 [[pairs]]
 from = "FEB5"
 to = "0634"
@@ -341,7 +2671,6 @@ to = "0634"
 from = "FEB8"
 to = "0634"
 
-# Sad
 [[pairs]]
 from = "FEB9"
 to = "0635"
@@ -358,7 +2687,6 @@ to = "0635"
 from = "FEBC"
 to = "0635"
 
-# Dad
 [[pairs]]
 from = "FEBD"
 to = "0636"
@@ -375,7 +2703,6 @@ to = "0636"
 from = "FEC0"
 to = "0636"
 
-# Tah
 [[pairs]]
 from = "FEC1"
 to = "0637"
@@ -392,7 +2719,6 @@ to = "0637"
 from = "FEC4"
 to = "0637"
 
-# Zah
 [[pairs]]
 from = "FEC5"
 to = "0638"
@@ -409,7 +2735,6 @@ to = "0638"
 from = "FEC8"
 to = "0638"
 
-# Ain
 [[pairs]]
 from = "FEC9"
 to = "0639"
@@ -426,7 +2751,6 @@ to = "0639"
 from = "FECC"
 to = "0639"
 
-# Ghain
 [[pairs]]
 from = "FECD"
 to = "063A"
@@ -443,7 +2767,6 @@ to = "063A"
 from = "FED0"
 to = "063A"
 
-# Feh
 [[pairs]]
 from = "FED1"
 to = "0641"
@@ -460,7 +2783,6 @@ to = "0641"
 from = "FED4"
 to = "0641"
 
-# Qaf
 [[pairs]]
 from = "FED5"
 to = "0642"
@@ -477,7 +2799,6 @@ to = "0642"
 from = "FED8"
 to = "0642"
 
-# Kaf
 [[pairs]]
 from = "FED9"
 to = "0643"
@@ -494,7 +2815,6 @@ to = "0643"
 from = "FEDC"
 to = "0643"
 
-# Lam
 [[pairs]]
 from = "FEDD"
 to = "0644"
@@ -511,7 +2831,6 @@ to = "0644"
 from = "FEE0"
 to = "0644"
 
-# Meem
 [[pairs]]
 from = "FEE1"
 to = "0645"
@@ -528,7 +2847,6 @@ to = "0645"
 from = "FEE4"
 to = "0645"
 
-# Noon
 [[pairs]]
 from = "FEE5"
 to = "0646"
@@ -545,7 +2863,6 @@ to = "0646"
 from = "FEE8"
 to = "0646"
 
-# Heh
 [[pairs]]
 from = "FEE9"
 to = "0647"
@@ -562,7 +2879,6 @@ to = "0647"
 from = "FEEC"
 to = "0647"
 
-# Waw
 [[pairs]]
 from = "FEED"
 to = "0648"
@@ -571,7 +2887,6 @@ to = "0648"
 from = "FEEE"
 to = "0648"
 
-# Alef maksura
 [[pairs]]
 from = "FEEF"
 to = "0649"
@@ -580,7 +2895,6 @@ to = "0649"
 from = "FEF0"
 to = "0649"
 
-# Yeh
 [[pairs]]
 from = "FEF1"
 to = "064A"
@@ -597,7 +2911,6 @@ to = "064A"
 from = "FEF4"
 to = "064A"
 
-# Lam-Alef ligatures
 [[pairs]]
 from = "FEF5"
 to_seq = "0644 0622"
@@ -629,3 +2942,4 @@ to_seq = "0644 0627"
 [[pairs]]
 from = "FEFC"
 to_seq = "0644 0627"
+

@@ -372,8 +372,10 @@ fn shipped_enclosed_cjk_parenthesized_one() {
     let set = load_str(&text, "enclosed-cjk.toml".into()).unwrap();
     let mut map = UnicodeMap::builtin();
     map.merge_set(set).unwrap();
-    // ㈠ U+3220 → 一 U+4E00
-    assert_eq!(map.lookup_char('\u{3220}'), Some('\u{4E00}'));
+    // ㈠ U+3220 → (一) — full compatibility decomposition includes parens
+    let mut out = Vec::new();
+    assert!(map.lookup_into('\u{3220}', &mut out));
+    assert_eq!(out, vec!['(', '\u{4E00}', ')']);
 }
 
 #[test]
@@ -465,20 +467,25 @@ fn shipped_enclosed_supplement_parenthesized_a() {
     let set = load_str(&text, "enclosed-alphanumeric-supplement.toml".into()).unwrap();
     let mut map = UnicodeMap::builtin();
     map.merge_set(set).unwrap();
-    // 🄐 U+1F110 → A
-    assert_eq!(map.lookup_char('\u{1F110}'), Some('A'));
+    // 🄐 U+1F110 → (A) — full compatibility decomposition
+    let mut out = Vec::new();
+    assert!(map.lookup_into('\u{1F110}', &mut out));
+    assert_eq!(out, vec!['(', 'A', ')']);
 }
 
 #[test]
 fn shipped_enclosed_supplement_negative_circled_z() {
+    // Negative circled letters (1F150-1F169) do NOT have
+    // compatibility decompositions in Unicode — they are
+    // distinct symbols, not compatibility forms.
     let text =
         std::fs::read_to_string("etc/unicode-mappings/enclosed-alphanumeric-supplement.toml")
             .unwrap();
     let set = load_str(&text, "enclosed-alphanumeric-supplement.toml".into()).unwrap();
     let mut map = UnicodeMap::builtin();
     map.merge_set(set).unwrap();
-    // 🅩 U+1F169 → Z
-    assert_eq!(map.lookup_char('\u{1F169}'), Some('Z'));
+    // 🅩 U+1F169 has no mapping in the generated data
+    assert_eq!(map.lookup_char('\u{1F169}'), None);
 }
 
 // ── CJK Compat Ideographs Supplement ────────────────────────────────

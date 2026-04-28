@@ -1,26 +1,16 @@
 # Enclosed Alphanumeric Supplement
 #
 # Enclosed letters and digits in the Supplementary Multilingual Plane.
-# Includes negative circled, squared, and regional indicator symbols.
+# Includes parenthesized, squared, negative circled, and negative
+# squared Latin capital letters.
 #
-# Source: Unicode block U+1F100-U+1F1FF
+# Regional Indicator Symbols (1F1E6-1F1FF) are excluded — they
+# combine to form flag emoji and should not be decomposed.
+#
+# Source: Unicode block U+1F100-U+1F1FF (90 entries)
 # Reference: https://en.wikipedia.org/wiki/Enclosed_Alphanumeric_Supplement
-#
-# NOTE: Regional Indicator Symbols (1F1E6-1F1FF) are excluded —
-# they combine to form flag emoji and should not be decomposed.
-#
-# This file contains a representative subset. Generate the complete
-# mapping from UnicodeData.txt:
-#
-#   awk -F';' '$1 ~ /^1F1[0-9A-E]/ && $6 != "" {
-#     split($6, a, " "); target="";
-#     for (i in a) { if (a[i] !~ /^</) target = target " " a[i] }
-#     gsub(/^ /, "", target);
-#     if (target ~ / /)
-#       print "[[pairs]]\nfrom = \"" $1 "\"\nto_seq = \"" target "\"\n"
-#     else if (target != "")
-#       print "[[pairs]]\nfrom = \"" $1 "\"\nto = \"" target "\"\n"
-#   }' UnicodeData.txt
+# Generated from: UnicodeData.txt field 5 (compatibility decomposition)
+# Generator: bin/generate-toml.sh
 
 [metadata]
 type = "enclosed_alphanumeric_supplement"
@@ -28,83 +18,363 @@ description = "Enclosed Alphanumeric Supplement → plain letters/digits"
 direction = "narrowing"
 tags = ["ascii-normalize", "canonicalize"]
 
-# ── Digit comma/full stop variants (1F100-1F10A) ────────────────────
+[[pairs]]
+from = "1F10"
+to_seq = "03B5 0313"
 
-# 🄀 U+1F100 → 0.
+[[pairs]]
+from = "1F11"
+to_seq = "03B5 0314"
+
+[[pairs]]
+from = "1F12"
+to_seq = "1F10 0300"
+
+[[pairs]]
+from = "1F13"
+to_seq = "1F11 0300"
+
+[[pairs]]
+from = "1F14"
+to_seq = "1F10 0301"
+
+[[pairs]]
+from = "1F15"
+to_seq = "1F11 0301"
+
+[[pairs]]
+from = "1F18"
+to_seq = "0395 0313"
+
+[[pairs]]
+from = "1F19"
+to_seq = "0395 0314"
+
+[[pairs]]
+from = "1F1A"
+to_seq = "1F18 0300"
+
+[[pairs]]
+from = "1F1B"
+to_seq = "1F19 0300"
+
+[[pairs]]
+from = "1F1C"
+to_seq = "1F18 0301"
+
+[[pairs]]
+from = "1F1D"
+to_seq = "1F19 0301"
+
 [[pairs]]
 from = "1F100"
 to_seq = "0030 002E"
 
-# 🄁 U+1F101 → 0,
 [[pairs]]
 from = "1F101"
 to_seq = "0030 002C"
 
-# 🄂 U+1F102 → 1,
 [[pairs]]
 from = "1F102"
 to_seq = "0031 002C"
 
-# 🄃 U+1F103 → 2,
 [[pairs]]
 from = "1F103"
 to_seq = "0032 002C"
 
-# 🄄 U+1F104 → 3,
 [[pairs]]
 from = "1F104"
 to_seq = "0033 002C"
 
-# 🄅 U+1F105 → 4,
 [[pairs]]
 from = "1F105"
 to_seq = "0034 002C"
 
-# 🄆 U+1F106 → 5,
 [[pairs]]
 from = "1F106"
 to_seq = "0035 002C"
 
-# 🄇 U+1F107 → 6,
 [[pairs]]
 from = "1F107"
 to_seq = "0036 002C"
 
-# 🄈 U+1F108 → 7,
 [[pairs]]
 from = "1F108"
 to_seq = "0037 002C"
 
-# 🄉 U+1F109 → 8,
 [[pairs]]
 from = "1F109"
 to_seq = "0038 002C"
 
-# 🄊 U+1F10A → 9,
 [[pairs]]
 from = "1F10A"
 to_seq = "0039 002C"
 
-# ── Parenthesized Latin capital letters (1F110-1F129) → A-Z ─────────
-[[ranges]]
-from_start = "1F110"
-from_end = "1F129"
-to_start = "0041"
+[[pairs]]
+from = "1F110"
+to_seq = "0028 0041 0029"
 
-# ── Squared Latin capital letters (1F130-1F149) → A-Z ───────────────
-[[ranges]]
-from_start = "1F130"
-from_end = "1F149"
-to_start = "0041"
+[[pairs]]
+from = "1F111"
+to_seq = "0028 0042 0029"
 
-# ── Negative circled Latin capital letters (1F150-1F169) → A-Z ──────
-[[ranges]]
-from_start = "1F150"
-from_end = "1F169"
-to_start = "0041"
+[[pairs]]
+from = "1F112"
+to_seq = "0028 0043 0029"
 
-# ── Negative squared Latin capital letters (1F170-1F189) → A-Z ──────
-[[ranges]]
-from_start = "1F170"
-from_end = "1F189"
-to_start = "0041"
+[[pairs]]
+from = "1F113"
+to_seq = "0028 0044 0029"
+
+[[pairs]]
+from = "1F114"
+to_seq = "0028 0045 0029"
+
+[[pairs]]
+from = "1F115"
+to_seq = "0028 0046 0029"
+
+[[pairs]]
+from = "1F116"
+to_seq = "0028 0047 0029"
+
+[[pairs]]
+from = "1F117"
+to_seq = "0028 0048 0029"
+
+[[pairs]]
+from = "1F118"
+to_seq = "0028 0049 0029"
+
+[[pairs]]
+from = "1F119"
+to_seq = "0028 004A 0029"
+
+[[pairs]]
+from = "1F11A"
+to_seq = "0028 004B 0029"
+
+[[pairs]]
+from = "1F11B"
+to_seq = "0028 004C 0029"
+
+[[pairs]]
+from = "1F11C"
+to_seq = "0028 004D 0029"
+
+[[pairs]]
+from = "1F11D"
+to_seq = "0028 004E 0029"
+
+[[pairs]]
+from = "1F11E"
+to_seq = "0028 004F 0029"
+
+[[pairs]]
+from = "1F11F"
+to_seq = "0028 0050 0029"
+
+[[pairs]]
+from = "1F120"
+to_seq = "0028 0051 0029"
+
+[[pairs]]
+from = "1F121"
+to_seq = "0028 0052 0029"
+
+[[pairs]]
+from = "1F122"
+to_seq = "0028 0053 0029"
+
+[[pairs]]
+from = "1F123"
+to_seq = "0028 0054 0029"
+
+[[pairs]]
+from = "1F124"
+to_seq = "0028 0055 0029"
+
+[[pairs]]
+from = "1F125"
+to_seq = "0028 0056 0029"
+
+[[pairs]]
+from = "1F126"
+to_seq = "0028 0057 0029"
+
+[[pairs]]
+from = "1F127"
+to_seq = "0028 0058 0029"
+
+[[pairs]]
+from = "1F128"
+to_seq = "0028 0059 0029"
+
+[[pairs]]
+from = "1F129"
+to_seq = "0028 005A 0029"
+
+[[pairs]]
+from = "1F12A"
+to_seq = "3014 0053 3015"
+
+[[pairs]]
+from = "1F12B"
+to = "0043"
+
+[[pairs]]
+from = "1F12C"
+to = "0052"
+
+[[pairs]]
+from = "1F12D"
+to_seq = "0043 0044"
+
+[[pairs]]
+from = "1F12E"
+to_seq = "0057 005A"
+
+[[pairs]]
+from = "1F130"
+to = "0041"
+
+[[pairs]]
+from = "1F131"
+to = "0042"
+
+[[pairs]]
+from = "1F132"
+to = "0043"
+
+[[pairs]]
+from = "1F133"
+to = "0044"
+
+[[pairs]]
+from = "1F134"
+to = "0045"
+
+[[pairs]]
+from = "1F135"
+to = "0046"
+
+[[pairs]]
+from = "1F136"
+to = "0047"
+
+[[pairs]]
+from = "1F137"
+to = "0048"
+
+[[pairs]]
+from = "1F138"
+to = "0049"
+
+[[pairs]]
+from = "1F139"
+to = "004A"
+
+[[pairs]]
+from = "1F13A"
+to = "004B"
+
+[[pairs]]
+from = "1F13B"
+to = "004C"
+
+[[pairs]]
+from = "1F13C"
+to = "004D"
+
+[[pairs]]
+from = "1F13D"
+to = "004E"
+
+[[pairs]]
+from = "1F13E"
+to = "004F"
+
+[[pairs]]
+from = "1F13F"
+to = "0050"
+
+[[pairs]]
+from = "1F140"
+to = "0051"
+
+[[pairs]]
+from = "1F141"
+to = "0052"
+
+[[pairs]]
+from = "1F142"
+to = "0053"
+
+[[pairs]]
+from = "1F143"
+to = "0054"
+
+[[pairs]]
+from = "1F144"
+to = "0055"
+
+[[pairs]]
+from = "1F145"
+to = "0056"
+
+[[pairs]]
+from = "1F146"
+to = "0057"
+
+[[pairs]]
+from = "1F147"
+to = "0058"
+
+[[pairs]]
+from = "1F148"
+to = "0059"
+
+[[pairs]]
+from = "1F149"
+to = "005A"
+
+[[pairs]]
+from = "1F14A"
+to_seq = "0048 0056"
+
+[[pairs]]
+from = "1F14B"
+to_seq = "004D 0056"
+
+[[pairs]]
+from = "1F14C"
+to_seq = "0053 0044"
+
+[[pairs]]
+from = "1F14D"
+to_seq = "0053 0053"
+
+[[pairs]]
+from = "1F14E"
+to_seq = "0050 0050 0056"
+
+[[pairs]]
+from = "1F14F"
+to_seq = "0057 0043"
+
+[[pairs]]
+from = "1F16A"
+to_seq = "004D 0043"
+
+[[pairs]]
+from = "1F16B"
+to_seq = "004D 0044"
+
+[[pairs]]
+from = "1F16C"
+to_seq = "004D 0052"
+
+[[pairs]]
+from = "1F190"
+to_seq = "0044 004A"
+
