@@ -229,6 +229,7 @@ criterion_group!(
     bench_classifier,
     bench_filter_detail,
     bench_check_threats,
+    bench_unicode_normalize,
 );
 criterion_main!(benches);
 
@@ -433,6 +434,221 @@ fn bench_check_threats(c: &mut Criterion) {
             });
         },
     );
+
+    group.finish();
+}
+
+// --- Unicode normalization benchmarks ---
+
+/// Pure ASCII input — fast path should skip entirely.
+fn unicode_clean_ascii(size: usize) -> Vec<u8> {
+    (0..size).map(|i| b'A' + (i % 26) as u8).collect()
+}
+
+/// Input with ~20% fullwidth ASCII characters.
+fn unicode_fullwidth_mixed(size: usize) -> Vec<u8> {
+    let mut v = Vec::with_capacity(size);
+    let mut i = 0u32;
+    while v.len() < size {
+        if i % 5 == 0 {
+            // Fullwidth A (U+FF21) = 0xEF 0xBC 0xA1 in UTF-8
+            let cp = 0xFF21 + (i % 26);
+            let c = char::from_u32(cp).unwrap_or('Ａ');
+            let mut buf = [0u8; 3];
+            let s = c.encode_utf8(&mut buf);
+            if v.len() + s.len() <= size {
+                v.extend_from_slice(s.as_bytes());
+            }
+        } else {
+            v.push(b'A' + (i % 26) as u8);
+        }
+        i += 1;
+    }
+    v.truncate(size);
+    v
+}
+
+/// Input with ~20% math bold characters (4-byte UTF-8).
+fn unicode_math_bold_mixed(size: usize) -> Vec<u8> {
+    let mut v = Vec::with_capacity(size);
+    let mut i = 0u32;
+    while v.len() < size {
+        if i % 5 == 0 {
+            // Math bold A (U+1D400) = 0xF0 0x9D 0x90 0x80 in UTF-8
+            let cp = 0x1D400 + (i % 26);
+            let c = char::from_u32(cp).unwrap_or('\u{1D400}');
+            let mut buf = [0u8; 4];
+            let s = c.encode_utf8(&mut buf);
+            if v.len() + s.len() <= size {
+                v.extend_from_slice(s.as_bytes());
+            }
+        } else {
+            v.push(b'A' + (i % 26) as u8);
+        }
+        i += 1;
+    }
+    v.truncate(size);
+    v
+}
+
+/// Simulated real-world: cargo output with fullwidth homographs injected.
+fn unicode_real_world() -> Vec<u8> {
+    let mut v = Vec::new();
+    for _ in 0..50 {
+        // Normal cargo line
+        v.extend_from_slice(b"   Compiling memchr v2.7.1\n");
+        // Line with fullwidth homographs
+        v.extend_from_slice("   Ｃompiling ｆake-crate v０.１.０\n".as_bytes());
+    }
+    v
+}
+
+fn bench_unicode_normalize(c: &mut Criterion) {
+    use strip_ansi::unicode_map::UnicodeMap;
+
+    let mut group = c.benchmark_group("unicode_normalize");
+    let map = UnicodeMap::builtin();
+
+    // Fast path: pure ASCII (should be near-zero cost).
+    for size in [1024, 4096, 16384] {
+        let clean = unicode_clean_ascii(size);
+        group.throughput(Throughput::Bytes(size as u64));
+
+        group.bench_with_input(
+            BenchmarkId::new("clean_ascii", size),
+            &clean,
+            |b, input| {
+                b.iter(|| {
+                    let s = std::str::from_utf8(black_box(input)).unwrap();
+                    let mut out = Vec::with_capacity(input.len());
+                    let mut char_buf = Vec::new();
+                    for ch in s.chars() {
+                        char_buf.clear();
+                        if map.lookup_into(ch, &mut char_buf) {
+                            for &tc in &char_buf {
+                                let mut enc = [0u8; 4];
+                                out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes());
+                            }
+                        } else {
+                            let mut enc = [0u8; 4];
+                            out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+                        }
+                    }
+                    out
+                });
+            },
+        );
+    }
+
+    // Fullwidth mixed (~20% fullwidth, 3-byte UTF-8).
+    for size in [1024, 4096, 16384] {
+        let mixed = unicode_fullwidth_mixed(size);
+        group.throughput(Throughput::Bytes(mixed.len() as u64));
+
+        group.bench_with_input(
+            BenchmarkId::new("fullwidth_mixed", size),
+            &mixed,
+            |b, input| {
+                b.iter(|| {
+                    let s = std::str::from_utf8(black_box(input)).unwrap();
+                    let mut out = Vec::with_capacity(input.len());
+                    let mut char_buf = Vec::new();
+                    for ch in s.chars() {
+                        char_buf.clear();
+                        if map.lookup_into(ch, &mut char_buf) {
+                            for &tc in &char_buf {
+                                let mut enc = [0u8; 4];
+                                out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes());
+                            }
+                        } else {
+                            let mut enc = [0u8; 4];
+                            out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+                        }
+                    }
+                    out
+                });
+            },
+        );
+    }
+
+    // Math bold mixed (~20% math bold, 4-byte UTF-8).
+    let math = unicode_math_bold_mixed(4096);
+    group.throughput(Throughput::Bytes(math.len() as u64));
+    group.bench_with_input(
+        BenchmarkId::new("math_bold_mixed", math.len()),
+        &math,
+        |b, input| {
+            b.iter(|| {
+                let s = std::str::from_utf8(black_box(input)).unwrap();
+                let mut out = Vec::with_capacity(input.len());
+                let mut char_buf = Vec::new();
+                for ch in s.chars() {
+                    char_buf.clear();
+                    if map.lookup_into(ch, &mut char_buf) {
+                        for &tc in &char_buf {
+                            let mut enc = [0u8; 4];
+                            out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes());
+                        }
+                    } else {
+                        let mut enc = [0u8; 4];
+                        out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+                    }
+                }
+                out
+            });
+        },
+    );
+
+    // Real-world: cargo output with homographs.
+    let real = unicode_real_world();
+    group.throughput(Throughput::Bytes(real.len() as u64));
+    group.bench_with_input(
+        BenchmarkId::new("real_world_cargo", real.len()),
+        &real,
+        |b, input| {
+            b.iter(|| {
+                let s = std::str::from_utf8(black_box(input)).unwrap();
+                let mut out = Vec::with_capacity(input.len());
+                let mut char_buf = Vec::new();
+                for ch in s.chars() {
+                    char_buf.clear();
+                    if map.lookup_into(ch, &mut char_buf) {
+                        for &tc in &char_buf {
+                            let mut enc = [0u8; 4];
+                            out.extend_from_slice(tc.encode_utf8(&mut enc).as_bytes());
+                        }
+                    } else {
+                        let mut enc = [0u8; 4];
+                        out.extend_from_slice(ch.encode_utf8(&mut enc).as_bytes());
+                    }
+                }
+                out
+            });
+        },
+    );
+
+    // Lookup-only: measure just the map lookup cost per char.
+    let fullwidth_chars: Vec<char> = (0xFF01..=0xFF5Eu32)
+        .map(|cp| char::from_u32(cp).unwrap())
+        .collect();
+    group.bench_function("lookup_fullwidth_94", |b| {
+        b.iter(|| {
+            for &c in black_box(&fullwidth_chars) {
+                let _ = black_box(map.lookup_char(c));
+            }
+        });
+    });
+
+    let ascii_chars: Vec<char> = (0x20..=0x7Eu32)
+        .map(|cp| char::from_u32(cp).unwrap())
+        .collect();
+    group.bench_function("lookup_ascii_miss_95", |b| {
+        b.iter(|| {
+            for &c in black_box(&ascii_chars) {
+                let _ = black_box(map.lookup_char(c));
+            }
+        });
+    });
 
     group.finish();
 }
