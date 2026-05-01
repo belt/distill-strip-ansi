@@ -37,53 +37,35 @@ To propose a new built-in threat pattern:
 See `doc/SECURITY.md` for the threat model and
 `doc/CVE-MITIGATION.md` for the CVE matrix.
 
-## Project Structure
+## Local validation with act
 
-```text
-src/
-  parser.rs            1-byte ECMA-48 state machine
-  classifier.rs        12-byte ClassifyingParser (SeqDetail)
-  filter.rs            FilterConfig + FilterStream
-  preset.rs            Terminal presets (dumb..full)
-  detect.rs            Auto-detection (terminal-detect)
-  threat_db.rs         External threat database (toml-config)
-  toml_config.rs       TOML config loading (toml-config)
-  sgr_rewrite.rs       SGR param parser/rewriter (transform)
-  downgrade.rs         Color depth reduction (downgrade-color)
-  palette.rs           Palette transforms (color-palette)
-  unicode_map.rs       Unicode normalization (unicode-normalize)
-  transform_stream.rs  TransformStream (transform)
-  cli.rs               CLI argument definitions
-  main.rs              strip-ansi entry point
-  distill_ansi_main.rs distill-ansi entry point
-  strip.rs             Core strip functions
-  stream.rs            StripStream
-  writer.rs            StripWriter (std)
-  io.rs                Output buffering
-  lib.rs               Public API surface
+`act` can be useful for local workflow validation, but it is not a perfect replacement for GitHub-hosted runners.
 
-doc/
-  DESIGN.md                Architecture and data models
-  LIBRARY-USAGE.md         API examples by feature
-  SECURITY.md              Threat model and defenses
-  CVE-MITIGATION.md        CVE defense matrix
-  PRESETS.md               Preset reference and gradient
-  ANSI-REFERENCE.md        ECMA-48 sequence taxonomy
-  COLOR-TRANSFORMS.md      Color depth + palette transforms
-  UNICODE-NORMALIZATION.md Unicode normalization design
-  ECOSYSTEM.md             Crate comparison
-  CONTRIBUTING.md          This file
-  threat-db.toml           Reference threat database
+Best practice:
 
-tests/
-  integration_tests.rs          CLI end-to-end
-  property_classifier_tests.rs  Proptest: classifier
-  property_filter_tests.rs      Proptest: filter
-  property_preset_tests.rs      Proptest: presets
-  preset_unit_tests.rs          Preset unit tests
-  snapshot_tests.rs             Insta snapshots
-  ...
+- Run the Linux matrix entries locally with `act`.
+- Use a real GitHub token for actions that access the network or external actions.
+- Prefer non-root container execution to better emulate GitHub runner user behavior.
+- Do not treat `act` as authoritative for macOS or Windows workflows; those should be verified on GitHub-hosted runners.
+
+Example commands:
+
+```sh
+unset GITHUB_TOKEN
+act -s GITHUB_TOKEN="$(gh auth token)" --matrix "name:alpine (musl)" -P windows-latest=ubuntu:latest -P macos-latest=ubuntu:latest -j test
+act -s GITHUB_TOKEN="$(gh auth token)" --matrix "name:debian (glibc)" -P windows-latest=ubuntu:latest -P macos-latest=ubuntu:latest -j test
+act -s GITHUB_TOKEN="$(gh auth token)" --matrix "name:ubuntu (native)" -P windows-latest=ubuntu:latest -P macos-latest=ubuntu:latest -j test
 ```
+
+If you want better parity with GitHub Actions user permissions:
+
+```sh
+act -s GITHUB_TOKEN="$(gh auth token)" --container-options '--user=1000:1000' --matrix "name:debian (glibc)" -P windows-latest=ubuntu:latest -P macos-latest=ubuntu:latest -j test
+```
+
+`act` still runs workflow containers under Docker and may show root-owned paths such as `/root/.cargo/bin`. That is an `act`-specific behavior and not a reason to assume GitHub-hosted runners use root.
+
+For architecture, design, and module responsibilities, link to the source-of-truth rather than duplicating it here: see `doc/DESIGN.md`.
 
 ## Testing
 
