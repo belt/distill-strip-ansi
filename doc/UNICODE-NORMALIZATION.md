@@ -303,33 +303,22 @@ defaults.
 
 Subtractive. Applies to both builtins and TOML-loaded sets.
 
-Removing `@security`-tagged builtins requires `--unsafe`:
-
-```
---unsafe --no-unicode-map @security
---unsafe --no-unicode-map fullwidth-ascii
---unsafe --no-unicode-map math-latin-bold
-```
-
-Without `--unsafe`, attempting to remove a security-tagged
-mapping exits with an error explaining the risk.
-
 ### Examples
 
 ```sh
 # Default: @ascii-normalize builtins on
 distill-ansi
 
-# Disable security subset (requires --unsafe)
-distill-ansi --unsafe --no-unicode-map @security
+# Disable security subset
+distill-ansi --no-unicode-map @security
 
 # Disable all defaults
 distill-ansi --no-unicode-map @ascii-normalize
 
-# Disable one specific security builtin (requires --unsafe)
-distill-ansi --unsafe --no-unicode-map fullwidth-ascii
+# Disable one specific builtin
+distill-ansi --no-unicode-map fullwidth-ascii
 
-# Disable one non-security builtin (no --unsafe needed)
+# Disable one non-security builtin
 distill-ansi --no-unicode-map superscript-subscript
 
 # Defaults + Japanese canonicalization

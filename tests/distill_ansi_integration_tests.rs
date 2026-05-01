@@ -80,21 +80,9 @@ fn fixture_unicode_normalize() {
 // ── --no-unicode-map disables builtins ──────────────────────────────
 
 #[test]
-fn no_unicode_map_ascii_normalize_without_unsafe_fails() {
-    // @ascii-normalize includes @security builtins, so --unsafe is required
-    let mut c = cmd();
-    c.arg("--no-unicode-map").arg("@ascii-normalize");
-    c.write_stdin("test\n");
-    c.assert().failure().code(2);
-}
-
-#[test]
 fn no_unicode_map_ascii_normalize_disables_all_builtins() {
     let mut c = cmd();
-    // @ascii-normalize includes @security, so --unsafe is required
-    c.arg("--unsafe")
-        .arg("--no-unicode-map")
-        .arg("@ascii-normalize");
+    c.arg("--no-unicode-map").arg("@ascii-normalize");
     c.write_stdin("Ａdmin\n");
     // Fullwidth A should pass through unchanged
     c.assert().success().stdout("Ａdmin\n");
@@ -118,46 +106,12 @@ fn no_unicode_map_non_security_no_unsafe_needed() {
     c.assert().success().stdout("Ⓣⓔⓢⓣ\n");
 }
 
-// ── --unsafe gate ───────────────────────────────────────────────────
+// ── --no-unicode-map @security (no --unsafe needed) ─────────────────
 
 #[test]
-fn no_unicode_map_security_without_unsafe_fails() {
+fn no_unicode_map_security_disables_security_builtins() {
     let mut c = cmd();
     c.arg("--no-unicode-map").arg("@security");
-    c.write_stdin("test\n");
-    c.assert().failure().code(2);
-}
-
-#[test]
-fn no_unicode_map_fullwidth_ascii_without_unsafe_fails() {
-    let mut c = cmd();
-    c.arg("--no-unicode-map").arg("fullwidth-ascii");
-    c.write_stdin("test\n");
-    c.assert().failure().code(2);
-}
-
-#[test]
-fn no_unicode_map_math_latin_bold_without_unsafe_fails() {
-    let mut c = cmd();
-    c.arg("--no-unicode-map").arg("math-latin-bold");
-    c.write_stdin("test\n");
-    c.assert().failure().code(2);
-}
-
-#[test]
-fn no_unicode_map_latin_ligatures_without_unsafe_fails() {
-    let mut c = cmd();
-    c.arg("--no-unicode-map").arg("latin-ligatures");
-    c.write_stdin("test\n");
-    c.assert().failure().code(2);
-}
-
-#[test]
-fn no_unicode_map_security_with_unsafe_succeeds() {
-    let mut c = cmd();
-    c.arg("--unsafe")
-        .arg("--no-unicode-map")
-        .arg("@security");
     c.write_stdin("Ａdmin\n");
     // Fullwidth A passes through (security disabled)
     // But circled letters still normalize (non-security builtin)
@@ -165,13 +119,27 @@ fn no_unicode_map_security_with_unsafe_succeeds() {
 }
 
 #[test]
-fn no_unicode_map_fullwidth_ascii_with_unsafe_succeeds() {
+fn no_unicode_map_fullwidth_ascii_no_unsafe_needed() {
     let mut c = cmd();
-    c.arg("--unsafe")
-        .arg("--no-unicode-map")
-        .arg("fullwidth-ascii");
+    c.arg("--no-unicode-map").arg("fullwidth-ascii");
     c.write_stdin("Ａ\n");
     c.assert().success().stdout("Ａ\n");
+}
+
+#[test]
+fn no_unicode_map_math_latin_bold_no_unsafe_needed() {
+    let mut c = cmd();
+    c.arg("--no-unicode-map").arg("math-latin-bold");
+    c.write_stdin("𝐇𝐞𝐥𝐥𝐨\n");
+    c.assert().success().stdout("𝐇𝐞𝐥𝐥𝐨\n");
+}
+
+#[test]
+fn no_unicode_map_latin_ligatures_no_unsafe_needed() {
+    let mut c = cmd();
+    c.arg("--no-unicode-map").arg("latin-ligatures");
+    c.write_stdin("ﬁle\n");
+    c.assert().success().stdout("ﬁle\n");
 }
 
 // ── --unicode-map adds TOML files ───────────────────────────────────

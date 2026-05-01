@@ -77,11 +77,9 @@ struct Args {
     #[arg(long = "no-unicode-map", value_name = "SPEC")]
     no_unicode_map: Vec<String>,
 
-    /// Allow removing security-tagged Unicode mappings.
+    /// Allow presets that preserve dangerous ANSI sequences (xterm, full).
     ///
-    /// Required for --no-unicode-map @security or individual
-    /// security builtins (fullwidth-ascii, math-latin-bold,
-    /// latin-ligatures).
+    /// Required for pen-testing and terminal development.
     #[arg(long, hide_short_help = true)]
     r#unsafe: bool,
 }
@@ -437,21 +435,17 @@ fn resolve_tag(tag: &str) -> Vec<&'static str> {
     }
 }
 
-/// Security-tagged builtin set names.
-#[cfg(feature = "unicode-normalize")]
-const SECURITY_BUILTINS: &[&str] = &[
-    "fullwidth_ascii",
-    "math_latin_bold",
-    "latin_ligatures",
-];
-
 /// Resolve a `--no-unicode-map` spec to builtin type_names to remove.
 /// For `@security`, returns the security builtins.
 /// For `@ascii-normalize`, returns all builtin type_names.
 #[cfg(feature = "unicode-normalize")]
 fn resolve_remove_builtins(spec: &str) -> Vec<&'static str> {
     match spec {
-        "@security" => SECURITY_BUILTINS.to_vec(),
+        "@security" => vec![
+            "fullwidth_ascii",
+            "math_latin_bold",
+            "latin_ligatures",
+        ],
         "@ascii-normalize" => vec![
             "fullwidth_ascii",
             "math_latin_bold",
@@ -486,16 +480,6 @@ fn resolve_remove_builtins(spec: &str) -> Vec<&'static str> {
     }
 }
 
-/// Check if a `--no-unicode-map` spec targets any security-tagged builtins.
-#[cfg(feature = "unicode-normalize")]
-fn targets_security(spec: &str) -> bool {
-    if spec == "@security" || spec == "@ascii-normalize" {
-        return true;
-    }
-    let type_name = spec.replace('-', "_");
-    SECURITY_BUILTINS.contains(&type_name.as_str())
-}
-
 /// Build the UnicodeMap from CLI args.
 ///
 /// Returns `Ok(Some(map))` when normalization is active,
@@ -503,17 +487,6 @@ fn targets_security(spec: &str) -> bool {
 /// `Err(ExitCode)` on validation errors.
 #[cfg(feature = "unicode-normalize")]
 fn build_unicode_map(args: &Args) -> Result<Option<UnicodeMap>, ExitCode> {
-    // Check --unsafe gate for security removals.
-    for spec in &args.no_unicode_map {
-        if targets_security(spec) && !args.r#unsafe {
-            eprintln!(
-                "distill-ansi: --no-unicode-map {spec} removes security mappings. \
-                 Add --unsafe to acknowledge the risk."
-            );
-            return Err(ExitCode::from(2));
-        }
-    }
-
     // Start with builtins.
     let mut map = UnicodeMap::builtin();
 

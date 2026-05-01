@@ -111,10 +111,12 @@ Latin ligatures (ﬀ, ﬁ, ﬂ, ﬃ, ﬄ, ﬅ, ﬆ) are common in
 copy-paste from PDFs. `ﬁle` does not match `file` in any
 text search tool.
 
-Removing security-tagged builtins requires `--unsafe`:
+Removing security-tagged builtins is permitted without `--unsafe`
+— homoglyphs are a human-factors risk, not a machine-exploitable
+attack. The `--unsafe` flag is reserved for ANSI echoback vectors.
 
 ```sh
-distill-ansi --unsafe --no-unicode-map @security
+distill-ansi --no-unicode-map @security
 ```
 
 Additional canonicalization mappings (CJK, Japanese, Korean,
