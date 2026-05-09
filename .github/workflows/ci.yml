@@ -532,6 +532,9 @@ jobs:
         uses: taiki-e/install-action@3fa6878dc4ae603f73960271565a082bf196ab96  # v2.77.2
         with:
           tool: cargo-auditable
+      - name: Ensure cargo-auditable (Alpine cache fallback)
+        if: matrix.container == 'rust:alpine'
+        run: command -v cargo-auditable || cargo install cargo-auditable --locked
       - name: Cargo Build Release (with auditable dep-tree embedded)
         shell: sh
         # `cargo auditable build` is a thin wrapper: it builds via cargo
