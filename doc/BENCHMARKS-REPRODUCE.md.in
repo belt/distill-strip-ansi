@@ -138,7 +138,7 @@ The generator drives five criterion suites by default:
 - `cargo bench --bench internals` — library internals:
   strip, stream, classifier, filter, threats, transforms,
   augments, unicode normalize
-- `cargo bench -p ecosystem-bench --bench {distill,fast_strip,console_bench,strip_escapes}`
+- `cargo bench -p ecosystem-bench --bench {distill,fast_strip,console_bench,strip_escapes,vtparse}`
 
 With `--features iai-callgrind`, the run set swaps to the
 `*_iai` parallel targets under Valgrind/Callgrind — same

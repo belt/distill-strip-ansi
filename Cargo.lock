@@ -376,6 +376,7 @@ dependencies = [
  "fast-strip-ansi",
  "iai-callgrind",
  "strip-ansi-escapes",
+ "vtparse",
 ]
 
 [[package]]
@@ -1198,6 +1199,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "231fdcd7ef3037e8330d8e17e61011a2c244126acc0a982f4040ac3f9f0bc077"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "vtparse"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1726b5dabcf18909219a11c1ae3b85fff931b6e5ccf7321d998fc7665f52661b"
+dependencies = [
+ "utf8parse",
 ]
 
 [[package]]

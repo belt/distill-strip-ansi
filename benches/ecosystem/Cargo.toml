@@ -41,6 +41,10 @@ harness = false
 name = "strip_escapes"
 harness = false
 
+[[bench]]
+name = "vtparse"
+harness = false
+
 # ── iai-callgrind variants (instruction counts, host-independent) ──
 
 [[bench]]
@@ -63,11 +67,17 @@ name = "strip_escapes_iai"
 harness = false
 required-features = ["iai-callgrind"]
 
+[[bench]]
+name = "vtparse_iai"
+harness = false
+required-features = ["iai-callgrind"]
+
 [dependencies]
 distill-bench-harness = { path = "../harness" }
 strip-ansi = { package = "distill-strip-ansi", path = "../..", features = ["filter"] }
 fast-strip-ansi = "0.13"
 strip-ansi-escapes = "0.2"
 console = "0.16"
+vtparse = "0.7"
 criterion = { version = "0.7", features = ["html_reports"] }
 iai-callgrind = "0.16.1"

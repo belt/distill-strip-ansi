@@ -7,8 +7,9 @@ strategy. Results themselves live in `doc/BENCHMARKS.md`.
 
 ## iai-callgrind Status
 
-Instruction-count data is present in `target/iai/` — `doc/BENCHMARKS.md`
-includes `Ir/MiB` columns where applicable.
+No iai-callgrind data yet. Run `mise x bench:callgrind` (requires
+`valgrind`) to add instruction-count columns to the results doc on the
+next regenerate.
 
 ## Test Data Strategy
 
@@ -129,7 +130,7 @@ summaries alongside the criterion output.
 ## Direct Invocations
 
 ```bash
-# Default run: up to 2×L3 cache (~10m51s)
+# Default run: up to 2×L3 cache (~9m35s)
 ./bin/generate-benchmarks-md.py
 
 # Faster iteration (less statistical power — do NOT publish):
@@ -156,7 +157,7 @@ The generator drives five criterion suites by default:
 - `cargo bench --bench internals` — library internals:
   strip, stream, classifier, filter, threats, transforms,
   augments, unicode normalize
-- `cargo bench -p ecosystem-bench --bench {distill,fast_strip,console_bench,strip_escapes}`
+- `cargo bench -p ecosystem-bench --bench {distill,fast_strip,console_bench,strip_escapes,vtparse}`
 
 With `--features iai-callgrind`, the run set swaps to the
 `*_iai` parallel targets under Valgrind/Callgrind — same

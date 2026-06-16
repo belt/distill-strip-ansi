@@ -25,10 +25,12 @@ Unicode normalization are unique to this crate; see
 | `distill-*`    | 1B ECMA48 | 1B     | yes    | yes |   464 |
 | `fast-strip-*` | `vt-push` | stream | no     | no  |   415 |
 | `console`      | regex     | no     | no     | no  |   192 |
+| `vtparse`      | DEC FSM   | byte   | yes    | no  |    —  |
 | `strip-ansi-*` | `vte`     | Writer | no     | no  |    63 |
 
 MiB/s at 4 KiB dirty (~20% ANSI). See [BENCHMARKS.md](BENCHMARKS.md)
-for scaling, clean-path, and resource data.
+for scaling, clean-path, and resource data. The `vtparse` row is
+populated on the next `./bin/generate-benchmarks-md.py` run.
 
 ## What Each Crate Actually Does
 
@@ -61,6 +63,23 @@ other dependencies. Not a stripping specialist.
 
 Good choice when: you already use `console` for terminal styling
 and need occasional stripping as a side feature.
+
+### vtparse (~8.8M total downloads)
+
+WezTerm's low-level DEC ANSI state machine. `no_std`-capable, the
+sibling of `vte`. There's no built-in stripping function — you
+implement `VTActor` and decide what each parsed event means. The
+ecosystem bench wires up a minimal stripper: retain `print` chars
+(re-encoded UTF-8) and `execute_c0_or_c1` controls, drop CSI/OSC/
+DCS/ESC/APC/SOS/PM. Useful when you need an event-driven parser
+for terminal-emulator work; overkill for plain stripping. Note
+that vtparse normalises non-UTF-8 bytes to U+FFFD via `print` —
+the other crates here are byte-preserving.
+
+Good choice when: you're building terminal-emulator-grade
+sequence handling (e.g. extracting OSC 8 hyperlinks, classifying
+DCS sequences) and need full state-machine semantics, not just
+removal.
 
 ### distill-strip-ansi (this crate)
 

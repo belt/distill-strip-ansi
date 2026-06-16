@@ -218,11 +218,12 @@ CRATES = [
     ("fast_strip",          "fast-strip-ansi",     "`fast-strip-ansi`"),
     ("console",             "console",             "`console`"),
     ("strip_ansi_escapes",  "strip-ansi-escapes",  "`strip-ansi-escapes`"),
+    ("vtparse",             "vtparse",             "`vtparse`"),
 ]
 
 CRATE_METADATA_NAMES = [
     "distill-strip-ansi", "fast-strip-ansi", "console",
-    "strip-ansi-escapes", "criterion",
+    "strip-ansi-escapes", "vtparse", "criterion",
 ]
 
 
@@ -381,6 +382,7 @@ IAI_ECO_BENCHES: dict[str, tuple[str, str, str]] = {
     "fast_strip":         ("ecosystem-bench", "fast_strip_iai",    "fast_strip"),
     "console":            ("ecosystem-bench", "console_iai",       "console_strip"),
     "strip_ansi_escapes": ("ecosystem-bench", "strip_escapes_iai", "strip_escapes"),
+    "vtparse":            ("ecosystem-bench", "vtparse_iai",       "vtparse_strip"),
 }
 
 
@@ -1728,6 +1730,7 @@ ECOSYSTEM_BENCH_CMDS = [
     ["cargo", "bench", "-p", "ecosystem-bench", "--bench", "fast_strip"],
     ["cargo", "bench", "-p", "ecosystem-bench", "--bench", "console_bench"],
     ["cargo", "bench", "-p", "ecosystem-bench", "--bench", "strip_escapes"],
+    ["cargo", "bench", "-p", "ecosystem-bench", "--bench", "vtparse"],
 ]
 
 # iai-callgrind variants — parallel list, run only when the
@@ -1747,6 +1750,8 @@ IAI_ECOSYSTEM_BENCH_CMDS = [
      "--bench", "console_iai"],
     ["cargo", "bench", "-p", "ecosystem-bench", "--features", "iai-callgrind",
      "--bench", "strip_escapes_iai"],
+    ["cargo", "bench", "-p", "ecosystem-bench", "--features", "iai-callgrind",
+     "--bench", "vtparse_iai"],
 ]
 
 OUTPUT_FILE = Path("doc/BENCHMARKS.md")
