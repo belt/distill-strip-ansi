@@ -69,7 +69,7 @@ jobs:
           apk add -q --virtual .warmup-deps git build-base musl-dev perl \
             pkgconfig openssl-dev openssl-libs-static
           rustup component add rustfmt clippy llvm-tools-preview
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Warm Cargo Tools (Deny + Tarpaulin + Auditable)
         if: ${{ steps.cache-master.outputs.cache-hit != 'true' && env.ACT != 'true' }}
         env:
@@ -120,7 +120,7 @@ jobs:
             .cargo-deny-cache
           key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
           fail-on-cache-miss: ${{ env.ACT != 'true' }}
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 1
       - run: cargo fmt --all --quiet -- --check
@@ -176,7 +176,7 @@ jobs:
             .cargo-deny-cache
           key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
           fail-on-cache-miss: ${{ env.ACT != 'true' }}
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 1
       - uses: EmbarkStudios/cargo-deny-action@91bf2b620e09e18d6eb78b92e7861937469acedb  # v2.0.17
@@ -216,7 +216,7 @@ jobs:
             .cargo-deny-cache
           key: ${{ runner.os }}-master-env-${{ steps.buster.outputs.week }}
           fail-on-cache-miss: ${{ env.ACT != 'true' }}
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 1
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4  # v2.9.1
@@ -258,7 +258,7 @@ jobs:
             ${{ runner.os }}-master-env-
       - name: Alpine CI Bootstrap (Speed Suite + Git)
         run: apk add -q --virtual .ci-deps git build-base musl-dev
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 1
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4  # v2.9.1
@@ -344,7 +344,7 @@ jobs:
           apt-get update -qq
           apt-get install -y git gcc g++
           cc --version
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         if: ${{ !matrix.skip_local || env.ACT != 'true' }}
         with:
           fetch-depth: 1
@@ -405,7 +405,7 @@ jobs:
         run: |
           apk add -q --virtual .ci-deps git build-base musl-dev perl pkgconfig openssl-dev openssl-libs-static
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 0
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4  # v2.9.1
@@ -508,7 +508,7 @@ jobs:
           apt-get update -qq
           apt-get install -y git gcc g++
           cc --version
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         if: ${{ !matrix.skip_local || env.ACT != 'true' }}
         with:
           fetch-depth: 1
