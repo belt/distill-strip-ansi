@@ -346,12 +346,16 @@ distill-ansi --unicode-map @all --no-unicode-map @widening
 
 ```toml
 [features]
-unicode-normalize = ["transform"]
+unicode-normalize = []
 ```
 
-The `unicode-normalize` feature enables the built-in mapping
-table and the transform logic. No new dependencies. Built-in
-mappings are active by default when the feature is compiled in.
+The `unicode-normalize` feature is self-contained: it enables
+the built-in mapping table and lookup logic, with no dependency
+on `transform`, `downgrade-color`, or `augment-color`. Homograph
+normalization operates on decoded text, not SGR/color sequences,
+so it has no code-level need for the color-transform pipeline.
+No new dependencies. Built-in mappings are active by default
+when the feature is compiled in.
 
 TOML file loading reuses the existing `toml-config` feature
 (which provides `serde` + `toml`). When `unicode-normalize`
