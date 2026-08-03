@@ -1,7 +1,7 @@
 # distill-strip-ansi
 
-Strip ANSI escape sequences from byte streams — fast,
-correct, and security-aware.
+Strip ANSI escape sequences from byte streams fast,
+correct, and security-aware. Make streams readable.
 
 ## What It Does
 
@@ -15,14 +15,14 @@ SS2/SS3, Fe, and CAN/SUB abort.
 - zero `unsafe`, `no_std`, fast
 - SIMD-accelerated scanning via `memchr`
 - Zero-alloc fast path on clean input (`Cow::Borrowed`)
-- Streaming with 1 byte of cross-chunk state
+- Streaming with only 1 byte of cross-chunk state needed (fast)
 - Selective filtering by sequence group, sub-kind,
   SGR color depth, and OSC type
 - Color transforms: truecolor → 256 → 16 → greyscale → mono
   - tritanopia simulation for dichromats
   - extended-gamut for tetrachromats
-  - legacy terminal support (without the garbage)
-  - e-ink displays (without the garbage)
+  - legacy terminal support (without seeing unsupported garbage)
+  - e-ink displays (without seeing unsupported garbage)
 - Unicode homograph normalization (fullwidth, math bold,
   circled letters, superscripts — security hardening)
 - Security-aware: auto-detect caps at `sanitize`,
@@ -48,8 +48,8 @@ Color transforms and Unicode normalization live in the
 
 ## Performance
 
-1.1× faster than `fast-strip-ansi`, 2.4× faster than `console`,
-7.4× faster than `strip-ansi-escapes` on authors hardware.
+1.3× faster than `fast-strip-ansi`, 3.2× faster than `console`,
+12.7× faster than `strip-ansi-escapes` on authors hardware.
 Clean input returns `Cow::Borrowed` pure `memchr` SIMD scan, zero allocation.
 O(n) linear scaling across all input sizes.
 
@@ -183,14 +183,14 @@ See [doc/DESIGN.md](doc/DESIGN.md) for the architecture and
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.6", default-features = false, features = ["std"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.7", default-features = false, features = ["std"] }
 ```
 
 For `no_std` (requires `alloc`):
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.6", default-features = false }
+strip-ansi = { package = "distill-strip-ansi", version = "0.7", default-features = false }
 ```
 
 ## Feature Flags

@@ -129,7 +129,7 @@ summaries alongside the criterion output.
 ## Direct Invocations
 
 ```bash
-# Default run: up to 2×L3 cache (~10m51s)
+# Default run: up to 2×L3 cache (~9m26s)
 ./bin/generate-benchmarks-md.py
 
 # Faster iteration (less statistical power — do NOT publish):
