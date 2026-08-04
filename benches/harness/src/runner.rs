@@ -4,6 +4,7 @@
 use criterion::{BenchmarkId, Criterion, Throughput};
 use std::collections::HashSet;
 use std::hint::black_box;
+use std::time::Instant;
 
 use crate::{
     BenchConfig, CacheInfo, CapturePoint, FlushParams, InputSource, ResourceTracker, clean_input,
@@ -30,6 +31,14 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
     let config = BenchConfig::from_env(default_max);
     let sizes = cache.build_sizes(config.max_size);
     let tracker = ResourceTracker::new();
+    // Wall-clock reference for this bench binary's run. Printed via plain
+    // eprintln! (unconditional, one line per event) so it survives being
+    // redirected/piped — unlike criterion's own progress lines, which use
+    // print_overwritable and collapse to a single carriage-return-updated
+    // line on a real TTY. This is what actually proves elapsed real time
+    // per benchmark ID, as opposed to criterion's pre-measurement estimate
+    // (itself derived from a possibly noisy warmup, see config.rs).
+    let bench_start = Instant::now();
 
     eprintln!(
         "[{}] Cache: L1d={}  L2={}  L3={}  RAM={}",
@@ -50,7 +59,6 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
     );
 
     let mut group = c.benchmark_group("ecosystem");
-    config.apply(&mut group);
 
     // ── Dirty: all sizes (fixture-bucketed) ─────────────────────
     let mut seen_ids: HashSet<(String, usize)> = HashSet::new();
@@ -95,6 +103,9 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
             meta.verbose_display(),
         );
 
+        config.apply_tiered(&mut group, || {
+            black_box((bench.strip_fn)(black_box(&input)));
+        });
         group.throughput(Throughput::Bytes(actual_size as u64));
 
         let point = CapturePoint {
@@ -103,9 +114,26 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
         };
         tracker.before(point);
 
+        let bench_id_str = format!("{label}/{actual_size}");
+        eprintln!(
+            "[{}] t+{:>8.3}s  START {}",
+            bench.crate_name,
+            bench_start.elapsed().as_secs_f64(),
+            bench_id_str,
+        );
+        let iter_start = Instant::now();
+
         group.bench_with_input(BenchmarkId::new(&label, actual_size), &input, |b, inp| {
             b.iter(|| (bench.strip_fn)(black_box(inp)));
         });
+
+        eprintln!(
+            "[{}] t+{:>8.3}s  DONE  {} ({:.3}s wall)",
+            bench.crate_name,
+            bench_start.elapsed().as_secs_f64(),
+            bench_id_str,
+            iter_start.elapsed().as_secs_f64(),
+        );
 
         let point = CapturePoint {
             crate_name: bench.crate_name,
@@ -118,7 +146,19 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
     let clean_sizes = build_clean_sizes(&cache, config.max_size);
     for &size in &clean_sizes {
         let input = clean_input(size);
+        config.apply_tiered(&mut group, || {
+            black_box((bench.strip_fn)(black_box(&input)));
+        });
         group.throughput(Throughput::Bytes(size as u64));
+
+        let bench_id_str = format!("{}_clean/{}", bench.bench_id, size);
+        eprintln!(
+            "[{}] t+{:>8.3}s  START {}",
+            bench.crate_name,
+            bench_start.elapsed().as_secs_f64(),
+            bench_id_str,
+        );
+        let iter_start = Instant::now();
 
         group.bench_with_input(
             BenchmarkId::new(format!("{}_clean", bench.bench_id), size),
@@ -127,14 +167,28 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
                 b.iter(|| (bench.strip_fn)(black_box(inp)));
             },
         );
+
+        eprintln!(
+            "[{}] t+{:>8.3}s  DONE  {} ({:.3}s wall)",
+            bench.crate_name,
+            bench_start.elapsed().as_secs_f64(),
+            bench_id_str,
+            iter_start.elapsed().as_secs_f64(),
+        );
     }
 
     // ── Real-world fixtures ─────────────────────────────────────
+    let fixture_ctx = FixtureBenchCtx {
+        tracker: &tracker,
+        config: &config,
+        bench,
+        bench_start,
+    };
     if let Some(cargo) = load_fixture("cargo-test.raw.txt") {
-        bench_fixture(&mut group, &tracker, bench, &cargo, "cargo");
+        bench_fixture(&mut group, &fixture_ctx, &cargo, "cargo");
     }
     if let Some(osc8) = load_fixture("brew-upgrade.raw.txt") {
-        bench_fixture(&mut group, &tracker, bench, &osc8, "osc8");
+        bench_fixture(&mut group, &fixture_ctx, &osc8, "osc8");
     }
 
     group.finish();
@@ -146,35 +200,67 @@ pub fn run_strip_bench(c: &mut Criterion, bench: &StripBench) {
     });
 }
 
+/// Shared, per-run context for `bench_fixture` calls — everything that's
+/// constant across every real-world fixture benched in one
+/// `run_strip_bench` call. Bundled into a struct (rather than passed as
+/// separate parameters) to keep `bench_fixture` under clippy's
+/// `too_many_arguments` threshold and because these values genuinely
+/// travel together as one "benchmark session" concept.
+struct FixtureBenchCtx<'a> {
+    tracker: &'a ResourceTracker,
+    config: &'a BenchConfig,
+    bench: &'a StripBench,
+    bench_start: Instant,
+}
+
 fn bench_fixture(
     group: &mut criterion::BenchmarkGroup<'_, criterion::measurement::WallTime>,
-    tracker: &ResourceTracker,
-    bench: &StripBench,
+    ctx: &FixtureBenchCtx<'_>,
     input: &[u8],
     label: &str,
 ) {
     let size = input.len();
+    ctx.config.apply_tiered(group, || {
+        black_box((ctx.bench.strip_fn)(black_box(input)));
+    });
     group.throughput(Throughput::Bytes(size as u64));
 
     let point = CapturePoint {
-        crate_name: bench.crate_name,
+        crate_name: ctx.bench.crate_name,
         size,
     };
-    tracker.before(point);
+    ctx.tracker.before(point);
+
+    let bench_id_str = format!("{}_{}/{}", ctx.bench.bench_id, label, size);
+    eprintln!(
+        "[{}] t+{:>8.3}s  START {}",
+        ctx.bench.crate_name,
+        ctx.bench_start.elapsed().as_secs_f64(),
+        bench_id_str,
+    );
+    let iter_start = Instant::now();
 
     group.bench_with_input(
-        BenchmarkId::new(format!("{}_{}", bench.bench_id, label), size),
+        BenchmarkId::new(format!("{}_{}", ctx.bench.bench_id, label), size),
         input,
         |b, inp| {
-            b.iter(|| (bench.strip_fn)(black_box(inp)));
+            b.iter(|| (ctx.bench.strip_fn)(black_box(inp)));
         },
     );
 
+    eprintln!(
+        "[{}] t+{:>8.3}s  DONE  {} ({:.3}s wall)",
+        ctx.bench.crate_name,
+        ctx.bench_start.elapsed().as_secs_f64(),
+        bench_id_str,
+        iter_start.elapsed().as_secs_f64(),
+    );
+
     let point = CapturePoint {
-        crate_name: bench.crate_name,
+        crate_name: ctx.bench.crate_name,
         size,
     };
-    tracker.after(point);
+    ctx.tracker.after(point);
 }
 
 fn build_clean_sizes(cache: &CacheInfo, max_size: usize) -> Vec<usize> {
