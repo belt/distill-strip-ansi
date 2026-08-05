@@ -27,11 +27,12 @@ import math
 import os
 import platform
 import re
+import shutil
 import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 # Table width cap for the md_table → _md_list fallback. 80 is the
@@ -1868,6 +1869,26 @@ def main() -> None:
         # and readers get both throughput and Ir/MiB for the same
         # session.
         iai_mode = "iai-callgrind" in features
+        if iai_mode and shutil.which("valgrind") is None:
+            # Fail fast, before spending ~9 minutes on the criterion
+            # pass: iai-callgrind's own runner errors per-bench
+            # ("cannot find binary path: 'valgrind'"), but that
+            # failure only surfaces after the full criterion run set
+            # (BENCH_CMD + ECOSYSTEM_BENCH_CMDS) has already executed,
+            # since the two run sets are independent and iai_mode only
+            # appends to run_set rather than gating it. Checking here
+            # instead of discovering it 5 identical failures deep in
+            # target/iai/run.log.
+            print(
+                "error: --features iai-callgrind requires 'valgrind' on "
+                "PATH, but it was not found.\n"
+                "Install it (e.g. `apt install valgrind`, "
+                "`brew install valgrind`, `pacman -S valgrind`) and "
+                "re-run, or drop --features iai-callgrind for a "
+                "criterion-only report.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         criterion_run = [with_features(cmd) for cmd in [BENCH_CMD] + ECOSYSTEM_BENCH_CMDS]
         if iai_mode:
             # iai-callgrind commands already carry their own
@@ -1912,20 +1933,45 @@ def main() -> None:
             # set (criterion + iai) interleaves both in a single
             # pass and we want output appropriate for each.
             is_iai = "--save-summary=json" in cmd
+            # Wall-clock timestamps (not just elapsed seconds) bracket
+            # every invocation so a warning emitted mid-run — e.g.
+            # criterion's "Unable to complete N samples in Xs" — can
+            # be cross-checked against how long the command actually
+            # took. Criterion's own warning text is a *projection*
+            # ("you may wish to increase target time to Ys"), not a
+            # report of elapsed time, so it can look alarming next to
+            # a run that in fact finished quickly; the before/after
+            # stamps here are the actual measurement.
+            start_ts = datetime.now().astimezone().isoformat(timespec="seconds")
             if is_iai:
                 bench_name = _extract_bench_name(cmd)
-                print(f"  callgrind: {bench_name}…", file=sys.stderr, end="", flush=True)
+                print(
+                    f"  callgrind: {bench_name}… (start {start_ts})",
+                    file=sys.stderr, end="", flush=True,
+                )
                 t0 = time.monotonic()
                 with open(iai_log, "a") as logf:
-                    logf.write(f"\n=== {' '.join(cmd)} ===\n")
+                    logf.write(f"\n=== {' '.join(cmd)} === (start {start_ts})\n")
                     logf.flush()
                     r = subprocess.run(cmd, env=env, stdout=logf, stderr=logf)
                 elapsed = time.monotonic() - t0
+                end_ts = datetime.now().astimezone().isoformat(timespec="seconds")
                 status = "ok" if r.returncode == 0 else f"FAIL ({r.returncode})"
-                print(f" {status} [{fmt_duration(elapsed)}]", file=sys.stderr)
+                print(
+                    f" {status} [{fmt_duration(elapsed)}] (end {end_ts})",
+                    file=sys.stderr,
+                )
             else:
-                print(f"Running: {' '.join(cmd)}", file=sys.stderr)
+                print(f"Running: {' '.join(cmd)} (start {start_ts})", file=sys.stderr)
+                t0 = time.monotonic()
                 r = subprocess.run(cmd, env=env)
+                elapsed = time.monotonic() - t0
+                end_ts = datetime.now().astimezone().isoformat(timespec="seconds")
+                status = "ok" if r.returncode == 0 else f"FAIL ({r.returncode})"
+                print(
+                    f"  {status} [{fmt_duration(elapsed)}] (end {end_ts})",
+                    file=sys.stderr,
+                )
             if r.returncode != 0:
                 failed.append(" ".join(cmd))
                 if not is_iai:
