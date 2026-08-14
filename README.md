@@ -12,10 +12,14 @@ SS2/SS3, Fe, and CAN/SUB abort.
 
 ## Why distill-strip-ansi?
 
-- zero `unsafe`, `no_std`, fast
-- SIMD-accelerated scanning via `memchr`
-- Zero-alloc fast path on clean input (`Cow::Borrowed`)
+- Drop-in replacements for `strip-ansi-escapes` and
+  `fast-strip-ansi`
 - Streaming with only 1 byte of cross-chunk state needed (fast)
+  - Benefits of `console`-like state-machine without the complexity
+- Near peer to/is faster than `fast-strip-ansi in resources/performance
+  - zero `unsafe`, `no_std`, fast
+  - SIMD-accelerated scanning via `memchr`
+  - Zero-alloc fast path on clean input (`Cow::Borrowed`)
 - Selective filtering by sequence group, sub-kind,
   SGR color depth, and OSC type
 - Color transforms: truecolor → 256 → 16 → greyscale → mono
@@ -28,8 +32,6 @@ SS2/SS3, Fe, and CAN/SUB abort.
 - Security-aware: auto-detect caps at `sanitize`,
   echoback vectors stripped by default, threat scanning
   with external database support
-- Drop-in replacements for `strip-ansi-escapes` and
-  `fast-strip-ansi`
 
 See [doc/ECOSYSTEM.md](doc/ECOSYSTEM.md) for a detailed
 crate comparison.
@@ -48,8 +50,11 @@ Color transforms and Unicode normalization live in the
 
 ## Performance
 
-1.3× faster than `fast-strip-ansi`, 3.2× faster than `console`,
-12.7× faster than `strip-ansi-escapes` on authors hardware.
+<!-- BENCH:PERF start; generated, do not edit -->
+1.4× faster than `fast-strip-ansi`, 3.6× faster than `console`,
+12.8× faster than `strip-ansi-escapes` on authors hardware.
+<!-- BENCH:PERF end -->
+
 Clean input returns `Cow::Borrowed` pure `memchr` SIMD scan, zero allocation.
 O(n) linear scaling across all input sizes.
 
@@ -224,8 +229,9 @@ Rust 1.85+ (edition 2024).
 
 ## Coming Soon
 
-- Criterion 0.7 → 0.8 (MSRV 1.86, breaking API)
-- MSRV 1.86
+- Criterion 0.7 → 0.8+ (MSRV 1.86, breaking API)
+- MSRV 1.86+
+- wasip2 1.0.4+ (MSRV 1.87+)
 - Better ops
 
 ## Contributing
