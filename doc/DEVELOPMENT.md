@@ -52,20 +52,23 @@ mise run release:dry-run  # CI + crates.io publish dry-run
 
 | Task | CI Parity | What it does |
 | ---- | --------- | ------------ |
-| `mise run ci` | full tier 2 | fmt → clippy → deny → lockfiles → test |
+| `mise run ci` | full tier 2 | fmt → clippy → deny → lockfiles → tests |
 | `mise run ci:lockfiles` | (drift guard) | Fails if `fuzz/Cargo.lock` is stale |
 | `mise run release:dry-run` | + publish | `ci` + msrv + `cargo publish --dry-run` |
 | `mise run fmt` | `fmt` job | `cargo fmt --check` |
 | `mise run clippy` | `clippy` job | Lint with `-D warnings` |
 | `mise run deny` | `deny` job | Advisory, license, ban, source checks |
 | `mise run msrv` | `msrv` job | Build + test against MSRV (1.85) |
-| `mise run test` | `test` job | `cargo nextest run` |
+| `mise run test` | `test` job | Library suite (`distill-strip-ansi`) |
+| `mise run test:harness` | — | Harness suite (`distill-bench-harness`) |
+| `mise run test:all` | — | Both packages |
 | `mise run test-cargo` | — | `cargo test` (standard runner) |
 | `mise run coverage` | `diff-coverage` | tarpaulin with llvm engine |
 | `mise run coverage:diff` | `diff-coverage` | Coverage + diff-cover vs main |
 | `mise run bench` | — | Criterion run; regenerates BENCHMARKS.md |
 | `mise run bench:quick` | — | Fast criterion pass (don't publish) |
 | `mise run bench:callgrind` | — | Deterministic Ir counts (needs valgrind) |
+| `mise run bench:publish` | — | Canonical release run (64 MiB cap) |
 | `mise run pgo` | — | Profile-guided optimization build |
 | `mise run tools:update` | — | Check cargo-installed tools for updates |
 
@@ -128,6 +131,44 @@ For architecture, design, and module responsibilities, link to the source-of-tru
 
 ## Testing
 
+### Two packages, two suites
+
+This workspace has two testable packages and they are tested by
+two separate tasks, on purpose:
+
+| Task                    | Package                 | Answers             |
+| ----------------------- | ----------------------- | ------------------- |
+| `mise run test`         | `distill-strip-ansi`    | Library correctness |
+| `mise run test:harness` | `distill-bench-harness` | Harness consistency |
+| `mise run test:all`     | both packages           | Everything at once  |
+
+`mise run ci` runs both, as two named steps.
+
+Please do not collapse these into a single `--workspace` run.
+Package selection in each task is explicit (`-p …`) so that the
+scope reads as a decision rather than an omission — the previous
+version relied on "root package is the default", which silently
+meant the harness suite never executed anywhere, including in
+`ci`. Two questions, two tasks, both gated.
+
+Two clarifications, because both have been guessed wrong before:
+
+- `--workspace` would **not** run benchmarks. `[[bench]]` targets
+  are declared `harness = false`, so nextest does not treat them
+  as tests and never executes them; `cargo bench` is the only
+  thing that runs a benchmark. "Benchmarks are slow" is therefore
+  not the reason for the split, and adding `--workspace` would
+  not have made `test` slow.
+- The harness suite is 11 unit tests covering cache/topology
+  detection, the hardware-adaptive size ladder, and criterion
+  sample-size arithmetic. It finishes in under 0.02s.
+
+Both suites run with `--all-features`, matching GitHub CI. Without
+it the library package runs 565 tests instead of 700 — roughly 135
+feature-gated tests would pass locally by never running.
+
+### Runners
+
 Two test runners serve different purposes:
 
 | Context               | Runner     | Why                       |
@@ -144,7 +185,9 @@ catch compilation failures in it; use `mise run msrv` or
 `mise run test-cargo`.
 
 ```sh
-mise run test                        # nextest (fast, isolated)
+mise run test                        # library suite (fast, isolated)
+mise run test:harness                # bench-tooling suite
+mise run test:all                    # both packages
 mise run test-cargo                  # cargo test (doctests, CI parity)
 cargo test --test integration_tests  # CLI only
 cargo test --lib                     # unit tests only
