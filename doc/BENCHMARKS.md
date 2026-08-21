@@ -18,12 +18,25 @@ task wiring, see `doc/BENCHMARKS-REPRODUCE.md`.
 | GiB/s    | gibibytes/sec (2³⁰ B/s)                              |
 | ×        | multiplier (`base` = distill)                        |
 | Ir/MiB   | retired instructions per MiB (callgrind)             |
-| ⚠        | high-variance cell (CV ≥ 3%) — re-run via callgrind  |
+| ⚠        | dispersed cell (MAD/median ≥ 1%) — see Ir/MiB        |
 
-- Wall-clock runs hide the `CV` column to keep tables narrow.
-  A `⚠` next to a value means the coefficient of variation
-  was ≥ 3% — interpret that cell loosely and cross-check with
-  `mise x bench:callgrind` for a deterministic `Ir/MiB` value.
+- Reported times are the **median** of criterion's samples,
+  not the mean or the regression slope criterion prints to its
+  own stdout. Median is deliberate: these runs carry a heavy
+  right tail (10-20% of samples land in it on authors host), and
+  the median rejects that tail instead of being dragged by it.
+  Expect the numbers here to read faster than criterion's
+  console output for the same benchmark.
+- Dispersion is reported as MAD/median — the median absolute
+  deviation relative to the median — so the spread figure and
+  the point estimate are the same kind of statistic. A `⚠`
+  means that ratio reached 1%, i.e. the *bulk* of the samples
+  is genuinely spread, not merely that outliers exist.
+- Both are strictly *within* one run. Run-to-run variation is
+  much larger — up to ~20% on identical code on authors host —
+  so treat cross-run comparisons of wall-clock numbers with
+  suspicion and use `Ir/MiB` for those instead:
+  `mise run bench:callgrind`.
 - `Ir/MiB` is host-independent: retired instructions per MiB
   of input. Not directly comparable to wall-clock throughput
   (IPC varies by workload), but excellent for capacity
@@ -33,8 +46,8 @@ task wiring, see `doc/BENCHMARKS-REPRODUCE.md`.
 
 ## Highlights for Humans
 
-- 837 MiB/s dirty throughput (4 KiB, ~20% ANSI)
-- 5.3 GiB/s clean fast path (24 MiB)
+- 928 MiB/s dirty throughput (4 KiB, ~20% ANSI)
+- 4.1 GiB/s clean fast path (16 MiB)
 - Zero allocation on clean input (`Cow::Borrowed`)
 - No temp files, no disk I/O — pure in-memory
 - O(n) linear scaling — constant-ish throughput up to 1 GiB+
@@ -50,11 +63,11 @@ task wiring, see `doc/BENCHMARKS-REPRODUCE.md`.
 | Date       | 2026-09-12                               |
 | L1d        | 32.0K                                    |
 | L2         | 256.0K                                   |
-| L3         | 12.0 MiB                                 |
+| L3         | 8.0 MiB                                  |
 | RAM        | 31.2 GiB                                 |
 | target-cpu | `x86-64-v3`                              |
-| Sizes      | 22 tiers (hardware-adaptive)             |
-| Bench time | 9m26s                                    |
+| Sizes      | 16 tiers (hardware-adaptive)             |
+| Bench time | 7m27s                                    |
 
 ### Crate Versions
 
@@ -62,7 +75,7 @@ task wiring, see `doc/BENCHMARKS-REPRODUCE.md`.
 | -------------------- | ------: |
 | `distill-strip-ansi` |   0.7.0 |
 | `fast-strip-ansi`    |  0.13.1 |
-| `console`            |  0.16.3 |
+| `console`            |  0.16.6 |
 | `strip-ansi-escapes` |   0.2.1 |
 | `criterion`          |   0.7.0 |
 
@@ -70,10 +83,10 @@ task wiring, see `doc/BENCHMARKS-REPRODUCE.md`.
 
 | Crate                | Deps |  Peak RSS |   RSS Δ |    CPU |
 | -------------------- | ---: | --------: | ------: | -----: |
-| `distill-strip-ansi` |    2 | 163.7 MiB | 1.5 MiB | 31.0 s |
-| `fast-strip-ansi`    |    3 | 206.2 MiB | 2.6 MiB | 25.4 s |
-| `console`            |    2 | 194.9 MiB | 9.9 MiB | 27.2 s |
-| `strip-ansi-escapes` |    2 | 193.5 MiB |  352.0K | 79.6 s |
+| `distill-strip-ansi` |    2 | 178.5 MiB |  656.0K | 17.0 s |
+| `fast-strip-ansi`    |    3 | 227.0 MiB |  508.0K | 15.4 s |
+| `console`            |    2 | 194.8 MiB | 1.3 MiB | 18.9 s |
+| `strip-ansi-escapes` |    2 | 205.2 MiB | 8.1 MiB | 44.6 s |
 
 `strip-ansi` binary: 4.6 MiB, 24 deps
 (includes `clap` for CLI argument parsing).
@@ -99,122 +112,110 @@ the reproduction doc for how to generate it.
 
 ### Dirty 2 KiB
 
-| Crate                |      Time | MiB/s |     × | Ir/MiB |
-| -------------------- | --------: | ----: | ----: | -----: |
-| `distill-strip-ansi` |  2.7 µs ⚠ |   721 |  base |  32.4M |
-| `fast-strip-ansi`    |  3.1 µs ⚠ |   636 |  1.1× |  40.4M |
-| `console`            |  7.7 µs ⚠ |   254 |  2.8× | 125.4M |
-| `strip-ansi-escapes` | 29.1 µs ⚠ |    67 | 10.8× | 371.4M |
+| Crate                |     Time | MiB/s |     × | Ir/MiB |
+| -------------------- | -------: | ----: | ----: | -----: |
+| `distill-strip-ansi` | 2.2 µs ⚠ |   908 |  base |  31.9M |
+| `fast-strip-ansi`    |   2.8 µs |   687 |  1.3× |  41.1M |
+| `console`            | 8.0 µs ⚠ |   246 |  3.7× | 127.2M |
+| `strip-ansi-escapes` |  27.0 µs |    72 | 12.6× | 370.6M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ### Dirty 4 KiB
 
 | Crate                |      Time | MiB/s |     × | Ir/MiB |
 | -------------------- | --------: | ----: | ----: | -----: |
-| `distill-strip-ansi` |  4.7 µs ⚠ |   837 |  base |  16.2M |
-| `fast-strip-ansi`    |  6.2 µs ⚠ |   633 |  1.3× |  20.2M |
-| `console`            | 15.0 µs ⚠ |   261 |  3.2× |  62.7M |
-| `strip-ansi-escapes` | 59.2 µs ⚠ |    66 | 12.7× | 185.7M |
+| `distill-strip-ansi` |    4.2 µs |   928 |  base |  16.0M |
+| `fast-strip-ansi`    |  5.8 µs ⚠ |   679 |  1.4× |  20.5M |
+| `console`            | 15.3 µs ⚠ |   255 |  3.6× |  63.6M |
+| `strip-ansi-escapes` |   54.0 µs |    72 | 12.8× | 185.3M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ### Dirty 32 KiB
 
 | Crate                |       Time | MiB/s |     × | Ir/MiB |
 | -------------------- | ---------: | ----: | ----: | -----: |
-| `distill-strip-ansi` |  34.8 µs ⚠ |   897 |  base |  30.8M |
-| `fast-strip-ansi`    |  50.2 µs ⚠ |   622 |  1.4× |  40.8M |
-| `console`            | 124.6 µs ⚠ |   251 |  3.6× | 111.4M |
-| `strip-ansi-escapes` | 591.4 µs ⚠ |    53 | 17.0× | 357.7M |
+| `distill-strip-ansi` |  34.0 µs ⚠ |   919 |  base |  30.4M |
+| `fast-strip-ansi`    |    45.2 µs |   691 |  1.3× |  41.1M |
+| `console`            | 148.9 µs ⚠ |   210 |  4.4× | 113.6M |
+| `strip-ansi-escapes` |   430.6 µs |    73 | 12.7× | 357.4M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ### Dirty 256 KiB
 
 | Crate                |       Time | MiB/s |     × | Ir/MiB |
 | -------------------- | ---------: | ----: | ----: | -----: |
-| `distill-strip-ansi` | 333.7 µs ⚠ |   749 |  base |   3.9M |
-| `fast-strip-ansi`    | 469.2 µs ⚠ |   533 |  1.4× |   5.1M |
-| `console`            | 986.0 µs ⚠ |   254 |  3.0× |  13.9M |
-| `strip-ansi-escapes` |   3.9 ms ⚠ |    64 | 11.7× |  44.7M |
+| `distill-strip-ansi` | 408.7 µs ⚠ |   612 |  base |   3.8M |
+| `fast-strip-ansi`    | 414.3 µs ⚠ |   603 | ~1.0× |   5.1M |
+| `console`            |   1.1 ms ⚠ |   230 |  2.7× |  14.2M |
+| `strip-ansi-escapes` |   5.6 ms ⚠ |    45 | 13.7× |  44.7M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
-### Dirty 24 MiB
+### Dirty 8 MiB
 
 | Crate                |       Time | MiB/s |     × | Ir/MiB |
 | -------------------- | ---------: | ----: | ----: | -----: |
-| `distill-strip-ansi` |  28.9 ms ⚠ |   832 |  base |  10.1M |
-| `fast-strip-ansi`    |  52.1 ms ⚠ |   461 |  1.8× |  12.8M |
-| `console`            | 125.8 ms ⚠ |   191 |  4.4× |  36.1M |
-| `strip-ansi-escapes` | 483.1 ms ⚠ |    50 | 16.7× | 118.2M |
+| `distill-strip-ansi` |  12.6 ms ⚠ |   637 |  base |  29.8M |
+| `fast-strip-ansi`    |  22.5 ms ⚠ |   356 |  1.8× |  39.0M |
+| `console`            |  37.0 ms ⚠ |   216 |  2.9× | 110.6M |
+| `strip-ansi-escapes` | 244.9 ms ⚠ |    33 | 19.5× | 354.4M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ### Dirty 32 MiB
 
-| Crate                |       Time | MiB/s |     × | Ir/MiB |
-| -------------------- | ---------: | ----: | ----: | -----: |
-| `distill-strip-ansi` |  48.2 ms ⚠ |   663 |  base |   7.5M |
-| `fast-strip-ansi`    |  74.5 ms ⚠ |   429 |  1.5× |   9.6M |
-| `console`            | 173.9 ms ⚠ |   184 |  3.6× |  27.1M |
-| `strip-ansi-escapes` | 672.4 ms ⚠ |    48 | 13.9× |  88.7M |
+| Crate                |       Time | MiB/s |    × | Ir/MiB |
+| -------------------- | ---------: | ----: | ---: | -----: |
+| `distill-strip-ansi` |  61.6 ms ⚠ |   520 | base |   7.4M |
+| `fast-strip-ansi`    |  85.3 ms ⚠ |   375 | 1.4× |   9.8M |
+| `console`            | 180.7 ms ⚠ |   177 | 2.9× |  27.6M |
+| `strip-ansi-escapes` |   443.2 ms |    72 | 7.2× |  88.6M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
-### Dirty 48 MiB
+### Dirty 64 MiB
 
-| Crate                |       Time | MiB/s |     × | Ir/MiB |
-| -------------------- | ---------: | ----: | ----: | -----: |
-| `distill-strip-ansi` |  67.2 ms ⚠ |   714 |  base |   5.0M |
-| `fast-strip-ansi`    | 107.2 ms ⚠ |   448 |  1.6× |   6.4M |
-| `console`            | 233.0 ms ⚠ |   206 |  3.5× |  18.1M |
-| `strip-ansi-escapes` | 952.1 ms ⚠ |    50 | 14.2× |  59.1M |
+| Crate                |        Time | MiB/s |     × | Ir/MiB |
+| -------------------- | ----------: | ----: | ----: | -----: |
+| `distill-strip-ansi` |  146.2 ms ⚠ |   438 |  base |   3.7M |
+| `fast-strip-ansi`    |  147.4 ms ⚠ |   434 | ~1.0× |   4.9M |
+| `console`            |  309.7 ms ⚠ |   207 |  2.1× |  13.8M |
+| `strip-ansi-escapes` | 1412.4 ms ⚠ |    45 |  9.7× |  44.3M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
-for a deterministic `Ir/MiB` check.
-
-### Dirty 1 GiB
-
-| Crate                |         Time | MiB/s |     × | Ir/MiB |
-| -------------------- | -----------: | ----: | ----: | -----: |
-| `distill-strip-ansi` |  1685.5 ms ⚠ |   608 |  base | 235.7K |
-| `fast-strip-ansi`    |  2556.3 ms ⚠ |   401 |  1.5× | 299.2K |
-| `console`            |  5005.4 ms ⚠ |   205 |  3.0× | 846.4K |
-| `strip-ansi-escapes` | 18020.3 ms ⚠ |    57 | 10.7× |   2.8M |
-
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ### Cargo Output (5 KiB)
 
-| Crate                |       Time | MiB/s |      × | Ir/MiB |
-| -------------------- | ---------: | ----: | -----: | -----: |
-| `distill-strip-ansi` | 130.0 ns ⚠ | 41076 |   base |  12.4M |
-| `fast-strip-ansi`    |   3.7 µs ⚠ |  1433 |  28.7× |  16.3M |
-| `console`            |  10.2 µs ⚠ |   523 |  78.6× |  48.5M |
-| `strip-ansi-escapes` | 114.8 µs ⚠ |    47 | 883.3× | 147.7M |
+| Crate                |      Time | MiB/s |      × | Ir/MiB |
+| -------------------- | --------: | ----: | -----: | -----: |
+| `distill-strip-ansi` |  117.7 ns | 45386 |   base |  12.3M |
+| `fast-strip-ansi`    |  3.7 µs ⚠ |  1456 |  31.2× |  16.5M |
+| `console`            |   11.2 µs |   478 |  94.9× |  49.1M |
+| `strip-ansi-escapes` | 94.0 µs ⚠ |    57 | 798.6× | 147.5M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ### OSC 8 Hyperlinks (4 KiB)
 
-| Crate                |       Time | MiB/s |      × | Ir/MiB |
-| -------------------- | ---------: | ----: | -----: | -----: |
-| `distill-strip-ansi` | 106.7 ns ⚠ | 38498 |   base |  11.2M |
-| `fast-strip-ansi`    |   2.9 µs ⚠ |  1413 |  27.2× |  33.7M |
-| `console`            |   8.4 µs ⚠ |   488 |  79.0× |  25.3M |
-| `strip-ansi-escapes` |  83.4 µs ⚠ |    49 | 781.5× |  67.5M |
+| Crate                |      Time | MiB/s |      × | Ir/MiB |
+| -------------------- | --------: | ----: | -----: | -----: |
+| `distill-strip-ansi` |   91.7 ns | 44784 |   base |  11.1M |
+| `fast-strip-ansi`    |    2.7 µs |  1529 |  29.3× |  33.8M |
+| `console`            |    8.8 µs |   467 |  95.9× |  25.4M |
+| `strip-ansi-escapes` | 89.4 µs ⚠ |    46 | 974.1× |  67.0M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ### Extended Capabilities
@@ -223,29 +224,29 @@ Additional features available in `distill-strip-ansi`.
 
 | Feature                   |       Time | MiB/s | Ir/MiB |
 | ------------------------- | ---------: | ----: | -----: |
-| Classify (parse only)     |  12.9 µs ⚠ |   325 |  33.5M |
-| Classify + detail         |  11.1 µs ⚠ |   376 |  32.6M |
-| Filter: SGR mask          |  13.3 µs ⚠ |   316 |  39.5M |
-| Filter: sanitize preset   |  11.8 µs ⚠ |   356 |  41.3M |
-| Threat scan (clean)       |  12.8 µs ⚠ |   328 |  32.2M |
-| Threat scan (dirty)       |  13.5 µs ⚠ |   312 |  32.3M |
-| Streaming (L1)            |  39.6 µs ⚠ |   789 |  33.5M |
-| Streaming (L2)            | 389.5 µs ⚠ |   642 |   4.2M |
-| Streaming (L3)            |  17.8 ms ⚠ |   675 |  21.9M |
-| Unicode normalize         |  21.2 µs ⚠ |   153 |  94.1M |
-| Transform: passthrough    |  86.7 ns ⚠ | 48406 |   1.9M |
-| Transform: truecolor→mono |  23.5 µs ⚠ |   198 |  64.7M |
-| Transform: truecolor→grey |  27.8 µs ⚠ |   167 |  68.8M |
-| Transform: truecolor→16   |  25.7 µs ⚠ |   181 |  67.5M |
-| Transform: truecolor→256  |  23.1 µs ⚠ |   202 |  68.8M |
-| Transform: 256→16         |  21.4 µs ⚠ |   182 |  60.7M |
-| Transform: 256→grey       |  20.9 µs ⚠ |   186 |  69.8M |
-| Transform: basic→mono     |  27.6 µs ⚠ |   152 |  64.4M |
-| Augment: protanopia       |   3.2 µs ⚠ |   231 |  52.0M |
-| Augment: deuteranopia     |   3.3 µs ⚠ |   223 |  52.0M |
-| Augment: sRGB roundtrip   | 840.8 ns ⚠ |   290 |  29.3M |
+| Classify (parse only)     |  12.6 µs ⚠ |   334 |  33.7M |
+| Classify + detail         |    10.5 µs |   400 |  32.8M |
+| Filter: SGR mask          |    10.2 µs |   413 |  38.8M |
+| Filter: sanitize preset   |    10.6 µs |   394 |  40.6M |
+| Threat scan (clean)       |  10.3 µs ⚠ |   409 |  32.4M |
+| Threat scan (dirty)       |  10.3 µs ⚠ |   410 |  32.4M |
+| Streaming (L1)            |  42.2 µs ⚠ |   740 |  33.0M |
+| Streaming (L2)            | 280.4 µs ⚠ |   891 |   4.1M |
+| Streaming (L3)            |  13.8 ms ⚠ |   582 |  32.3M |
+| Unicode normalize         |    16.4 µs |   197 |  93.9M |
+| Transform: passthrough    |    76.9 ns | 54592 |   1.8M |
+| Transform: truecolor→mono |    19.4 µs |   240 |  61.4M |
+| Transform: truecolor→grey |  30.1 µs ⚠ |   155 |  65.6M |
+| Transform: truecolor→16   |  20.9 µs ⚠ |   223 |  64.1M |
+| Transform: truecolor→256  |    21.3 µs |   218 |  65.6M |
+| Transform: 256→16         |  15.1 µs ⚠ |   257 |  58.0M |
+| Transform: 256→grey       |    16.9 µs |   230 |  67.1M |
+| Transform: basic→mono     |  22.6 µs ⚠ |   186 |  62.0M |
+| Augment: protanopia       |     2.8 µs |   259 |  51.9M |
+| Augment: deuteranopia     |     2.8 µs |   259 |  51.9M |
+| Augment: sRGB roundtrip   |   724.0 ns |   337 |  29.3M |
 
-⚠ marks cells where CV ≥ 3% — re-run `mise x bench:callgrind`
+⚠ marks cells where MAD/median ≥ 1% — re-run `mise run bench:callgrind`
 for a deterministic `Ir/MiB` check.
 
 ## Scaling
@@ -256,112 +257,88 @@ Constant bar length = O(n). Shrinking = super-linear.
 RSS Δ and CPU shown at largest size only — small-size
 values are dominated by benchmark harness overhead.
 
-### `distill-strip-ansi` v0.7.0 — O(n)
+### `distill-strip-ansi` v0.7.0 — O(n) · RSS Δ 656.0K · CPU 17.0 s
 
 ```text
-  2 KiB ████████████████████████ 721
-  4 KiB ████████████████████████████ 837
-  8 KiB ██████████████████████████ 799
- 16 KiB ████████████████████████████ 854
- 32 KiB ██████████████████████████████ 897
- 64 KiB ███████████████████████████ 818
-128 KiB ████████████████████████████ 862
-256 KiB █████████████████████████ 749
-512 KiB ██████████████████████████████ 898
-  1 MiB ███████████████████████████ 813
-  2 MiB ████████████████████████████ 855
-  4 MiB ██████████████████████████ 789
-  8 MiB ███████████████████████████ 811
- 24 MiB ███████████████████████████ 832
- 32 MiB ██████████████████████ 663
- 48 MiB ███████████████████████ 714
- 64 MiB ███████████████████████ 703
- 96 MiB ██████████████████████ 676
-192 MiB ██████████████████ 545
-384 MiB ████████████████████ 628
-768 MiB ████████████████████ 615
-  1 GiB ████████████████████ 608
+  2 KiB █████████████████████████████ 908
+  4 KiB █████████████████████████████ 928
+  8 KiB ██████████████████████████████ 929
+ 16 KiB █████████████████████████████ 925
+ 32 KiB █████████████████████████████ 919
+ 64 KiB ████████████████████████████ 888
+128 KiB █████████████████████████████ 918
+256 KiB ███████████████████ 612
+512 KiB █████████████████████ 668
+  1 MiB █████████████████████████████ 906
+  2 MiB █████████████████████████████ 917
+  4 MiB ████████████████████████ 773
+  8 MiB ████████████████████ 637
+ 16 MiB ██████████████████ 561
+ 32 MiB ████████████████ 520
+ 64 MiB ██████████████ 438
 ```
 
-### `fast-strip-ansi` v0.13.1 — O(n)
+### `fast-strip-ansi` v0.13.1 — O(n) · RSS Δ 508.0K · CPU 15.4 s
 
 ```text
-  2 KiB █████████████████████ 636
-  4 KiB █████████████████████ 633
-  8 KiB ███████████████████ 587
- 16 KiB ███████████████████ 574
- 32 KiB ████████████████████ 622
- 64 KiB ███████████████████ 569
-128 KiB ██████████████████ 546
-256 KiB █████████████████ 533
-512 KiB ██████████████████ 560
-  1 MiB █████████████████ 526
-  2 MiB ███████████████████ 570
-  4 MiB ██████████████████ 562
-  8 MiB █████████████████████ 630
- 24 MiB ███████████████ 461
- 32 MiB ██████████████ 429
- 48 MiB ██████████████ 448
- 64 MiB ███████████████ 466
- 96 MiB ███████████████ 451
-192 MiB ██████████████ 419
-384 MiB █████████████ 414
-768 MiB █████████████ 415
-  1 GiB █████████████ 401
+  2 KiB ██████████████████████ 687
+  4 KiB █████████████████████ 679
+  8 KiB ███████████████████ 592
+ 16 KiB ██████████████████████ 695
+ 32 KiB ██████████████████████ 691
+ 64 KiB ██████████████████████ 683
+128 KiB ██████████████████████ 685
+256 KiB ███████████████████ 603
+512 KiB █████████████ 422
+  1 MiB ██████████████████████ 686
+  2 MiB ████████████████ 507
+  4 MiB ███████████ 360
+  8 MiB ███████████ 356
+ 16 MiB ████████████ 378
+ 32 MiB ████████████ 375
+ 64 MiB ██████████████ 434
 ```
 
-### `console` v0.16.3 — O(n)
+### `console` v0.16.6 — O(n) · RSS Δ 1.3 MiB · CPU 18.9 s
 
 ```text
-  2 KiB ████████ 254
-  4 KiB ████████ 261
-  8 KiB ████████ 259
- 16 KiB ████████ 265
- 32 KiB ████████ 251
- 64 KiB ████████ 259
-128 KiB ████████ 249
-256 KiB ████████ 254
-512 KiB ████████ 261
-  1 MiB █████████ 271
-  2 MiB ████████ 257
-  4 MiB ███████ 236
-  8 MiB ███████ 224
- 24 MiB ██████ 191
- 32 MiB ██████ 184
- 48 MiB ██████ 206
- 64 MiB ██████ 199
- 96 MiB ███████ 215
-192 MiB ██████ 199
-384 MiB ██████ 191
-768 MiB ██████ 199
-  1 GiB ██████ 205
+  2 KiB ███████ 246
+  4 KiB ████████ 255
+  8 KiB ████████ 255
+ 16 KiB ████████ 256
+ 32 KiB ██████ 210
+ 64 KiB ████████ 258
+128 KiB ████████ 256
+256 KiB ███████ 230
+512 KiB ████████ 256
+  1 MiB ████████ 259
+  2 MiB ███████ 221
+  4 MiB █████ 173
+  8 MiB ██████ 216
+ 16 MiB ███████ 231
+ 32 MiB █████ 177
+ 64 MiB ██████ 207
 ```
 
-### `strip-ansi-escapes` v0.2.1 — O(n)
+### `strip-ansi-escapes` v0.2.1 — O(n) · RSS Δ 8.1 MiB · CPU 44.6 s
 
 ```text
-  2 KiB ██ 67
-  4 KiB ██ 66
-  8 KiB ██ 64
- 16 KiB ██ 65
- 32 KiB █ 53
- 64 KiB ██ 61
-128 KiB █ 57
-256 KiB ██ 64
-512 KiB ██ 63
-  1 MiB █ 55
-  2 MiB ██ 62
-  4 MiB ██ 60
-  8 MiB █ 60
- 24 MiB █ 50
- 32 MiB █ 48
- 48 MiB █ 50
- 64 MiB █ 53
- 96 MiB █ 56
-192 MiB █ 57
-384 MiB █ 57
-768 MiB █ 57
-  1 GiB █ 57
+  2 KiB ██ 72
+  4 KiB ██ 72
+  8 KiB ██ 73
+ 16 KiB ██ 73
+ 32 KiB ██ 73
+ 64 KiB ██ 73
+128 KiB ██ 70
+256 KiB █ 45
+512 KiB █ 47
+  1 MiB █ 53
+  2 MiB █ 46
+  4 MiB █ 53
+  8 MiB █ 33
+ 16 MiB █ 43
+ 32 MiB ██ 72
+ 64 MiB █ 45
 ```
 
 ### Complexity Summary
