@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1
+
+### Fixed
+
+`ColorDepth::Mono` left a stray `ESC[m` reset behind when downgrading
+a color-only SGR sequence (e.g. `ESC[38;2;255;0;0m`), instead of
+dropping it entirely. `rewrite_sgr_direct` now suppresses the whole
+sequence when rewriting produces no params.
+
 ## 0.7.0
 
 ### Breaking
