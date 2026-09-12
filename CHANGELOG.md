@@ -9,6 +9,14 @@ a color-only SGR sequence (e.g. `ESC[38;2;255;0;0m`), instead of
 dropping it entirely. `rewrite_sgr_direct` now suppresses the whole
 sequence when rewriting produces no params.
 
+### Operational
+
+CI's macOS build job was named `macos-x64` but built
+`aarch64-apple-darwin` — GitHub's `macos-latest` runners are
+Apple Silicon only, and there is no `x86_64-apple-darwin` job in
+this workflow. Renamed to `macos-arm64` so the release artifact
+name matches what actually ships. No build output changed.
+
 ## 0.7.0
 
 ### Breaking
