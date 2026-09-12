@@ -57,14 +57,20 @@ pub(crate) fn rewrite_sgr_direct(
     palette: &PaletteTransform,
     out: &mut SmallVec<[u8; 32]>,
 ) {
-    out.push(0x1B);
-    out.push(b'[');
-
     // Empty params (ESC[m) = implicit reset — pass through unchanged.
     if param_bytes.is_empty() {
+        out.push(0x1B);
+        out.push(b'[');
         out.push(b'm');
         return;
     }
+
+    // Mark of where this sequence's output would start, so a fully-
+    // suppressed sequence (see below) can be rolled back to nothing
+    // rather than leaving `ESC[` behind.
+    let start = out.len();
+    out.push(0x1B);
+    out.push(b'[');
 
     let mut emitter = SgrEmitter::new(target, palette, out);
     let mut acc: u16 = 0;
@@ -88,6 +94,18 @@ pub(crate) fn rewrite_sgr_direct(
     emitter.flush();
 
     let out = emitter.finish();
+
+    // If every param in a *non-empty* input was dropped (e.g. a
+    // color-only SGR reduced to Mono, which strips it entirely rather
+    // than resetting), emitting `ESC[m` would be wrong: unlike a truly
+    // empty input, the writer's intent here was never "reset", so a
+    // bare `ESC[m` is unwanted no-op output — visually and
+    // byte-for-byte different from what the source asked for. Roll
+    // back to nothing instead of closing with `m`.
+    if out.len() == start + 2 {
+        out.truncate(start);
+        return;
+    }
     out.push(b'm');
 }
 

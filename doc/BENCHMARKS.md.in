@@ -18,12 +18,25 @@ task wiring, see `doc/BENCHMARKS-REPRODUCE.md`.
 | GiB/s    | gibibytes/sec (2³⁰ B/s)                              |
 | ×        | multiplier (`base` = distill)                        |
 | Ir/MiB   | retired instructions per MiB (callgrind)             |
-| ⚠        | high-variance cell (CV ≥ 3%) — re-run via callgrind  |
+| ⚠        | dispersed cell (MAD/median ≥ 1%) — see Ir/MiB        |
 
-- Wall-clock runs hide the `CV` column to keep tables narrow.
-  A `⚠` next to a value means the coefficient of variation
-  was ≥ 3% — interpret that cell loosely and cross-check with
-  `mise x bench:callgrind` for a deterministic `Ir/MiB` value.
+- Reported times are the **median** of criterion's samples,
+  not the mean or the regression slope criterion prints to its
+  own stdout. Median is deliberate: these runs carry a heavy
+  right tail (10-20% of samples land in it on authors host), and
+  the median rejects that tail instead of being dragged by it.
+  Expect the numbers here to read faster than criterion's
+  console output for the same benchmark.
+- Dispersion is reported as MAD/median — the median absolute
+  deviation relative to the median — so the spread figure and
+  the point estimate are the same kind of statistic. A `⚠`
+  means that ratio reached 1%, i.e. the *bulk* of the samples
+  is genuinely spread, not merely that outliers exist.
+- Both are strictly *within* one run. Run-to-run variation is
+  much larger — up to ~20% on identical code on authors host —
+  so treat cross-run comparisons of wall-clock numbers with
+  suspicion and use `Ir/MiB` for those instead:
+  `mise run bench:callgrind`.
 - `Ir/MiB` is host-independent: retired instructions per MiB
   of input. Not directly comparable to wall-clock throughput
   (IPC varies by workload), but excellent for capacity

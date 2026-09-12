@@ -1,7 +1,7 @@
 # distill-strip-ansi
 
-Strip ANSI escape sequences from byte streams — fast,
-correct, and security-aware.
+Strip ANSI escape sequences from byte streams fast,
+correct, and security-aware. Make streams readable.
 
 ## What It Does
 
@@ -12,24 +12,26 @@ SS2/SS3, Fe, and CAN/SUB abort.
 
 ## Why distill-strip-ansi?
 
-- zero `unsafe`, `no_std`, fast
-- SIMD-accelerated scanning via `memchr`
-- Zero-alloc fast path on clean input (`Cow::Borrowed`)
-- Streaming with 1 byte of cross-chunk state
+- Drop-in replacements for `strip-ansi-escapes` and
+  `fast-strip-ansi`
+- Streaming with only 1 byte of cross-chunk state needed (fast)
+  - Benefits of `console`-like state-machine without the complexity
+- Near peer to/is faster than `fast-strip-ansi in resources/performance
+  - zero `unsafe`, `no_std`, fast
+  - SIMD-accelerated scanning via `memchr`
+  - Zero-alloc fast path on clean input (`Cow::Borrowed`)
 - Selective filtering by sequence group, sub-kind,
   SGR color depth, and OSC type
 - Color transforms: truecolor → 256 → 16 → greyscale → mono
   - tritanopia simulation for dichromats
   - extended-gamut for tetrachromats
-  - legacy terminal support (without the garbage)
-  - e-ink displays (without the garbage)
+  - legacy terminal support (without seeing unsupported garbage)
+  - e-ink displays (without seeing unsupported garbage)
 - Unicode homograph normalization (fullwidth, math bold,
   circled letters, superscripts — security hardening)
 - Security-aware: auto-detect caps at `sanitize`,
   echoback vectors stripped by default, threat scanning
   with external database support
-- Drop-in replacements for `strip-ansi-escapes` and
-  `fast-strip-ansi`
 
 See [doc/ECOSYSTEM.md](doc/ECOSYSTEM.md) for a detailed
 crate comparison.
@@ -48,8 +50,11 @@ Color transforms and Unicode normalization live in the
 
 ## Performance
 
-1.1× faster than `fast-strip-ansi`, 2.4× faster than `console`,
-7.4× faster than `strip-ansi-escapes` on authors hardware.
+<!-- BENCH:PERF start; generated, do not edit -->
+1.4× faster than `fast-strip-ansi`, 3.6× faster than `console`,
+12.8× faster than `strip-ansi-escapes` on authors hardware.
+<!-- BENCH:PERF end -->
+
 Clean input returns `Cow::Borrowed` pure `memchr` SIMD scan, zero allocation.
 O(n) linear scaling across all input sizes.
 
@@ -183,14 +188,14 @@ See [doc/DESIGN.md](doc/DESIGN.md) for the architecture and
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.6", default-features = false, features = ["std"] }
+strip-ansi = { package = "distill-strip-ansi", version = "0.7", default-features = false, features = ["std"] }
 ```
 
 For `no_std` (requires `alloc`):
 
 ```toml
 [dependencies]
-strip-ansi = { package = "distill-strip-ansi", version = "0.6", default-features = false }
+strip-ansi = { package = "distill-strip-ansi", version = "0.7", default-features = false }
 ```
 
 ## Feature Flags
@@ -224,8 +229,9 @@ Rust 1.85+ (edition 2024).
 
 ## Coming Soon
 
-- Criterion 0.7 → 0.8 (MSRV 1.86, breaking API)
-- MSRV 1.86
+- Criterion 0.7 → 0.8+ (MSRV 1.86, breaking API)
+- MSRV 1.86+
+- wasip2 1.0.4+ (MSRV 1.87+)
 - Better ops
 
 ## Contributing

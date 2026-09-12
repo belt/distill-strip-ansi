@@ -12,12 +12,12 @@ includes `Ir/MiB` columns where applicable.
 
 ## Test Data Strategy
 
-| Tier            | Source               | Why            |
-| --------------- | -------------------- | -------------- |
-| ≤32.0K          | fixture or generated | L1 cache       |
-| 32.0K–256.0K    | generated in RAM     | L2 cache       |
-| 256.0K–12.0 MiB | generated in RAM     | L3 boundary    |
-| >12.0 MiB       | generated in RAM     | DRAM bandwidth |
+| Tier           | Source               | Why            |
+| -------------- | -------------------- | -------------- |
+| ≤32.0K         | fixture or generated | L1 cache       |
+| 32.0K–256.0K   | generated in RAM     | L2 cache       |
+| 256.0K–8.0 MiB | generated in RAM     | L3 boundary    |
+| >8.0 MiB       | generated in RAM     | DRAM bandwidth |
 
 Each criterion size selects the closest
 `tests/fixtures/*.raw.txt` file that contains ANSI
@@ -107,19 +107,28 @@ if you trust context" to "publishable anywhere".
 
 iai-callgrind is immune to this entirely — valgrind
 instrumentation is deterministic per ISA. A `⚠` next to
-a cell in `doc/BENCHMARKS.md` means its CV was ≥ 3%;
-re-run `mise x bench:callgrind` to get a deterministic
-`Ir/MiB` check for that workload.
+a cell in `doc/BENCHMARKS.md` means its MAD/median reached
+1%; re-run `mise run bench:callgrind` to get a
+deterministic `Ir/MiB` check for that workload.
+
+Wall-clock numbers are only comparable *within* a single
+run. On authors host an identical library measured up to 20%
+apart across consecutive runs, with the governor, turbo
+and transparent-hugepage settings left as the OS chose
+them. Ir counts are the right tool for tracking a change
+over time; the MiB/s tables are for the relative ordering
+of crates measured together in one pass.
 
 ## Mise Tasks
 
 Pre-wired via `.mise.toml` — `mise install` once, then:
 
-| Task                     | What it does                               |
-| ------------------------ | ------------------------------------------ |
-| `mise x bench`           | Full criterion run; regenerates BENCHMARKS |
-| `mise x bench:quick`     | Fast pass (lower stats; don't publish)     |
-| `mise x bench:callgrind` | Deterministic Ir counts via iai-callgrind  |
+| Task                       | What it does                              |
+| -------------------------- | ----------------------------------------- |
+| `mise run bench`           | Criterion run; regenerates BENCHMARKS     |
+| `mise run bench:quick`     | Fast pass (lower stats; don't publish)    |
+| `mise run bench:callgrind` | Deterministic Ir counts via iai-callgrind |
+| `mise run bench:publish`   | Canonical release run (criterion + Ir)    |
 
 `bench:callgrind` requires `valgrind` on PATH (apt/brew/
 pacman) and drives the generator with
@@ -129,7 +138,7 @@ summaries alongside the criterion output.
 ## Direct Invocations
 
 ```bash
-# Default run: up to 2×L3 cache (~10m51s)
+# Default run: up to 2×L3 cache (~7m27s)
 ./bin/generate-benchmarks-md.py
 
 # Faster iteration (less statistical power — do NOT publish):

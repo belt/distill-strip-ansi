@@ -50,7 +50,12 @@ echo "ok: fuzz/Cargo.lock is current"
 # Usage: mise run ci
 [tasks.ci]
 description = "Full local CI gate (mirrors GitHub CI before push)"
-depends = ["fmt", "clippy", "deny", "ci:lockfiles", "test"]
+# Both test suites are listed explicitly rather than collapsed into a
+# --workspace run. Keeping them as two named steps preserves the
+# package separation (see the "Test suites" block below) while still
+# gating on both: separating the suites is about scope, not about
+# letting the harness go unverified.
+depends = ["fmt", "clippy", "deny", "ci:lockfiles", "test", "test:harness"]
 
 # Usage: mise run release:dry-run
 [tasks."release:dry-run"]
@@ -61,14 +66,14 @@ set -e
 cargo publish --dry-run --locked --allow-dirty
 """
 
-# Usage: mise x fmt
+# Usage: mise run fmt
 [tasks.fmt]
 description = "Format source code syntax"
 run = """
 cargo fmt --quiet --check
 """
 
-# Usage: mise x msrv
+# Usage: mise run msrv
 [tasks.msrv]
 description = "Verify compilation against minimum supported Rust version"
 run = """
@@ -76,14 +81,14 @@ out=$(cargo test --locked --quiet 2>&1) || { echo "$out"; exit 1; }
 echo "ok: msrv tests passed"
 """
 
-# Usage: mise x deny
+# Usage: mise run deny
 [tasks.deny]
 description = "Audit dependencies for security and license compliance"
 run = """
 cargo deny --log-level warn check "$@"
 """
 
-# Usage: mise x clippy
+# Usage: mise run clippy
 [tasks.clippy]
 description = "Lint source code and verify test correctness"
 run = """
@@ -91,16 +96,83 @@ env -u RUSTC_WORKSPACE_WRAPPER \
   cargo clippy --all-targets -- -D warnings
 """
 
-# Usage: mise x test
+# Usage: mise run lint-md
+#
+# Scoped to this repo, and target/ is excluded explicitly:
+# markdownlint-cli2 does not read .gitignore
+#
+# markdownlint-cli2's negation syntax prints them # back as `!pattern`,
+# uses `#pattern` because `!` needs quoting in most shells
+[tasks.lint-md]
+description = "Lint markdown files (this repo only, excludes target/)"
+run = """
+markdownlint-cli2 '**/*.md' '#target' '#**/target' "$@"
+"""
+
+# ══════════════════════════════════════════════════════════════════
+# Test suites — TWO packages, TWO suites, deliberately separate
+# ══════════════════════════════════════════════════════════════════
+#
+#   mise run test          → distill-strip-ansi   (the library)
+#   mise run test:harness  → distill-bench-harness (bench tooling)
+#   mise run test:all      → both packages
+#
+# The split is intentional. `test` proves the *published library* is
+# correct and is what you run in a tight edit/test loop. The harness
+# is measurement tooling that ships to nobody; its suite answers a
+# different question ("is our benchmarking self-consistent?") and is
+# kept out of the hot loop so the fast path stays fast.
+#
+# DO NOT "fix" `test` by adding --workspace. Package selection here is
+# explicit (-p) precisely so that it reads as a decision rather than an
+# oversight. If you want everything, that task already exists:
+# `test:all`. Note also that --workspace does NOT pull benchmarks into
+# the run — `[[bench]]` targets use harness = false and nextest ignores
+# them — so "benchmarks are slow" is not the reason for the split, and
+# adding --workspace would not have made `test` slow. The reason is
+# scope: two packages, two questions.
+#
+# Both suites use --all-features so local runs match CI, which tests
+# with --all-features. Without it ~135 feature-gated tests never run
+# locally (565 vs 700 in the library package).
+
+# Usage: mise run test
 [tasks.test]
-description = "Execute fast test suite"
+description = "Test the library package (distill-strip-ansi, all features)"
 run = """
 out=$(env -u RUSTC_WORKSPACE_WRAPPER \
-  cargo nextest run --status-level skip --final-status-level fail "$@" 2>&1) || { echo "$out"; exit 1; }
+  cargo nextest run -p distill-strip-ansi --all-features \
+  --status-level skip --final-status-level fail "$@" 2>&1) || { echo "$out"; exit 1; }
 echo "$out" | grep 'Summary' || echo "ok: tests passed"
 """
 
-# Usage: mise x test-cargo
+# Usage: mise run test:harness
+#
+# Self-audit for the benchmark tooling: cache/topology detection, the
+# hardware-adaptive size ladder, and the criterion sample-size
+# arithmetic. These are pure unit tests — fast, no benchmarks run.
+# Kept runnable on its own so a change to benches/harness can be
+# verified without a full workspace sweep.
+[tasks."test:harness"]
+description = "Test the bench harness package (distill-bench-harness)"
+run = """
+out=$(env -u RUSTC_WORKSPACE_WRAPPER \
+  cargo nextest run -p distill-bench-harness --all-features \
+  --status-level skip --final-status-level fail "$@" 2>&1) || { echo "$out"; exit 1; }
+echo "$out" | grep 'Summary' || echo "ok: harness tests passed"
+"""
+
+# Usage: mise run test:all
+[tasks."test:all"]
+description = "Test every workspace package (library + bench harness)"
+run = """
+out=$(env -u RUSTC_WORKSPACE_WRAPPER \
+  cargo nextest run --workspace --all-features \
+  --status-level skip --final-status-level fail "$@" 2>&1) || { echo "$out"; exit 1; }
+echo "$out" | grep 'Summary' || echo "ok: all tests passed"
+"""
+
+# Usage: mise run test-cargo
 [tasks.test-cargo]
 description = "Execute standard test suite"
 run = """
@@ -108,7 +180,7 @@ env -u RUSTC_WORKSPACE_WRAPPER \
   cargo test "$@"
 """
 
-# Usage: mise x coverage
+# Usage: mise run coverage
 [tasks.coverage]
 description = "Generate test execution metrics"
 run = """
@@ -124,7 +196,7 @@ env RUST_LOG=warn -u RUSTC_WRAPPER -u RUSTC_WORKSPACE_WRAPPER \
     -- --test-threads=1
 """
 
-# Usage: mise x coverage:diff
+# Usage: mise run coverage:diff
 [tasks."coverage:diff"]
 description = "Enforce complete test coverage on new code changes"
 depends = ["coverage"]
@@ -133,7 +205,7 @@ run = """
 env uvx diff-cover target/tarpaulin/cobertura.xml --no-color --compare-branch=main --fail-under=95
 """
 
-# Usage: mise x pgo
+# Usage: mise run pgo
 [tasks.pgo]
 description = "Build with Profile-Guided Optimization (instrument → profile → rebuild)"
 run = """
@@ -162,24 +234,24 @@ RUSTFLAGS="-Cprofile-use=$PGO_DIR/merged.profdata" \
 echo "==> PGO build complete: target/release/strip-ansi"
 """
 
-# Usage: mise x bench
+# Usage: mise run bench
 #
 # Default criterion run. For noise-free sub-microsecond numbers, see:
-#   mise x bench:callgrind  (deterministic, instruction-count)
+#   mise run bench:callgrind  (deterministic, instruction-count)
 [tasks.bench]
 description = "Run criterion benchmarks and regenerate doc/BENCHMARKS.md"
 run = """
-./bin/generate-benchmarks-md.py "$@"
+./bin/bench-run.sh bench "$@"
 """
 
-# Usage: mise x bench:quick
+# Usage: mise run bench:quick
 [tasks."bench:quick"]
 description = "Fast criterion pass (lower statistical power — do NOT publish)"
 run = """
-BENCH_QUICK=1 ./bin/generate-benchmarks-md.py "$@"
+BENCH_QUICK=1 ./bin/bench-run.sh bench-quick "$@"
 """
 
-# Usage: mise x bench:callgrind
+# Usage: mise run bench:callgrind
 #
 # iai-callgrind runs benches under Callgrind: instruction counts,
 # L1/LL cache accesses, branch mispredicts. Zero variance run-to-run
@@ -193,15 +265,35 @@ BENCH_QUICK=1 ./bin/generate-benchmarks-md.py "$@"
 # (where applicable) and up-to-date environment info.
 [tasks."bench:callgrind"]
 description = "Deterministic instruction-count benchmarks via iai-callgrind"
+# The generator itself preflights valgrind and exits before running
+# anything, so this task no longer duplicates that check — one source
+# of truth for the requirement.
 run = """
-if ! command -v valgrind >/dev/null; then
-  echo 'err: valgrind not installed. Check distro package manager' >&2
-  exit 1
-fi
-./bin/generate-benchmarks-md.py --features iai-callgrind "$@"
+./bin/bench-run.sh bench-callgrind --features iai-callgrind "$@"
 """
 
-# Usage: mise x tools:update
+# Usage: mise run bench:publish
+#
+# The canonical run for numbers that ship: criterion plus deterministic
+# Ir counts, capped at 64 MiB. This is the invocation that produced the
+# figures currently in doc/BENCHMARKS.md and the README performance
+# block, recorded here so it stops being retyped by hand.
+#
+# --max-size 64M applies to the criterion ladder only; the iai pass
+# uses its own fixed size tiers. 64 MiB is 8x this host's L3, which is
+# far enough past cache to show the DRAM-bound plateau without paying
+# for the GiB-scale tiers.
+#
+# Expect ~45 minutes and an idle machine. Wall-clock benches are
+# serial by necessity; only the callgrind pass runs concurrently
+# (see --iai-jobs).
+[tasks."bench:publish"]
+description = "Canonical release benchmark run (criterion + Ir, 64 MiB cap)"
+run = """
+./bin/bench-run.sh bench-publish --features iai-callgrind --max-size 64M "$@"
+"""
+
+# Usage: mise run tools:update
 #
 # Snapshot of cargo-installed tools against crates.io. `cargo
 # install-update -a` applies updates; `-l` is a dry-run.

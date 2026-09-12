@@ -118,9 +118,17 @@ fn bench_contains_ansi(c: &mut Criterion) {
     group.finish();
 }
 
+fn stream_strip(input: &[u8]) -> Vec<u8> {
+    let mut stream = strip_ansi::StripStream::new();
+    let mut out = Vec::with_capacity(input.len());
+    stream.push(black_box(input), &mut out);
+    stream.finish();
+    out
+}
+
 fn bench_stream(c: &mut Criterion) {
     let mut group = c.benchmark_group("stream");
-    BenchConfig::from_env(usize::MAX).apply(&mut group);
+    let config = BenchConfig::from_env(usize::MAX);
 
     let cache = CacheInfo::detect();
     let sizes: Vec<usize> = vec![
@@ -133,6 +141,9 @@ fn bench_stream(c: &mut Criterion) {
 
     for &size in &sizes {
         let dirty = dirty_input(size);
+        config.apply_tiered(&mut group, || {
+            black_box(stream_strip(black_box(&dirty)));
+        });
         group.throughput(Throughput::Bytes(size as u64));
 
         let t = tracker();
@@ -141,31 +152,22 @@ fn bench_stream(c: &mut Criterion) {
             BenchmarkId::new("strip_slices", size),
             &dirty,
             |b, input| {
-                b.iter(|| {
-                    let mut stream = strip_ansi::StripStream::new();
-                    let mut out = Vec::with_capacity(input.len());
-                    stream.push(black_box(input), &mut out);
-                    stream.finish();
-                    out
-                });
+                b.iter(|| stream_strip(input));
             },
         );
         t.after(capture("stream/strip_slices", size));
     }
 
     let cargo = real_world_cargo();
+    config.apply_tiered(&mut group, || {
+        black_box(stream_strip(black_box(&cargo)));
+    });
     group.throughput(Throughput::Bytes(cargo.len() as u64));
     group.bench_with_input(
         BenchmarkId::new("real_cargo", cargo.len()),
         &cargo,
         |b, input| {
-            b.iter(|| {
-                let mut stream = strip_ansi::StripStream::new();
-                let mut out = Vec::with_capacity(input.len());
-                stream.push(black_box(input), &mut out);
-                stream.finish();
-                out
-            });
+            b.iter(|| stream_strip(input));
         },
     );
 

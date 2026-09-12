@@ -27,11 +27,14 @@ import math
 import os
 import platform
 import re
+import shutil
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 from pathlib import Path
 
 # Table width cap for the md_table → _md_list fallback. 80 is the
@@ -78,7 +81,7 @@ def fmt_ratio(ns: float | None, base: float | None) -> str:
     return f"{r:.1f}×"
 
 
-def fmt_bytes(b: int | float | None) -> str:
+def fmt_bytes(b: float | None) -> str:
     if b is None:
         return "—"
     b = int(abs(b))
@@ -114,13 +117,13 @@ def fmt_cpu_us(us: int | None) -> str:
 
 
 def fmt_cv(cv: float | None) -> str:
-    """Render coefficient of variation (std_dev / mean) as a percentage.
+    """Render a relative dispersion figure as a percentage.
 
     Kept for the internal details-section only. Ecosystem tables
-    now hide CV and instead append a `⚠` marker to the time column
-    via `mark_noisy` when CV > NOISY_CV_THRESHOLD; readers get "is
-    this number trustworthy" without losing table width to a column
-    that carries no decisional value.
+    hide the number and instead append a `⚠` marker to the time
+    column via `mark_noisy` when it exceeds NOISY_RMAD_THRESHOLD;
+    readers get "is this number trustworthy" without losing table
+    width to a column that carries no decisional value.
     """
     if cv is None:
         return "—"
@@ -130,22 +133,27 @@ def fmt_cv(cv: float | None) -> str:
     return f"{pct:.1f}%"
 
 
-# CV above this threshold flags a cell as "noisy" — shows a ⚠
-# suffix on the time/throughput value so the reader knows to
-# cross-check with an iai-callgrind run. 3% is the sweet spot
-# between "actionable signal" and "too many false alarms" on
-# a bench config of 200×9s per cell.
-NOISY_CV_THRESHOLD = 0.03
+# Relative MAD (median_abs_dev / median) above this threshold flags a
+# cell as dispersed, appending a `⚠` to the time/throughput value.
+#
+# 1% suits a robust statistic. The previous 3% was calibrated for
+# std_dev/mean, which the outlier tail inflates; against MAD/median
+# the same benchmarks sit near 0.3-0.5%, so 3% would never fire and
+# the marker would be dead weight. 1% still leaves an order of
+# magnitude of headroom over the ~0.36% observed on a well-behaved
+# 4 KiB cell, so it flags genuine spread in the bulk of the samples
+# rather than the presence of a tail.
+NOISY_RMAD_THRESHOLD = 0.01
 
 
-def mark_noisy(text: str, cv: float | None) -> str:
-    """Append a noise marker when CV exceeds the threshold.
+def mark_noisy(text: str, rmad: float | None) -> str:
+    """Append a dispersion marker when relative MAD exceeds threshold.
 
-    Returns `text` unchanged when CV is None (unavailable) or
-    below threshold. Padding lives on the caller side — the
-    marker is a zero-width-ish visual hint, not a column.
+    Returns `text` unchanged when the figure is None (unavailable) or
+    below threshold. Padding lives on the caller side — the marker is
+    a zero-width-ish visual hint, not a column.
     """
-    if cv is None or cv < NOISY_CV_THRESHOLD:
+    if rmad is None or rmad < NOISY_RMAD_THRESHOLD:
         return text
     return f"{text} ⚠"
 
@@ -240,12 +248,151 @@ class BenchPoint:
     cpu_sys_us: int = 0
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Host capacity — concurrency budget for the iai-callgrind pass
+# ═══════════════════════════════════════════════════════════════════
+#
+# Only the iai pass is parallelised. Criterion benches stay strictly
+# serial and must remain so: they report wall-clock time, and on a
+# desktop CPU every core shares one L3, one memory controller and one
+# turbo/power budget. Running two wall-clock benches at once changes
+# what they measure — a 24 MiB working set against a shared 8 MiB L3
+# sees a completely different hit rate with a neighbour present, and
+# the all-core turbo bin is lower than the single-core one, so the
+# numbers wouldn't even be comparable with previous serial runs.
+#
+# Callgrind is different in kind. It counts instructions and models
+# the cache in software, so its results do not depend on real cache
+# occupancy, clock speed, or co-tenants — only wall time does, and
+# wall time is not what the iai pass reports. Valgrind also runs
+# 50-100x slower than native, which makes that pass the dominant cost
+# of a full run and the one worth parallelising.
+
+# Assume this much memory per concurrent callgrind process. Valgrind's
+# shadow memory plus the largest iai input (XLARGE, 16 MiB) sits well
+# under this; the margin keeps a parallel pass from pushing the host
+# into swap, which would not corrupt Ir counts but would make the
+# machine unusable.
+IAI_MEM_PER_JOB = 1024 * 1024 * 1024
+
+# Priority offset for callgrind children. Leaving a physical core idle
+# is not by itself enough to keep an interactive desktop responsive
+# when the rest are saturated for minutes at a time.
+IAI_NICE = ("nice", "-n", "10")
+
+
+def _physical_cores() -> int:
+    """Physical (not logical) core count.
+
+    SMT siblings share L1d, L2 and execution ports, so they are not
+    independent execution capacity — scheduling one callgrind process
+    per *logical* CPU would oversubscribe by 2x on this host. Falls
+    back to a conservative halving when topology is unreadable.
+    """
+    try:
+        pairs = set()
+        for d in Path("/sys/devices/system/cpu").glob("cpu[0-9]*"):
+            core_id = d / "topology" / "core_id"
+            pkg_id = d / "topology" / "physical_package_id"
+            if core_id.exists() and pkg_id.exists():
+                pairs.add((pkg_id.read_text().strip(), core_id.read_text().strip()))
+        if pairs:
+            return len(pairs)
+    except OSError:
+        pass
+    if sys.platform == "darwin":
+        try:
+            out = subprocess.check_output(
+                ["sysctl", "-n", "hw.physicalcpu"], text=True,
+            )
+            return max(1, int(out.strip()))
+        except (subprocess.CalledProcessError, FileNotFoundError, ValueError):
+            pass
+    logical = os.cpu_count() or 1
+    return max(1, logical // 2)
+
+
+def _mem_available_bytes() -> int | None:
+    """Currently allocatable memory, or None when unknown."""
+    try:
+        for line in Path("/proc/meminfo").read_text().splitlines():
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) * 1024
+    except (OSError, ValueError, IndexError):
+        return None
+    return None
+
+
+def default_iai_jobs(n_cmds: int) -> int:
+    """Concurrency for the iai pass, bounded by host capacity.
+
+    Reserves one physical core for the operating system and whatever
+    the operator is doing, then clamps by available memory and by the
+    number of commands actually queued. Returns at least 1.
+    """
+    jobs = max(1, _physical_cores() - 1)
+    mem = _mem_available_bytes()
+    if mem is not None:
+        jobs = min(jobs, max(1, mem // IAI_MEM_PER_JOB))
+    return max(1, min(jobs, n_cmds))
+
+
+# Records the epoch time at which the most recent bench run began.
+# Criterion keeps every benchmark directory it has ever written, so
+# without a run boundary the generator cannot distinguish "measured
+# just now" from "measured weeks ago at a different --max-size, on a
+# different toolchain, against a different competitor version". See
+# RUN_MARKER_NAME usage in BenchData.is_fresh.
+RUN_MARKER_NAME = ".bench-run-start"
+
+
 class BenchData:
     def __init__(self, target_dir: Path) -> None:
         self.criterion_dir = target_dir / "criterion"
         self.resources: dict = {}
         self.meta: dict = {}
         self._load(target_dir / "criterion" / "bench-resources.json")
+        self.run_start: float | None = self._load_run_start()
+
+    def _load_run_start(self) -> float | None:
+        """Epoch seconds marking the start of the most recent run.
+
+        Written by the run path and persisted so `--no-run` re-renders
+        apply the identical freshness filter. Returns None when absent
+        (e.g. a criterion tree produced before this marker existed), in
+        which case no filtering happens and behaviour matches the old
+        generator.
+        """
+        marker = self.criterion_dir / RUN_MARKER_NAME
+        if not marker.exists():
+            return None
+        try:
+            return float(marker.read_text().strip())
+        except (ValueError, OSError):
+            return None
+
+    def is_fresh(self, path: Path) -> bool:
+        """True when `path` was written by the most recent bench run.
+
+        A criterion result older than the run boundary was produced by
+        an earlier invocation. Rendering it beside current results
+        under a single `Date` and `Bench time` header states something
+        untrue about it: this repo's own doc carried 32 MiB, 96 MiB,
+        192 MiB, 384 MiB, 768 MiB and 1 GiB rows in the scaling charts
+        while the run that generated the surrounding text measured 17
+        sizes topping out at 64 MiB. Those rows were up to several runs
+        old and pre-dated a competitor version bump.
+
+        With no marker present, everything counts as fresh — a
+        conservative fallback that preserves the previous behaviour
+        rather than silently emptying the doc.
+        """
+        if self.run_start is None:
+            return True
+        try:
+            return path.stat().st_mtime >= self.run_start
+        except OSError:
+            return False
 
     def _load(self, path: Path) -> None:
         if not path.exists():
@@ -264,24 +411,40 @@ class BenchData:
         return self.meta.get("cache_sizes", {})
 
     def discover_sizes(self) -> list[int]:
-        """Find all sizes that have Criterion data."""
+        """Find all sizes measured by the most recent run.
+
+        Filtered by `is_fresh` so a smaller `--max-size` than a
+        previous run shrinks the reported ladder instead of leaving
+        the larger sizes behind as apparently-current rows.
+        """
         sizes = set()
         eco = self.criterion_dir / "ecosystem"
         if eco.exists():
             for bench_dir in eco.iterdir():
                 if bench_dir.is_dir() and bench_dir.name not in ("report", "_warmup"):
                     for size_dir in bench_dir.iterdir():
-                        if size_dir.is_dir() and size_dir.name.isdigit():
+                        if (
+                            size_dir.is_dir()
+                            and size_dir.name.isdigit()
+                            and self.is_fresh(size_dir / "new" / "estimates.json")
+                        ):
                             sizes.add(int(size_dir.name))
         return sorted(sizes)
 
     def discover_bench_sizes(self, bench_name: str) -> list[int]:
-        """Find sizes for a specific benchmark (e.g. 'ours_dirty')."""
+        """Find sizes for a specific benchmark (e.g. 'ours_dirty').
+
+        Freshness-filtered — see `discover_sizes`.
+        """
         sizes = []
         bench_dir = self.criterion_dir / "ecosystem" / bench_name
         if bench_dir.exists():
             for d in bench_dir.iterdir():
-                if d.is_dir() and d.name.isdigit():
+                if (
+                    d.is_dir()
+                    and d.name.isdigit()
+                    and self.is_fresh(d / "new" / "estimates.json")
+                ):
                     sizes.append(int(d.name))
         return sorted(sizes)
 
@@ -300,26 +463,43 @@ class BenchData:
         bench: str,
         size: int | None = None,
     ) -> tuple[float, float | None] | None:
-        """Return (median_ns, cv) tuple, or None when not yet benched.
+        """Return (median_ns, rmad) tuple, or None when not yet benched.
 
-        CV = std_dev / mean. Unavailable on criterion runs that
-        didn't populate the mean/std_dev arms.
+        `rmad` is the *relative median absolute deviation*,
+        `median_abs_dev / median` — a robust dispersion measure paired
+        with the robust point estimate we report.
+
+        This used to return `std_dev / mean` alongside the median,
+        which mixed statistics: std_dev is inflated by the same
+        outlier tail the median deliberately rejects. On this repo's
+        own data that made the noise marker useless — it fired on
+        essentially every cell. `ecosystem/distill_dirty/4096` is
+        representative: median 3839 ns with a 95% CI of ±0.09% and a
+        MAD of 13.8 ns (0.36% of the median), yet 22% of samples
+        landed in a high-severe tail that pushed `std_dev/mean` well
+        past the 3% threshold. The operation is reproducible; the tail
+        is interference. Reporting MAD/median says that, and flags
+        only the cells whose *bulk* is genuinely dispersed.
+
+        Note this is strictly an intra-run measure. Run-to-run
+        variation on this host is far larger (see the methodology note
+        in the generated doc) and no dispersion statistic computed
+        within a single run can express it.
         """
         if size is not None:
             est = self.criterion_dir / group / bench / str(size) / "new" / "estimates.json"
         else:
             est = self.criterion_dir / group / bench / "new" / "estimates.json"
-        if not est.exists():
+        if not est.exists() or not self.is_fresh(est):
             return None
         with open(est) as f:
             data = json.load(f)
         median = data.get("median", {}).get("point_estimate")
         if median is None:
             return None
-        mean = data.get("mean", {}).get("point_estimate")
-        std_dev = data.get("std_dev", {}).get("point_estimate")
-        cv = (std_dev / mean) if (mean and std_dev and mean > 0) else None
-        return (median, cv)
+        mad = data.get("median_abs_dev", {}).get("point_estimate")
+        rmad = (mad / median) if (mad is not None and median > 0) else None
+        return (median, rmad)
 
     def get_point(self, bench_key: str, workload: str, size: int) -> BenchPoint:
         stats = self._read_estimates("ecosystem", f"{bench_key}_{workload}", size)
@@ -330,7 +510,7 @@ class BenchData:
                 stats = self._read_estimates("ecosystem", old[bench_key], size)
         ns, cv = stats if stats else (None, None)
 
-        crate_name = dict((k, n) for k, n, _ in CRATES).get(bench_key, bench_key)
+        crate_name = {k: n for k, n, _ in CRATES}.get(bench_key, bench_key)
         res = self.resources.get(crate_name, {}).get(str(size), {})
 
         return BenchPoint(
@@ -599,7 +779,9 @@ class Environment:
             pairs.append(("Rust", rv))
         except (subprocess.CalledProcessError, FileNotFoundError):
             pairs.append(("Rust", "unknown"))
-        pairs.append(("Date", date.today().isoformat()))
+        # Local date, timezone-aware: the doc records when the run
+        # happened from the operator's perspective.
+        pairs.append(("Date", datetime.now().astimezone().date().isoformat()))
         return pairs
 
     @staticmethod
@@ -668,9 +850,11 @@ class Environment:
         versions: dict[str, str] = {}
         for pkg in meta["packages"]:
             name = pkg["name"]
-            if name in CRATE_METADATA_NAMES:
-                if name not in versions or (name == "console" and pkg["version"].startswith("0.15")):
-                    versions[name] = pkg["version"]
+            if name in CRATE_METADATA_NAMES and (
+                name not in versions
+                or (name == "console" and pkg["version"].startswith("0.15"))
+            ):
+                versions[name] = pkg["version"]
         return [(n, versions.get(n, "—")) for n in CRATE_METADATA_NAMES]
 
     @staticmethod
@@ -871,7 +1055,7 @@ class BenchmarkReport:
                 # maintainer hints, never rendered prose.
                 while True:
                     stripped = re.sub(
-                        r"\A\s*<!--.*?-->\s*", "", text, count=1, flags=re.S,
+                        r"\A\s*<!--.*?-->\s*", "", text, count=1, flags=re.DOTALL,
                     )
                     if stripped == text:
                         break
@@ -999,7 +1183,7 @@ class BenchmarkReport:
 
         # Report whether iai-callgrind data is on disk so the repro
         # doc can mention deterministic numbers as "yes, already ran"
-        # vs "run mise x bench:callgrind first". Broken across lines
+        # vs "run mise run bench:callgrind first". Broken across lines
         # to keep prose under the 80-col limit.
         if self.iai is not None:
             sections["IAI_STATUS"] = (
@@ -1009,7 +1193,7 @@ class BenchmarkReport:
             )
         else:
             sections["IAI_STATUS"] = (
-                "No iai-callgrind data yet. Run `mise x bench:callgrind` "
+                "No iai-callgrind data yet. Run `mise run bench:callgrind` "
                 "(requires\n`valgrind`) to add instruction-count columns "
                 "to the results doc on the\nnext regenerate."
             )
@@ -1050,6 +1234,56 @@ class BenchmarkReport:
         self.emit("", "## Highlights for Humans", "")
         self._highlights_content()
 
+    def highlight_size(self) -> int:
+        """Dirty size the headline claims are drawn from.
+
+        4 KiB when measured, else the nearest measured size. Shared by
+        the doc's Highlights bullets and the README performance block so
+        the two are always quoting the same cell.
+        """
+        size = 4096
+        if size not in self.dirty_sizes and self.dirty_sizes:
+            size = min(self.dirty_sizes, key=lambda s: abs(s - 4096))
+        return size
+
+    def perf_summary_lines(self) -> list[str] | None:
+        """README performance sentence, derived from bench data.
+
+        Returns None when the comparison can't be computed (no data for
+        the baseline or for every competitor), so the caller leaves the
+        README untouched rather than writing an em-dash into prose.
+
+        Exists because these multipliers were hand-maintained and went
+        stale silently: README claimed 1.1x/2.4x/7.4x, then
+        1.4x/3.1x/13.9x, then 1.4x/3.3x/12.7x across successive runs,
+        each time needing a human to notice and retype them. Same
+        `highlight_size` and same `fmt_ratio` as the Dirty table, so
+        prose and table cannot disagree.
+        """
+        size = self.highlight_size()
+        base = self.data.get_point("distill", "dirty", size)
+        if not base.ns:
+            return None
+        parts: list[tuple[str, str]] = []
+        for bench_key, _, display in CRATES:
+            if bench_key == "distill":
+                continue
+            pt = self.data.get_point(bench_key, "dirty", size)
+            ratio = fmt_ratio(pt.ns, base.ns)
+            if ratio == "—":
+                continue
+            parts.append((ratio, display))
+        if not parts:
+            return None
+        # Match the existing hand-written shape: two lines, the last
+        # carrying the hardware caveat.
+        head = ", ".join(f"{ratio} faster than {name}" for ratio, name in parts[:-1])
+        tail_ratio, tail_name = parts[-1]
+        tail = f"{tail_ratio} faster than {tail_name} on authors hardware."
+        if head:
+            return [f"{head},", tail]
+        return [tail]
+
     def _highlights_content(self) -> None:
         """Emit only the dynamic highlight bullets.
 
@@ -1058,10 +1292,8 @@ class BenchmarkReport:
         measured properties of a bench run.
         """
         d = self.data
-        # Use 4 KiB dirty if available, otherwise closest size.
-        highlight_size = 4096
-        if highlight_size not in self.dirty_sizes and self.dirty_sizes:
-            highlight_size = min(self.dirty_sizes, key=lambda s: abs(s - 4096))
+        # Shared with the README block — see `highlight_size`.
+        highlight_size = self.highlight_size()
         ours = d.get_point("distill", "dirty", highlight_size)
         # Use largest clean size available.
         clean_sizes = [s for s in self.dirty_sizes if d.get_point("distill", "clean", s).ns]
@@ -1520,7 +1752,7 @@ class BenchmarkReport:
                                 break
 
             t = fmt_time(ns)
-            if cv is not None and cv >= NOISY_CV_THRESHOLD:
+            if cv is not None and cv >= NOISY_RMAD_THRESHOLD:
                 any_noisy = True
             m = fmt_mibs(ns, actual_size) if (ns and actual_size) else "—"
 
@@ -1542,8 +1774,9 @@ class BenchmarkReport:
         table = md_table(cols, rows)
         if any_noisy:
             table += (
-                f"\n\n⚠ marks cells where CV ≥ {NOISY_CV_THRESHOLD * 100:.0f}% — "
-                "re-run `mise x bench:callgrind`\nfor a deterministic "
+                f"\n\n⚠ marks cells where MAD/median ≥ "
+                f"{NOISY_RMAD_THRESHOLD * 100:.0f}% — "
+                "re-run `mise run bench:callgrind`\nfor a deterministic "
                 "`Ir/MiB` check."
             )
         self.emit(table)
@@ -1603,7 +1836,7 @@ class BenchmarkReport:
         for bk, _, display in CRATES:
             pt = self.data.get_point(bk, workload, size)
             t = mark_noisy(fmt_time(pt.ns), pt.cv)
-            if pt.cv is not None and pt.cv >= NOISY_CV_THRESHOLD:
+            if pt.cv is not None and pt.cv >= NOISY_RMAD_THRESHOLD:
                 any_noisy = True
             m = fmt_mibs(pt.ns, size)
             r = "base" if bk == "distill" else fmt_ratio(pt.ns, base.ns)
@@ -1628,8 +1861,9 @@ class BenchmarkReport:
         table = md_table(cols, rows)
         if any_noisy:
             table += (
-                f"\n\n⚠ marks cells where CV ≥ {NOISY_CV_THRESHOLD * 100:.0f}% — "
-                "re-run `mise x bench:callgrind`\nfor a deterministic "
+                f"\n\n⚠ marks cells where MAD/median ≥ "
+                f"{NOISY_RMAD_THRESHOLD * 100:.0f}% — "
+                "re-run `mise run bench:callgrind`\nfor a deterministic "
                 "`Ir/MiB` check."
             )
         return table
@@ -1749,6 +1983,45 @@ IAI_ECOSYSTEM_BENCH_CMDS = [
      "--bench", "strip_escapes_iai"],
 ]
 
+# README carries one machine-owned region: the performance
+# multipliers. The rest of that file is hand-written prose, so it is
+# spliced in place between markers rather than generated from a
+# `README.md.in` template — a full template would mean every prose
+# edit has to remember to go to the `.in` file, and edits made
+# directly to README.md would be silently discarded on the next run.
+README_FILE = Path("README.md")
+README_MARK_START = "<!-- BENCH:PERF start"
+README_MARK_END = "<!-- BENCH:PERF end -->"
+
+
+def splice_readme(path: Path, lines: list[str]) -> str:
+    """Replace the marked performance block in `path`.
+
+    Returns a short status string for the caller to print. Never raises
+    on a missing file or missing markers — a stale README is a
+    documentation problem, not a reason to fail a 45-minute bench run
+    that has already produced valid data.
+    """
+    if not path.exists():
+        return f"{path}: not found, skipped"
+    text = path.read_text()
+    start = text.find(README_MARK_START)
+    end = text.find(README_MARK_END)
+    if start == -1 or end == -1 or end < start:
+        return f"{path}: BENCH:PERF markers not found, left unchanged"
+    # Keep the start marker's own line intact (it carries the
+    # "generated" warning), replace only what sits between the markers.
+    start_eol = text.find("\n", start)
+    if start_eol == -1:
+        return f"{path}: malformed start marker, left unchanged"
+    block = "\n".join(lines)
+    updated = text[: start_eol + 1] + block + "\n" + text[end:]
+    if updated == text:
+        return f"{path}: performance block already current"
+    path.write_text(updated)
+    return f"Updated {path} performance block"
+
+
 OUTPUT_FILE = Path("doc/BENCHMARKS.md")
 TEMPLATE_FILE = Path("doc/BENCHMARKS.md.in")
 # Companion template for reproduction/setup notes — rendered
@@ -1806,6 +2079,16 @@ def main() -> None:
              "or -F a -F b). The literal `all-features` is treated as the "
              "cargo `--all-features` flag — it's not a real feature name, "
              "but it's the intuitive thing to type.",
+    )
+    parser.add_argument(
+        "--iai-jobs", type=int, default=0, metavar="N",
+        help="Concurrent iai-callgrind processes (default: auto — one "
+             "per physical core minus one, clamped by available "
+             "memory). Only the callgrind pass is parallelised; "
+             "criterion wall-clock benches always run serially, since "
+             "concurrent benches contend for shared L3, memory "
+             "bandwidth and turbo headroom and would not be "
+             "comparable. Use 1 to force fully serial.",
     )
     args = parser.parse_args()
 
@@ -1868,6 +2151,26 @@ def main() -> None:
         # and readers get both throughput and Ir/MiB for the same
         # session.
         iai_mode = "iai-callgrind" in features
+        if iai_mode and shutil.which("valgrind") is None:
+            # Fail fast, before spending ~9 minutes on the criterion
+            # pass: iai-callgrind's own runner errors per-bench
+            # ("cannot find binary path: 'valgrind'"), but that
+            # failure only surfaces after the full criterion run set
+            # (BENCH_CMD + ECOSYSTEM_BENCH_CMDS) has already executed,
+            # since the two run sets are independent and iai_mode only
+            # appends to run_set rather than gating it. Checking here
+            # instead of discovering it 5 identical failures deep in
+            # target/iai/run.log.
+            print(
+                "error: --features iai-callgrind requires 'valgrind' on "
+                "PATH, but it was not found.\n"
+                "Install it (e.g. `apt install valgrind`, "
+                "`brew install valgrind`, `pacman -S valgrind`) and "
+                "re-run, or drop --features iai-callgrind for a "
+                "criterion-only report.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         criterion_run = [with_features(cmd) for cmd in [BENCH_CMD] + ECOSYSTEM_BENCH_CMDS]
         if iai_mode:
             # iai-callgrind commands already carry their own
@@ -1888,9 +2191,17 @@ def main() -> None:
                 _iai_cmd(cmd)
                 for cmd in [IAI_BENCH_CMD] + IAI_ECOSYSTEM_BENCH_CMDS
             ]
-            run_set = criterion_run + iai_run
         else:
-            run_set = criterion_run
+            iai_run = []
+
+        # Stamp the run boundary before the first bench executes, so
+        # every criterion result this run writes is newer than the
+        # marker and everything left over from previous runs is older.
+        # Persisted (rather than held in memory) so a later `--no-run`
+        # re-render applies the same freshness filter.
+        run_marker = TARGET_DIR / "criterion" / RUN_MARKER_NAME
+        run_marker.parent.mkdir(parents=True, exist_ok=True)
+        run_marker.write_text(f"{time.time()}\n")
 
         # iai-callgrind is chatty: ~6 lines per bench × dozens of
         # benches drowns the terminal. Route its stdout to a log
@@ -1905,32 +2216,87 @@ def main() -> None:
             env.setdefault("IAI_CALLGRIND_LOG", "warn")
 
         failed: list[str] = []
-        for cmd in run_set:
-            # Detect iai vs criterion per-command: iai benches carry
-            # `--save-summary=json` in their trailing args, criterion
-            # benches don't. This matters because the additive run
-            # set (criterion + iai) interleaves both in a single
-            # pass and we want output appropriate for each.
-            is_iai = "--save-summary=json" in cmd
-            if is_iai:
-                bench_name = _extract_bench_name(cmd)
-                print(f"  callgrind: {bench_name}…", file=sys.stderr, end="", flush=True)
-                t0 = time.monotonic()
-                with open(iai_log, "a") as logf:
-                    logf.write(f"\n=== {' '.join(cmd)} ===\n")
-                    logf.flush()
-                    r = subprocess.run(cmd, env=env, stdout=logf, stderr=logf)
-                elapsed = time.monotonic() - t0
-                status = "ok" if r.returncode == 0 else f"FAIL ({r.returncode})"
-                print(f" {status} [{fmt_duration(elapsed)}]", file=sys.stderr)
-            else:
-                print(f"Running: {' '.join(cmd)}", file=sys.stderr)
-                r = subprocess.run(cmd, env=env)
+
+        # ── Criterion pass: strictly serial ─────────────────────────
+        #
+        # Wall-clock measurements cannot be parallelised on a shared
+        # cache hierarchy — see the "Host capacity" note above.
+        #
+        # Wall-clock timestamps (not just elapsed seconds) bracket
+        # every invocation so a warning emitted mid-run — e.g.
+        # criterion's "Unable to complete N samples in Xs" — can be
+        # cross-checked against how long the command actually took.
+        # Criterion's own warning text is a *projection* ("you may wish
+        # to increase target time to Ys"), not a report of elapsed
+        # time, so it can look alarming next to a run that in fact
+        # finished quickly; the before/after stamps here are the actual
+        # measurement.
+        for cmd in criterion_run:
+            start_ts = datetime.now().astimezone().isoformat(timespec="seconds")
+            print(f"Running: {' '.join(cmd)} (start {start_ts})", file=sys.stderr)
+            t0 = time.monotonic()
+            r = subprocess.run(cmd, env=env, check=False)
+            elapsed = time.monotonic() - t0
+            end_ts = datetime.now().astimezone().isoformat(timespec="seconds")
+            status = "ok" if r.returncode == 0 else f"FAIL ({r.returncode})"
+            print(
+                f"  {status} [{fmt_duration(elapsed)}] (end {end_ts})",
+                file=sys.stderr,
+            )
             if r.returncode != 0:
                 failed.append(" ".join(cmd))
-                if not is_iai:
-                    print(f"  ⚠ failed (exit {r.returncode}), continuing…",
-                          file=sys.stderr)
+                print(f"  ⚠ failed (exit {r.returncode}), continuing…",
+                      file=sys.stderr)
+
+        # ── iai-callgrind pass: concurrent, host-capacity bounded ───
+        if iai_run:
+            jobs = args.iai_jobs if args.iai_jobs > 0 else default_iai_jobs(len(iai_run))
+            jobs = max(1, min(jobs, len(iai_run)))
+            nice = list(IAI_NICE) if shutil.which("nice") else []
+            log_lock = threading.Lock()
+            print(
+                f"  callgrind: {len(iai_run)} bench(es), {jobs} concurrent "
+                f"({_physical_cores()} physical cores)"
+                + (", niced" if nice else ""),
+                file=sys.stderr,
+            )
+
+            def run_iai(cmd: list[str]) -> tuple[list[str], int, float]:
+                """Execute one callgrind bench, returning (cmd, rc, secs).
+
+                Output is captured rather than streamed to the shared
+                log handle: with several processes running at once,
+                interleaved writes would shred the per-bench sections.
+                Each command's output is appended as one atomic block
+                after it finishes.
+                """
+                started = datetime.now().astimezone().isoformat(timespec="seconds")
+                t_start = time.monotonic()
+                proc = subprocess.run(
+                    nice + cmd, env=env, check=False,
+                    capture_output=True, text=True,
+                )
+                secs = time.monotonic() - t_start
+                finished = datetime.now().astimezone().isoformat(timespec="seconds")
+                with log_lock, open(iai_log, "a") as logf:
+                    logf.write(
+                        f"\n=== {' '.join(cmd)} === "
+                        f"(start {started}, end {finished})\n"
+                    )
+                    logf.write(proc.stdout or "")
+                    logf.write(proc.stderr or "")
+                return (cmd, proc.returncode, secs)
+
+            with ThreadPoolExecutor(max_workers=jobs) as pool:
+                for cmd, rc, secs in pool.map(run_iai, iai_run):
+                    status = "ok" if rc == 0 else f"FAIL ({rc})"
+                    print(
+                        f"  callgrind: {_extract_bench_name(cmd)} "
+                        f"{status} [{fmt_duration(secs)}]",
+                        file=sys.stderr,
+                    )
+                    if rc != 0:
+                        failed.append(" ".join(cmd))
 
         if iai_mode and iai_log.exists():
             print(
@@ -1965,6 +2331,14 @@ def main() -> None:
         repro = report.generate_reproduce(repro_tmpl.read_text())
         args.reproduce_output.write_text(repro)
         print(f"Wrote {args.reproduce_output}", file=sys.stderr)
+
+    # README's performance multipliers, derived from the same cell the
+    # Dirty table reports so the two can't drift apart.
+    perf = report.perf_summary_lines()
+    if perf is None:
+        print(f"{README_FILE}: no comparison data, left unchanged", file=sys.stderr)
+    else:
+        print(splice_readme(README_FILE, perf), file=sys.stderr)
 
 
 if __name__ == "__main__":

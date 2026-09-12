@@ -234,7 +234,7 @@ fn check_stderr_diagnostic() {
     let output = cmd.output().unwrap();
 
     assert!(output.stdout.is_empty());
-    assert!(output.status.code() == Some(1));
+    assert_eq!(output.status.code(), Some(1));
     let stderr_str = String::from_utf8_lossy(&output.stderr);
     assert!(stderr_str.contains("strip-ansi: ANSI escape sequences detected"));
 }
@@ -253,7 +253,7 @@ fn broken_pipe_exit_zero() {
         .expect("Failed to spawn child process");
 
     let output = child.wait_with_output().expect("Failed to read output");
-    assert!(output.status.code() == Some(0));
+    assert_eq!(output.status.code(), Some(0));
 }
 
 #[test]

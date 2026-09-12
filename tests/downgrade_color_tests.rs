@@ -443,6 +443,43 @@ fn rewrite_to_mono_strips_basic_fg_bg() {
 }
 
 #[test]
+fn rewrite_to_mono_suppresses_color_only_sequence_entirely() {
+    // Regression: a color-only SGR (truecolor fg, no other params)
+    // reduced to Mono must vanish completely — ESC[38;2;255;0;0m
+    // should become zero bytes, not the no-op reset ESC[m.
+    //
+    // Bug history: rewrite_sgr_direct unconditionally wrote `ESC[`
+    // before rewriting params and `m` after, regardless of whether
+    // the emitter (correctly) wrote nothing for a Mono-downgraded
+    // color param. That turned "no color to show" into "emit an
+    // explicit reset", which is visually different from true
+    // suppression and not what a caller downgrading to Mono asked
+    // for. Caught via the homebrew formula's `--color-depth mono`
+    // test, which asserts the color sequence is fully absent.
+    let input = sgr(b"38;2;255;0;0");
+    let result = rewrite_sgr_params(&input, ColorDepth::Mono, &IDENTITY);
+    assert!(
+        result.is_empty(),
+        "color-only SGR at Mono depth should vanish entirely, got {:?}",
+        String::from_utf8_lossy(&result)
+    );
+}
+
+#[test]
+fn rewrite_to_mono_preserves_style_suppresses_trailing_color_only() {
+    // A styled + color sequence still keeps its style; only the
+    // color-only *tail* case (all params filtered) is suppressed.
+    // ESC[1;38;2;255;0;0m → ESC[1m (bold survives, color gone).
+    let input = sgr(b"1;38;2;255;0;0");
+    let result = rewrite_sgr_params(&input, ColorDepth::Mono, &IDENTITY);
+    let s = String::from_utf8_lossy(&result);
+    assert_eq!(
+        s, "\x1b[1m",
+        "bold should survive with no trailing color junk"
+    );
+}
+
+#[test]
 fn rewrite_to_greyscale_converts_color() {
     // ESC[38;2;255;0;0m → ESC[38;5;Nm where N is in greyscale ramp
     let input = sgr(b"38;2;255;0;0");

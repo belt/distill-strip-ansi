@@ -12,15 +12,25 @@ pub struct CacheInfo {
 impl CacheInfo {
     /// Detect cache sizes from the OS.
     ///
-    /// Falls back to conservative defaults if detection fails.
+    /// Falls back to conservative defaults only when detection
+    /// actually fails (a zero reading). An earlier version used
+    /// `raw.l3.max(DEFAULT)`, which conflated "detection failed" with
+    /// "this machine is smaller than the default" and silently
+    /// clamped genuine values *upward*: on a 4-core Haswell with a
+    /// real 8 MiB L3, sysfs was read correctly and then overridden to
+    /// 12 MiB. That mis-sized the whole ladder — `build_sizes` filed
+    /// 8 MiB under "fits in L3" when 8 MiB *is* the entire L3, the
+    /// "beyond L3" run started at 24 MiB and skipped the real 8-16
+    /// MiB transition, and the default `2 * l3` cap was actually 3x
+    /// the hardware's L3. Report what the hardware says.
     #[must_use]
     pub fn detect() -> Self {
         let raw = detect_raw();
         Self {
-            l1d: raw.l1d.max(32_768),
-            l2: raw.l2.max(262_144),
-            l3: raw.l3.max(12_582_912),
-            ram: raw.ram.max(1_073_741_824),
+            l1d: or_default(raw.l1d, 32_768),
+            l2: or_default(raw.l2, 262_144),
+            l3: or_default(raw.l3, 12_582_912),
+            ram: or_default(raw.ram, 1_073_741_824),
         }
     }
 
@@ -84,6 +94,12 @@ impl CacheInfo {
         sizes.dedup();
         sizes
     }
+}
+
+/// Substitute `fallback` only for a failed detection (zero), never
+/// for a successfully detected value that happens to be small.
+fn or_default(detected: u64, fallback: u64) -> u64 {
+    if detected == 0 { fallback } else { detected }
 }
 
 fn detect_raw() -> CacheInfo {
@@ -168,6 +184,36 @@ mod tests {
             l3: 12_582_912,
             ram: 34_359_738_368,
         }
+    }
+
+    #[test]
+    fn or_default_substitutes_only_on_zero() {
+        // Detection failure → fallback.
+        assert_eq!(or_default(0, 12_582_912), 12_582_912);
+        // Genuine reading below the fallback must survive: an 8 MiB
+        // L3 stays 8 MiB rather than being clamped up to 12 MiB.
+        assert_eq!(or_default(8 * 1024 * 1024, 12_582_912), 8 * 1024 * 1024);
+        // Genuine reading above the fallback also survives.
+        assert_eq!(or_default(32 * 1024 * 1024, 12_582_912), 32 * 1024 * 1024);
+    }
+
+    #[test]
+    fn build_sizes_respects_smaller_than_default_l3() {
+        // 8 MiB L3 (real Haswell desktop), not the 12 MiB fallback.
+        let cache = CacheInfo {
+            l1d: 32_768,
+            l2: 262_144,
+            l3: 8 * 1024 * 1024,
+            ram: 34_359_738_368,
+        };
+        let sizes = cache.build_sizes(cache.l3 as usize * 2);
+        // 2 * 8 MiB = 16 MiB is the cap, so nothing above it.
+        assert_eq!(*sizes.last().unwrap(), 16 * 1024 * 1024);
+        // 24 MiB belongs to a 12 MiB L3's ladder, not this one.
+        assert!(
+            !sizes.contains(&(24 * 1024 * 1024)),
+            "24M is 3x this machine's L3: {sizes:?}"
+        );
     }
 
     #[test]

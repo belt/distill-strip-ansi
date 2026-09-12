@@ -16,6 +16,7 @@
 #![forbid(unsafe_code)]
 
 use alloc::string::String;
+use alloc::vec;
 use alloc::vec::Vec;
 
 // ── Data types ──────────────────────────────────────────────────────

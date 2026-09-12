@@ -3,7 +3,7 @@ members = [".", "benches/harness", "benches/ecosystem"]
 
 [package]
 name = "distill-strip-ansi"
-version = "0.6.1"
+version = "0.7.1"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -36,7 +36,7 @@ augment-color = ["transform"]
 cli = ["std", "dep:clap", "dep:sigpipe", "terminal-detect"]
 distill-ansi-cli = ["std", "downgrade-color", "augment-color", "unicode-normalize", "terminal-detect", "dep:clap", "dep:sigpipe"]
 terminal-detect = ["filter", "std", "dep:supports-color", "dep:supports-hyperlinks"]
-unicode-normalize = ["transform"]
+unicode-normalize = []
 toml-config = ["filter", "std", "dep:serde", "dep:toml", "dep:thiserror"]
 cross-validate = ["dep:strip-ansi-escapes", "dep:fast-strip-ansi", "dep:console"]
 
