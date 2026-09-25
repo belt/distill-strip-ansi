@@ -22,6 +22,8 @@ name: Production Promotion
 permissions:
   contents: write
   packages: write
+  actions: read
+  checks: read
 
 jobs:
   promote:
@@ -33,19 +35,45 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve Run ID
+      - name: Wait for CI Run on Tagged Commit
         id: run_info
+        # ci.yml also triggers on `v*.*.*` tag pushes (see ci.yml
+        # `on.push.tags`), so a CI run for this exact commit always
+        # exists — but it starts at the same time as this job, so
+        # it isn't registered with the API yet, let alone finished.
+        # Poll until the run appears, then block until it completes.
+        #
+        # Previously this queried `--status success` immediately,
+        # found nothing (the run didn't exist yet), and silently fell
+        # through to `dawidd6/action-download-artifact`'s "most
+        # recent successful ci.yml run anywhere" fallback — which
+        # grabbed an unrelated run whose artifacts had long expired.
+        # Every promotion since v0.6.0 failed this way. See CHANGELOG
+        # 0.7.1 Operational.
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "id=${{ github.event.inputs.run_id }}" >> $GITHUB_OUTPUT
-          else
-            RUN_ID=$(gh run list --workflow CI \
-              --commit ${{ github.sha }} \
-              --status success \
-              --limit 1 \
-              --json databaseId -q '.[0].databaseId')
-            echo "id=$RUN_ID" >> $GITHUB_OUTPUT
+            echo "id=${{ github.event.inputs.run_id }}" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          SHA="${{ github.sha }}"
+          RUN_ID=""
+          echo "waiting for CI run on commit ${SHA}..."
+          for _ in $(seq 1 30); do
+            RUN_ID=$(gh run list --workflow CI --commit "${SHA}" \
+              --json databaseId -q '.[0].databaseId // empty')
+            [ -n "${RUN_ID}" ] && break
+            sleep 10
+          done
+
+          if [ -z "${RUN_ID}" ]; then
+            echo "::error::no CI run appeared for commit ${SHA} within 5 minutes"
+            exit 1
+          fi
+
+          echo "found CI run ${RUN_ID}, waiting for it to finish..."
+          gh run watch "${RUN_ID}" --exit-status
+          echo "id=${RUN_ID}" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

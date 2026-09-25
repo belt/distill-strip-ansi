@@ -17,6 +17,16 @@ Apple Silicon only, and there is no `x86_64-apple-darwin` job in
 this workflow. Renamed to `macos-arm64` so the release artifact
 name matches what actually ships. No build output changed.
 
+Every release since v0.6.0 also failed "Promote Staging to
+Production": the promote workflow only ran on tag pushes, but
+CI only ran on pushes to `main`, so no CI run ever existed for a
+tag's commit. The run-ID lookup came back empty and silently fell
+back to an unrelated, long-expired CI run, which is what actually
+produced the "no downloadable artifacts found (expired)" error —
+not runner retirement. CI now also triggers on `v*.*.*` tags, and
+promote polls for that run and waits for it to finish before
+downloading artifacts.
+
 ## 0.7.0
 
 ### Breaking
