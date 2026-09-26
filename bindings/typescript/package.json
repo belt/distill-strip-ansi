@@ -1,0 +1,30 @@
+{
+  "name": "distill-strip-ansi",
+  "version": "0.7.2",
+  "description": "TypeScript bindings for distill-strip-ansi",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/index.test.js",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "koffi": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "allowScripts": {
+    "koffi@2.16.3": true
+  }
+}

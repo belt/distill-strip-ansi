@@ -27,6 +27,9 @@ perf.data.old
 # Benchmark artifacts
 /tmp/
 **/__pycache__/
+**/*.egg-info/
+bindings/typescript/dist/
+bindings/typescript/node_modules/
 doc/BENCH_ENV.toml
 
 # Test artifacts
