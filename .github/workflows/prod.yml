@@ -93,8 +93,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist/
-          fd "strip-ansi" artifacts/ -x cp {} dist/
-          fd "distill-ansi" artifacts/ -x cp {} dist/
+          fd --type f "strip-ansi" artifacts/ -x cp {} dist/
+          fd --type f "distill-ansi" artifacts/ -x cp {} dist/
           ls -R dist/
 
       - name: Install cargo-audit (binary-provenance scan)
