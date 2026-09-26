@@ -185,6 +185,8 @@ the database format.
 
 See [doc/DESIGN.md](doc/DESIGN.md) for the architecture and
 [doc/LIBRARY-USAGE.md](doc/LIBRARY-USAGE.md) for API examples.
+See [bindings/README.md](bindings/README.md) for C, Python, Go, Ruby,
+and TypeScript bindings.
 
 ```toml
 [dependencies]
