@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.2
+
+### Added
+
+Added a versioned C ABI and thin Python (`ctypes`), Go (`cgo`), Ruby
+(`Fiddle`), and TypeScript (Koffi) bindings. Rust callers continue to use
+the native library API. Binding source, examples, and focused tests are in
+`bindings/`.
+
 ## 0.7.1
 
 ### Fixed

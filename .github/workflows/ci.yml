@@ -371,6 +371,48 @@ jobs:
         if: matrix.container == 'rust:alpine'
         run: apk del -q .ci-deps
 
+  bindings:
+    name: Language bindings (Ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # master
+        with:
+          profile: minimal
+      - name: Test C ABI
+        run: cargo test --locked -p distill-strip-ansi-c
+      - name: Build C ABI
+        run: cargo build --locked --release -p distill-strip-ansi-c
+      - name: Test C consumer
+        run: |
+          cc bindings/c-abi/tests/header_smoke.c -Ibindings/c-abi/include \
+            -Ltarget/release -Wl,-rpath,"$PWD/target/release" \
+            -ldistill_strip_ansi_c -o /tmp/distill-strip-ansi-c-smoke
+          /tmp/distill-strip-ansi-c-smoke
+      - name: Test Python binding
+        run: PYTHONPATH=bindings/python/src DISTILL_STRIP_ANSI_LIB="$PWD/target/release/libdistill_strip_ansi_c.so" python3 -m unittest discover -s bindings/python/tests
+      - name: Test Go binding
+        working-directory: bindings/go
+        env:
+          CGO_LDFLAGS: -L../../target/release
+          LD_LIBRARY_PATH: ../../target/release
+        run: go test ./...
+      - name: Test Ruby binding
+        env:
+          DISTILL_STRIP_ANSI_LIB: ${{ github.workspace }}/target/release/libdistill_strip_ansi_c.so
+        run: ruby bindings/ruby/test/test_distill_strip_ansi.rb
+      - name: Test TypeScript binding
+        working-directory: bindings/typescript
+        env:
+          DISTILL_STRIP_ANSI_LIB: ${{ github.workspace }}/target/release/libdistill_strip_ansi_c.so
+        run: |
+          npm install --no-package-lock
+          npm run build
+          npm test
+
   # Coverage enforcement
   diff-coverage:
     name: diff-coverage (Alpine)
@@ -437,7 +479,7 @@ jobs:
 
   # STAGING LAYER
   build:
-    needs: [bootstrap, test, clippy, fmt, deny, msrv, diff-coverage]
+    needs: [bootstrap, test, bindings, clippy, fmt, deny, msrv, diff-coverage]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
