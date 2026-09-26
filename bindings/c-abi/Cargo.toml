@@ -1,0 +1,14 @@
+[package]
+name = "distill-strip-ansi-c"
+version = "0.7.2"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+description = "C ABI for distill-strip-ansi"
+
+[lib]
+name = "distill_strip_ansi_c"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+distill-strip-ansi = { path = "../..", version = "0.7.2", default-features = false, features = ["std"] }

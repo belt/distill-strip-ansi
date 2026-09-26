@@ -336,7 +336,7 @@ dependencies = [
 
 [[package]]
 name = "distill-strip-ansi"
-version = "0.7.1"
+version = "0.7.2"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -357,6 +357,13 @@ dependencies = [
  "tempfile",
  "thiserror",
  "toml",
+]
+
+[[package]]
+name = "distill-strip-ansi-c"
+version = "0.7.2"
+dependencies = [
+ "distill-strip-ansi",
 ]
 
 [[package]]
